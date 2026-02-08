@@ -68,6 +68,8 @@ There are two main ways to do this in CyberPanel. **Method 1** is easier if your
     DB_PASS=your_db_password
     DB_NAME=your_db_name
     SESSION_SECRET=some_long_secret_string
+    MAX_POOL=10
+    NODE_ENV=production
     PORT=3000
     ```
     *Note: If you have multiple Node apps, change the PORT (e.g., 3001, 3002) to avoid conflicts.*
