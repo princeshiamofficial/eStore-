@@ -1,4 +1,9 @@
 require('dotenv').config();
+const next = require('next');
+const dev = process.env.NODE_ENV !== 'production';
+const nextApp = next({ dev });
+const handle = nextApp.getRequestHandler();
+
 const express = require('express');
 const compression = require('compression');
 const session = require('express-session');
@@ -105,7 +110,9 @@ app.get('/uploads/thumb-:filename', async (req, res, next) => {
 });
 
 app.use('/uploads', express.static(uploadDir, staticOptions));
-app.use(express.static(path.join(__dirname, '.'), staticOptions));
+app.use(express.static(path.join(__dirname, 'public'), staticOptions));
+app.use('/admin', express.static(path.join(__dirname, 'admin'), staticOptions));
+app.use('/assets', express.static(path.join(__dirname, 'assets'), staticOptions));
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'supersecret',
@@ -164,7 +171,7 @@ async function getCachedCategories() {
     if (cache.categories) return cache.categories;
     return new Promise((resolve) => {
         const query = `
-            SELECT c.id, c.name, c.slug, c.icon, c.position,
+            SELECT c.id, c.name, c.slug, c.icon, c.position, c.parent_id,
                    GROUP_CONCAT(cp.parent_id) as parent_ids
             FROM categories c
             LEFT JOIN category_parents cp ON c.id = cp.category_id
@@ -475,47 +482,36 @@ function updateMySitemapFile() {
     const baseUrl = 'https://store.colorhutbd.xyz';
     const catQuery = "SELECT slug FROM categories WHERE is_deleted = FALSE";
     const prodQuery = "SELECT slug FROM products WHERE status = 'Published' AND is_deleted = FALSE";
-    const blogQuery = "SELECT slug FROM blogs WHERE status = 'Published' AND is_deleted = FALSE";
 
     db.query(catQuery, (err, categories) => {
         if (err) return console.error('Sitemap Error (Categories):', err);
         db.query(prodQuery, (err, products) => {
             if (err) return console.error('Sitemap Error (Products):', err);
-            db.query(blogQuery, (err, blogs) => {
-                if (err) return console.error('Sitemap Error (Blogs):', err);
 
-                let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-                xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-                xml += `  <url><loc>${baseUrl}/</loc><priority>1.0</priority><changefreq>daily</changefreq></url>\n`;
-                xml += `  <url><loc>${baseUrl}/all</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>\n`;
-                xml += `  <url><loc>${baseUrl}/blog</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>\n`;
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+            xml += `  <url><loc>${baseUrl}/</loc><priority>1.0</priority><changefreq>daily</changefreq></url>\n`;
+            xml += `  <url><loc>${baseUrl}/all</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>\n`;
 
-                if (categories) {
-                    categories.forEach(cat => {
-                        if (cat.slug) xml += `  <url><loc>${baseUrl}/${cat.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>\n`;
-                    });
-                }
-
-                if (products) {
-                    products.forEach(prod => {
-                        if (prod.slug) xml += `  <url><loc>${baseUrl}/p/${prod.slug}</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>\n`;
-                    });
-                }
-
-                if (blogs) {
-                    blogs.forEach(blog => {
-                        if (blog.slug) xml += `  <url><loc>${baseUrl}/blog/${blog.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>\n`;
-                    });
-                }
-
-                xml += '</urlset>';
-
-                fs.writeFile(path.join(__dirname, 'mysitemap.xml'), xml, (err) => {
-                    if (err) console.error('Failed to write mysitemap.xml to disk:', err);
-                    else {
-                        // console.log('mysitemap.xml successfully generated/overwritten on disk.');
-                    }
+            if (categories) {
+                categories.forEach(cat => {
+                    if (cat.slug) xml += `  <url><loc>${baseUrl}/${cat.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>\n`;
                 });
+            }
+
+            if (products) {
+                products.forEach(prod => {
+                    if (prod.slug) xml += `  <url><loc>${baseUrl}/p/${prod.slug}</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>\n`;
+                });
+            }
+
+            xml += '</urlset>';
+
+            fs.writeFile(path.join(__dirname, 'public', 'mysitemap.xml'), xml, (err) => {
+                if (err) console.error('Failed to write mysitemap.xml to disk:', err);
+                else {
+                    // console.log('mysitemap.xml successfully generated/overwritten on disk.');
+                }
             });
         });
     });
@@ -697,14 +693,29 @@ app.get('/api/public/categories', async (req, res) => {
 
 // Get all published products (public)
 app.get('/api/public/products', (req, res) => {
-    const query = `
-        SELECT p.id, p.name, p.slug, p.category_id, p.price, p.image, p.rating, p.position, c.name as category_name
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const offset = (page - 1) * limit;
+    const categoryId = req.query.categoryId;
+
+    let query = `
+        SELECT p.id, p.name, p.slug, p.category_id, p.price, p.image, p.video_url, p.rating, p.position, c.name as category_name
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         WHERE p.status = 'Published' AND p.is_deleted = FALSE
-        ORDER BY p.position ASC, p.created_at DESC
     `;
-    db.query(query, (err, results) => {
+    const params = [];
+
+    if (categoryId) {
+        // Support fetching products from both the main category and its subcategories
+        query += ` AND (p.category_id = ? OR p.category_id IN (SELECT category_id FROM category_parents WHERE parent_id = ?))`;
+        params.push(categoryId, categoryId);
+    }
+
+    query += ` ORDER BY p.position ASC, p.created_at DESC LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
+
+    db.query(query, params, (err, results) => {
         if (err) {
             console.error('Error fetching public products:', err);
             return res.status(500).json({ error: 'Failed to fetch products', details: err.message });
@@ -775,7 +786,7 @@ app.get('/api/public/related/:categoryId', (req, res) => {
     const excludeId = req.query.exclude;
 
     const query = `
-        SELECT id, name, slug, image, rating 
+        SELECT id, name, slug, image, video_url, rating 
         FROM products 
         WHERE category_id = ? AND id != ? AND status = 'Published' AND is_deleted = FALSE 
         LIMIT 4
@@ -1033,14 +1044,28 @@ app.post('/api/upload', requireAuth, upload.array('images', 10), async (req, res
             const filename = `opt-${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
             const outPath = path.join(uploadDir, filename);
 
-            // Process with Sharp
-            // 1. Resize if too large (max 1200px width)
-            // 2. Convert to WebP with quality 80
-            // 3. Remove metadata to save space
-            await sharp(file.path)
-                .resize({ width: 1200, withoutEnlargement: true })
-                .webp({ quality: 80 })
-                .toFile(outPath);
+            // Process with Sharp using Iterative Compression
+            const targetSizeKB = 100;
+            const targetSizeBytes = targetSizeKB * 1024;
+            let quality = 90;
+            let outputBuffer;
+
+            // Iterative compression loop
+            while (true) {
+                outputBuffer = await sharp(file.path)
+                    .resize({ width: 1000, withoutEnlargement: true })
+                    .webp({ quality: quality })
+                    .toBuffer();
+
+                if (outputBuffer.length <= targetSizeBytes || quality <= 10) {
+                    break;
+                }
+
+                quality -= 5;
+            }
+
+            // Save the final optimized buffer
+            await sharp(outputBuffer).toFile(outPath);
 
             // Delete original unoptimized file
             fs.unlink(file.path, (err) => {
@@ -1197,54 +1222,6 @@ app.delete('/api/trash/empty', requireAuth, (req, res) => {
     });
 });
 
-// ===== ADMIN BLOG API =====
-app.get('/api/blogs', requireAuth, (req, res) => {
-    const query = "SELECT id, title, slug, status, author, views, created_at FROM blogs WHERE is_deleted = FALSE ORDER BY created_at DESC";
-    db.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: 'Failed to fetch blogs' });
-        res.json(results);
-    });
-});
-
-app.get('/api/blogs/:id', requireAuth, (req, res) => {
-    db.query("SELECT * FROM blogs WHERE id = ?", [req.params.id], (err, results) => {
-        if (err || results.length === 0) return res.status(404).json({ error: 'Blog not found' });
-        res.json(results[0]);
-    });
-});
-
-app.post('/api/blogs', requireAuth, (req, res) => {
-    const { title, content, excerpt, featured_image, status, author, seo_keywords, seo_description } = req.body;
-    const slug = generateSlug(title);
-
-    const query = "INSERT INTO blogs (title, slug, content, excerpt, featured_image, status, author, seo_keywords, seo_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    db.query(query, [title, slug, content, excerpt, featured_image, status || 'Draft', author || 'Admin', seo_keywords, seo_description], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Failed to create blog' });
-        res.json({ id: result.insertId, message: 'Blog created successfully' });
-        updateMySitemapFile();
-    });
-});
-
-app.put('/api/blogs/:id', requireAuth, (req, res) => {
-    const { title, content, excerpt, featured_image, status, author, seo_keywords, seo_description } = req.body;
-    const slug = generateSlug(title);
-
-    const query = "UPDATE blogs SET title = ?, slug = ?, content = ?, excerpt = ?, featured_image = ?, status = ?, author = ?, seo_keywords = ?, seo_description = ? WHERE id = ?";
-    db.query(query, [title, slug, content, excerpt, featured_image, status, author, seo_keywords, seo_description, req.params.id], (err) => {
-        if (err) return res.status(500).json({ error: 'Failed to update blog' });
-        res.json({ message: 'Blog updated successfully' });
-        updateMySitemapFile();
-    });
-});
-
-app.delete('/api/blogs/:id', requireAuth, (req, res) => {
-    db.query("UPDATE blogs SET is_deleted = TRUE, deleted_at = CURRENT_TIMESTAMP WHERE id = ?", [req.params.id], (err) => {
-        if (err) return res.status(500).json({ error: 'Failed to delete blog' });
-        res.json({ message: 'Blog moved to trash' });
-        updateMySitemapFile();
-    });
-});
-
 // Helper to inject GTM and Pixel
 function injectTrackingScripts(html, settings) {
     let modifiedHtml = html;
@@ -1302,64 +1279,9 @@ function injectTrackingScripts(html, settings) {
 }
 
 // Routes for clean URLs
-app.get('/', async (req, res) => {
-    try {
-        const [settings, data] = await Promise.all([
-            getCachedSettings(),
-            getCachedHtml('index.html')
-        ]);
-
-        if (!data) return res.status(500).send('Error loading page');
-
-        const faqSchema = `
-        <script type="application/ld+json">
-        {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "mainEntity": [{
-            "@type": "Question",
-            "name": "Where is Color Hut Studio located?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Color Hut Studio is based in Dhaka, Bangladesh, providing premium branding and stationery solutions nationwide."
-            }
-          }, {
-            "@type": "Question",
-            "name": "What products does Color Hut Studio offer?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "We offer premium corporate gifts, luxury stationery, minimalist brand identity assets, and expert design consulting."
-            }
-          }]
-        }
-        </script>
-        `;
-
-        let html = injectTrackingScripts(data, settings);
-
-        const siteTitle = settings.home_title || 'Color Hut Studio | Corporate Gifts & Branding Bangladesh';
-        const siteDesc = settings.home_description || 'Premium corporate gifts and brand identity solutions in Bangladesh.';
-        const siteKeywords = settings.site_keywords || 'Branding, Gifts, Bangladesh';
-
-        html = html
-            .replace(/{{SITE_TITLE}}/g, siteTitle)
-            .replace(/{{SITE_DESCRIPTION}}/g, siteDesc)
-            .replace(/{{SITE_KEYWORDS}}/g, siteKeywords)
-            .replace(/{{SITE_URL}}/g, `${req.protocol}://${req.get('host')}/`)
-            .replace(/{{SITE_IMAGE}}/g, `${req.protocol}://${req.get('host')}/logo.png`);
-
-        if (!html.includes('FAQPage')) {
-            html = html.replace('</head>', `${faqSchema}</head>`);
-        } else {
-            html = html.replace(/{{{FAQ_SCHEMA}}}/g, faqSchema);
-        }
-
-        res.setHeader('Content-Type', 'text/html');
-        res.send(html);
-    } catch (err) {
-        console.error('Home Route Error:', err);
-        res.status(500).send('Server Error');
-    }
+// Routes for clean URLs
+app.get('/', (req, res) => {
+    return handle(req, res);
 });
 
 app.get('/product', async (req, res) => {
@@ -1459,10 +1381,6 @@ app.get('/admin/trash', requireAuth, (req, res) => {
 
 app.get('/admin/seo', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin/seo.html'));
-});
-
-app.get('/admin/blogs', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin/blogs.html'));
 });
 
 // Socket.io for real-time updates
@@ -1577,19 +1495,15 @@ app.get('/mysitemap.xml', (req, res) => {
 
     const catQuery = "SELECT slug FROM categories WHERE is_deleted = FALSE";
     const prodQuery = "SELECT slug FROM products WHERE status = 'Published' AND is_deleted = FALSE";
-    const blogQuery = "SELECT slug FROM blogs WHERE status = 'Published' AND is_deleted = FALSE";
-
     Promise.all([
         new Promise((resolve, reject) => db.query(catQuery, (err, res) => err ? reject(err) : resolve(res))),
-        new Promise((resolve, reject) => db.query(prodQuery, (err, res) => err ? reject(err) : resolve(res))),
-        new Promise((resolve, reject) => db.query(blogQuery, (err, res) => err ? reject(err) : resolve(res)))
-    ]).then(([categories, products, blogs]) => {
+        new Promise((resolve, reject) => db.query(prodQuery, (err, res) => err ? reject(err) : resolve(res)))
+    ]).then(([categories, products]) => {
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
         xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
         xml += `  <url><loc>${baseUrl}/</loc><priority>1.0</priority><changefreq>daily</changefreq></url>\n`;
         xml += `  <url><loc>${baseUrl}/all</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>\n`;
-        xml += `  <url><loc>${baseUrl}/blog</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>\n`;
 
         categories.forEach(cat => {
             xml += `  <url><loc>${baseUrl}/${cat.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>\n`;
@@ -1597,10 +1511,6 @@ app.get('/mysitemap.xml', (req, res) => {
 
         products.forEach(prod => {
             xml += `  <url><loc>${baseUrl}/p/${prod.slug}</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>\n`;
-        });
-
-        blogs.forEach(blog => {
-            xml += `  <url><loc>${baseUrl}/blog/${blog.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>\n`;
         });
 
         xml += '</urlset>';
@@ -1655,65 +1565,9 @@ app.post('/api/public/track', (req, res) => {
 // Cleanup: Move static after explicit routes if needed, 
 // but for now, catch-all category route at the end is fine.
 
-// Blog Clean URLs
-app.get('/blog', async (req, res) => {
-    try {
-        const [settings, data] = await Promise.all([
-            getCachedSettings(),
-            getCachedHtml('blog.html')
-        ]);
-        if (!data) return res.status(500).send('Error loading page');
+// Product Clean URLs
 
-        const titleSuffix = settings.site_title_suffix || ' | Color Hut Studio';
-        const shareUrl = `${req.protocol}://${req.get('host')}/blog`;
-
-        let html = data
-            .replace(/{{SITE_TITLE}}/g, 'Perspective Blog' + titleSuffix)
-            .replace(/{{SITE_DESCRIPTION}}/g, 'Cornerstone insights on branding, corporate strategy, and the art of physical design.')
-            .replace(/{{OG_IMAGE}}/g, `${req.protocol}://${req.get('host')}/logo.png`)
-            .replace(/{{OG_URL}}/g, shareUrl);
-
-        html = injectTrackingScripts(html, settings);
-        res.setHeader('Content-Type', 'text/html');
-        res.send(html);
-    } catch (e) { res.status(500).send('Error'); }
-});
-
-app.get('/blog/:slug', async (req, res) => {
-    const slug = req.params.slug;
-    db.query("SELECT * FROM blogs WHERE slug = ? AND status = 'Published' AND is_deleted = FALSE", [slug], async (err, results) => {
-        if (err || results.length === 0) return res.status(404).send('Article not found');
-        const blog = results[0];
-        try {
-            const [settings, data] = await Promise.all([
-                getCachedSettings(),
-                getCachedHtml('article.html')
-            ]);
-            if (!data) return res.status(500).send('Error loading page');
-
-            const shareUrl = `${req.protocol}://${req.get('host')}/blog/${blog.slug}`;
-            const titleSuffix = settings.site_title_suffix || ' | Color Hut Studio';
-
-            let shareImage = blog.featured_image || `${req.protocol}://${req.get('host')}/logo.png`;
-            if (shareImage && !shareImage.startsWith('http')) {
-                const cleanPath = shareImage.startsWith('/') ? shareImage : `/uploads/${shareImage}`;
-                shareImage = `${req.protocol}://${req.get('host')}${cleanPath}`;
-            }
-
-            let html = data
-                .replace(/{{OG_TITLE}}/g, blog.title + titleSuffix)
-                .replace(/{{OG_DESCRIPTION}}/g, (blog.seo_description || blog.excerpt || blog.title).replace(/"/g, '&quot;'))
-                .replace(/{{OG_IMAGE}}/g, shareImage)
-                .replace(/{{OG_URL}}/g, shareUrl)
-                .replace(/{{SEO_KEYWORDS}}/g, blog.seo_keywords || '');
-
-            html = injectTrackingScripts(html, settings);
-            res.setHeader('Content-Type', 'text/html');
-            res.send(html);
-        } catch (e) { res.status(500).send('Error'); }
-    });
-});
-
+/*
 // Category Clean URLs Catch-All
 app.get('/:slug', async (req, res, next) => {
     const slug = req.params.slug;
@@ -1750,6 +1604,7 @@ app.get('/:slug', async (req, res, next) => {
         } catch (e) { res.status(500).send('Error'); }
     });
 });
+*/
 
 // Product Clean URLs
 app.get('/p/:slug', async (req, res) => {
@@ -1871,7 +1726,14 @@ app.get('/p/:slug', async (req, res) => {
     });
 });
 
+app.all('*', (req, res) => {
+    return handle(req, res);
+});
+
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+
+nextApp.prepare().then(() => {
+    server.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
 });

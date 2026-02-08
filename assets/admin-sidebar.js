@@ -38,18 +38,6 @@ function renderAdminSidebar() {
                 </svg>
                 Categories
             </a>
-            <a href="/admin/blogs"
-                class="sidebar-link ${currentPage.includes('blogs') ? 'active' : ''} flex items-center gap-3 px-8 py-3 text-sm font-bold ${currentPage.includes('blogs') ? 'text-slate-700' : 'text-slate-500 hover:text-orange-500'}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                        d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2z"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M14 2v6h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M8 13h8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M8 17h8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                Blogs
-            </a>
 
             <p class="px-8 text-[10px] font-black uppercase tracking-widest text-slate-400 mt-8 mb-4">Management</p>
             <a href="/admin/pixel-traffic"

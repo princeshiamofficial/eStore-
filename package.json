@@ -4,7 +4,9 @@
   "description": "Production E-commerce",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "app": "node server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -25,5 +27,10 @@
     "sharp": "^0.34.5",
     "sortablejs": "^1.15.6",
     "tailwind-merge": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "25.2.1",
+    "@types/react": "19.2.13",
+    "typescript": "5.9.3"
   }
 }

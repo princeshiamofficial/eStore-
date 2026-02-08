@@ -245,6 +245,12 @@
         .animate-attract {
             animation: attract-pulse 2s infinite;
         }
+
+        @media (max-width: 900px) {
+            .video-icon-badge {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -301,8 +307,8 @@
 
                             <div id="video-frame" class="hidden w-full h-full">
                                 <video class="w-full h-full object-cover"
-                                    src="https://v.etsystatic.com/video/upload/ac_none,du_15,q_auto:good/menu_hiccce.mp4"
-                                    autoplay loop muted playsinline controls></video>
+                                    src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay loop muted playsinline
+                                    controls></video>
                             </div>
                         </div>
 
@@ -633,7 +639,11 @@
                     el.oncontextmenu = e => e.preventDefault();
                 }
             } catch (e) {
-                console.error('SECURE MEDIA ERROR', e);
+                console.warn('SECURE MEDIA ERROR: Fallback to direct load', e);
+                // Fallback: If fetch fails (e.g. CORS), load directly
+                el.src = src;
+                el.style.opacity = '1';
+                if (el.parentNode) el.parentNode.classList.add('loaded');
             }
         }
 
@@ -750,6 +760,32 @@
                     categories = [];
                 }
             } catch (error) { console.error('Error fetching categories:', error); }
+        }
+
+        function playHoverVideo(el) {
+            if (window.innerWidth <= 900) return;
+            const video = el.querySelector('video');
+            const img = el.querySelector('img');
+            const icon = el.querySelector('.video-icon-badge');
+            if (video) {
+                video.play().catch(() => { });
+                video.style.opacity = '1';
+                if (img) img.style.opacity = '0';
+                if (icon) icon.style.opacity = '0';
+            }
+        }
+
+        function pauseHoverVideo(el) {
+            const video = el.querySelector('video');
+            const img = el.querySelector('img');
+            const icon = el.querySelector('.video-icon-badge');
+            if (video) {
+                video.pause();
+                video.currentTime = 0;
+                video.style.opacity = '0';
+                if (img) img.style.opacity = '1';
+                if (icon) icon.style.opacity = '1';
+            }
         }
 
         function enableDragToScroll(container) {
@@ -907,12 +943,21 @@
                     const loadingAttr = isPriority ? 'eager' : 'lazy';
                     const priorityAttr = isPriority ? 'fetchpriority="high"' : '';
 
+                    const hasVideo = !!item.video_url;
+
                     return `
-                        <a href="/p/${item.slug}" class="product-card group bg-white rounded-xl p-4 block">
+                        <a href="/p/${item.slug}" class="product-card group bg-white rounded-xl p-4 block" 
+                           onmouseenter="playHoverVideo(this)" onmouseleave="pauseHoverVideo(this)">
                             <div class="relative overflow-hidden rounded-lg aspect-square mb-4 shimmer-sweep">
-                                <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="${getThumb(mainImage)}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-1000"
+                                <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="${getThumb(mainImage)}" class="w-full h-full object-contain group-hover:scale-110 transition-all duration-1000"
                                      alt="Premium ${item.name} - Luxury Design by Color Hut Studio"
                                      ${priorityAttr} loading="${loadingAttr}" width="400" height="400">
+                                ${hasVideo ? `
+                                    <video src="${item.video_url}" muted playsinline loop class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 pointer-events-none"></video>
+                                    <div class="video-icon-badge absolute bottom-3 left-3 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg z-20 transition-opacity">
+                                        <svg class="w-4 h-4 text-orange-600 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </div>
+                                ` : ''}
                                 <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                             </div>
                             <div class="px-1">
@@ -931,10 +976,18 @@
                             images = item.image ? (item.image.startsWith('[') ? JSON.parse(item.image) : [item.image]) : [];
                         } catch (e) { images = [item.image]; }
                         const mainImage = images[0] || 'https://via.placeholder.com/400';
+                        const hasVideo = !!item.video_url;
 
                         return `
-                            <a href="/p/${item.slug}" class="group relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200/60 shadow-sm hover:shadow-md transition-all shimmer-sweep">
-                                <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="${getThumb(mainImage)}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700" alt="Related: ${item.name} | Color Hut" title="${item.name}">
+                            <a href="/p/${item.slug}" class="group relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200/60 shadow-sm hover:shadow-md transition-all shimmer-sweep"
+                               onmouseenter="playHoverVideo(this)" onmouseleave="pauseHoverVideo(this)">
+                                <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="${getThumb(mainImage)}" class="w-full h-full object-contain group-hover:scale-110 transition-all duration-700" alt="Related: ${item.name} | Color Hut" title="${item.name}">
+                                ${hasVideo ? `
+                                    <video src="${item.video_url}" muted playsinline loop class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 pointer-events-none"></video>
+                                    <div class="video-icon-badge absolute bottom-1 left-1 w-5 h-5 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg z-20 transition-opacity">
+                                        <svg class="w-2.5 h-2.5 text-orange-600 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </div>
+                                ` : ''}
                                 <div class="absolute inset-0 ring-1 ring-inset ring-black/5 group-hover:ring-orange-500/20 rounded-lg transition-all"></div>
                             </a>`;
                     }).join('');

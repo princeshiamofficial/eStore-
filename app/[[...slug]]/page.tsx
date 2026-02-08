@@ -1,0 +1,931 @@
+'use client';
+
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
+
+// === ICONS ===
+const SearchIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+);
+
+const HeartIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+);
+
+const CartIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+);
+
+const MenuIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+);
+
+const UserIcon = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+);
+
+const GridIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+    </svg>
+);
+
+const PlayIcon = () => (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: '2px' }}><path d="M5 3l14 9-14 9V3z" /></svg>
+);
+
+const ChevronDown = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
+    <svg className={className} style={style} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+);
+
+const ChevronRight = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
+    <svg className={className} style={style} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
+);
+
+const ArrowLeft = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+);
+
+const CalendarIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+);
+
+const RestaurantIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8V2M15 2h6M13 14h8V8h-8zM3 2v20a5 5 0 0 1 5-5h13a2 2 0 1 0 0-4H8a2 2 0 1 1 0-4h13a2 2 0 1 0 0-4H8a2 2 0 1 1 0-4h13" />
+    </svg>
+);
+
+const FolderIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+);
+
+const TagIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+);
+
+const CloseIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+);
+
+// === TYPES ===
+interface Product {
+    id: number;
+    name: string;
+    slug: string;
+    price: string | number;
+    image: string;
+    video_url?: string;
+    category_id?: number | string;
+    category_name?: string;
+    rating?: string | number;
+}
+
+const ProductSkeleton = () => (
+    <div className="store-card">
+        <div className="store-image-box skeleton"></div>
+        <div className="store-card-info">
+            <div className="skeleton skeleton-title" style={{ width: '70%', height: '16px' }}></div>
+            <div className="skeleton skeleton-text" style={{ width: '40%', height: '12px' }}></div>
+        </div>
+    </div>
+);
+
+const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: number, getCategoryStyles: any }>(({ p, idx, getCategoryStyles }, ref) => {
+    const [hovered, setHovered] = useState(false);
+    const videoRef = React.useRef<HTMLVideoElement>(null);
+
+    let imgUrl = p.image;
+    try {
+        if (p.image?.startsWith('[')) imgUrl = JSON.parse(p.image)[0];
+    } catch (e) { }
+
+    const hasPlay = !!p.video_url;
+    const catName = p.category_name || 'Handmade';
+    const catStyle = getCategoryStyles(catName);
+
+    const handleMouseEnter = () => {
+        if (typeof window !== 'undefined' && window.innerWidth <= 900) return;
+        setHovered(true);
+        if (videoRef.current) {
+            videoRef.current.play().catch(() => { });
+        }
+    };
+
+    const handleMouseLeave = () => {
+        setHovered(false);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+    };
+
+    return (
+        <a
+            ref={ref}
+            key={p.id}
+            href={`/p/${p.slug}`}
+            className="store-card"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            aria-label={`View details for ${p.name}`}
+        >
+            <div className="store-image-box">
+                <img
+                    src={imgUrl}
+                    alt={p.name}
+                    loading="lazy"
+                    style={{ opacity: hovered && hasPlay ? 0 : 1 }}
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=f0f0f0&color=333&size=400`;
+                    }}
+                />
+                {hasPlay && (
+                    <video
+                        ref={videoRef}
+                        src={p.video_url}
+                        className="store-video-hover"
+                        muted
+                        playsInline
+                        loop
+                        style={{ opacity: hovered ? 1 : 0 }}
+                    />
+                )}
+                <button className="store-fav-btn" aria-label="Add to Favorites" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                    <HeartIcon />
+                </button>
+                {hasPlay && !hovered && (
+                    <div className="store-play-overlay">
+                        <PlayIcon />
+                    </div>
+                )}
+            </div>
+            <div className="store-card-info">
+                <div className="store-title-row">
+                    <h3 className="store-prod-title">{p.name}</h3>
+                    <div className="store-prod-rating">
+                        <span style={{ fontWeight: 700 }}>{idx % 2 === 0 ? '5.0' : '4.8'}</span>
+                        <span style={{ margin: '0 1px' }}>★</span>
+                        <span style={{ color: '#595959' }}>({((idx + 1) * 342) % 3000})</span>
+                    </div>
+                </div>
+                <div className="store-category-badge" style={{ backgroundColor: catStyle.bg, color: catStyle.text }}>
+                    {catName.toUpperCase()}
+                </div>
+            </div>
+        </a>
+    );
+});
+ProductCard.displayName = 'ProductCard';
+
+
+const Footer = () => {
+    return (
+        <footer className="store-footer">
+            <div className="store-footer-content">
+                <div className="store-footer-grid">
+                    <div className="store-footer-col">
+                        <h3>Shop</h3>
+                        <ul className="store-footer-links">
+                            <li><a href="#">Gift cards</a></li>
+                            <li><a href="#">Sitemap</a></li>
+                            <li><a href="#">Registry</a></li>
+                        </ul>
+                    </div>
+                    <div className="store-footer-col">
+                        <h3>Sell</h3>
+                        <ul className="store-footer-links">
+                            <li><a href="#">Sell on Color Hut</a></li>
+                            <li><a href="#">Teams</a></li>
+                            <li><a href="#">Forums</a></li>
+                            <li><a href="#">Affiliates & Creators</a></li>
+                        </ul>
+                    </div>
+                    <div className="store-footer-col">
+                        <h3>About</h3>
+                        <ul className="store-footer-links">
+                            <li><a href="#">Color Hut, Inc.</a></li>
+                            <li><a href="#">Policies</a></li>
+                            <li><a href="#">Investors</a></li>
+                            <li><a href="#">Careers</a></li>
+                            <li><a href="#">Impact</a></li>
+                        </ul>
+                    </div>
+                    <div className="store-footer-col">
+                        <h3>Help</h3>
+                        <ul className="store-footer-links">
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="#">Privacy settings</a></li>
+                            <li><a href="https://www.youtube.com/@colorhut_official" target="_blank">Studio Gallery</a></li>
+                        </ul>
+                        <div className="store-footer-socials" style={{ marginTop: '24px' }}>
+                            <a href="https://facebook.com/colorhutbd" target="_blank" className="store-social-btn"><FacebookIcon /></a>
+                            <a href="#" className="store-social-btn"><InstagramIcon /></a>
+                            <a href="#" className="store-social-btn"><PinterestIcon /></a>
+                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" className="store-social-btn"><YouTubeIcon /></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="store-footer-bottom">
+                    <div className="store-footer-settings">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <GlobeIcon />
+                            <span>Bangladesh | English (US) | BDT</span>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+                        <ul className="store-footer-legal">
+                            <li>© 2026 Color Hut BD, Inc.</li>
+                            <li><a href="#">Terms of Use</a></li>
+                            <li><a href="#">Privacy</a></li>
+                            <li><a href="#">Interest-based ads</a></li>
+                            <li><a href="#">Local Shops</a></li>
+                            <li><a href="#">Regions</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    );
+};
+
+const InstagramIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+);
+
+const FacebookIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+);
+
+const YouTubeIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a2.78 2.78 0 0 0 1.94 2c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.89 23 12 23 12s0-3.89-.46-5.58z"></path><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon></svg>
+);
+
+const PinterestIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.2 0 1.033.394 2.137.884 2.738.097.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.252 7.929-7.252 4.163 0 7.398 2.967 7.398 6.92 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592 0 11.985 0" /></svg>
+);
+
+const GlobeIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+);
+
+export default function HomePage() {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchFocused, setSearchFocused] = useState(false);
+    const [catMenuOpen, setCatMenuOpen] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [fetchingLimit] = useState(12);
+    const pathname = usePathname();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [expandedCatId, setExpandedCatId] = useState<number | null>(null);
+    const [hoveredCatId, setHoveredCatId] = useState<number | null>(null);
+    const [allProducts, setAllProducts] = useState<any[]>([]); // For global search suggestions
+    const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+    const [activeSheetCatId, setActiveSheetCatId] = useState<number | null>(null);
+
+    const subNavRef = useRef<HTMLDivElement>(null);
+    const pathwayRef = useRef<HTMLDivElement>(null);
+
+
+    const observer = useRef<IntersectionObserver | null>(null);
+    const lastProductElementRef = useCallback((node: HTMLElement | null) => {
+        if (loading) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prevPage => prevPage + 1);
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, hasMore]);
+
+    useEffect(() => {
+        if (mobileSheetOpen) {
+            document.body.classList.add('no-scroll');
+        } else {
+            document.body.classList.remove('no-scroll');
+        }
+        return () => document.body.classList.remove('no-scroll');
+    }, [mobileSheetOpen]);
+
+    // Determine current category based on pathname
+    const currentPath = pathname || '/';
+    const isBaseHome = currentPath === '/';
+    const slug = currentPath.split('/').filter(Boolean).pop();
+
+    // Mouse Wheel Horizontal Scroll Logic
+    useEffect(() => {
+        const handleWheel = (e: WheelEvent, ref: React.RefObject<HTMLElement>) => {
+            if (ref.current && Math.abs(e.deltaY) > 0) {
+                e.preventDefault();
+                ref.current.scrollLeft += e.deltaY;
+            }
+        };
+
+        const sn = subNavRef.current;
+        const pw = pathwayRef.current;
+
+        const onWheelSN = (e: WheelEvent) => handleWheel(e, subNavRef);
+        const onWheelPW = (e: WheelEvent) => handleWheel(e, pathwayRef);
+
+        if (sn) sn.addEventListener('wheel', onWheelSN, { passive: false });
+        if (pw) pw.addEventListener('wheel', onWheelPW, { passive: false });
+
+        return () => {
+            if (sn) sn.removeEventListener('wheel', onWheelSN);
+            if (pw) pw.removeEventListener('wheel', onWheelPW);
+        };
+    }, []);
+
+    // Robust category finding
+    const currentCategory = categories.find(c =>
+        c.slug?.toLowerCase().trim() === slug?.toLowerCase().trim()
+    );
+
+    const subCategories = currentCategory
+        ? categories.filter(cat => {
+            const parents = String(cat.parent_ids || cat.parent_id || '').split(',').map(id => id.trim());
+            return parents.includes(String(currentCategory.id));
+        })
+        : [];
+
+    const catMenuRef = useRef<HTMLDivElement>(null);
+    const searchBarRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (catMenuRef.current && !catMenuRef.current.contains(event.target as Node)) {
+                setCatMenuOpen(false);
+            }
+            if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
+                setSearchFocused(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/public/categories');
+                const data = await res.json();
+                if (Array.isArray(data)) setCategories(data);
+            } catch (e) { }
+        }
+        loadCategories();
+    }, []);
+
+    // Load all products for site-wide search suggestions
+    useEffect(() => {
+        async function loadAllProducts() {
+            try {
+                // Fetch a large limit or a specific search-metadata endpoint if available
+                const res = await fetch('/api/public/products?limit=1000');
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    setAllProducts(data);
+                }
+            } catch (e) {
+                console.error('Error loading search metadata:', e);
+            }
+        }
+        loadAllProducts();
+    }, []);
+
+    const navKey = `${slug || 'home'}-${currentCategory?.id || 'all'}`;
+
+    useEffect(() => {
+        // Reset products when navigation key changes
+        setProducts([]);
+        setPage(1);
+        setHasMore(true);
+    }, [navKey]);
+
+    useEffect(() => {
+        // Essential guard: wait for categories if we're on a sub-path
+        if (!isBaseHome && categories.length === 0) return;
+
+        async function loadProducts() {
+            setLoading(true);
+            try {
+                let url = `/api/public/products?page=${page}&limit=${fetchingLimit}`;
+
+                if (currentCategory) {
+                    url += `&categoryId=${currentCategory.id}`;
+                } else if (!isBaseHome && slug && slug !== 'all') {
+                    // This is not a category page but also not the home page.
+                    // If we strictly follow the user's request, we shouldn't show all products.
+                    setProducts([]);
+                    setHasMore(false);
+                    setLoading(false);
+                    return;
+                }
+
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (Array.isArray(data)) {
+                    setProducts(prev => {
+                        // If it's page 1, we should probably just use the new data
+                        // but since we clear it in a separate effect, this is usually safe.
+                        // To be absolutely sure, let's filter the data if currentCategory exists.
+                        const filteredData = currentCategory
+                            ? data.filter((p: any) => {
+                                const isDirect = Number(p.category_id) === Number(currentCategory.id) || p.category_name === currentCategory.name;
+                                const isSub = subCategories.some(sub => Number(p.category_id) === Number(sub.id) || p.category_name === sub.name);
+                                return isDirect || isSub;
+                            })
+                            : data;
+
+                        if (page === 1) return filteredData;
+                        const newProducts = [...prev, ...filteredData];
+                        return Array.from(new Map(newProducts.map(item => [item.id, item])).values());
+                    });
+                    if (data.length < fetchingLimit) {
+                        setHasMore(false);
+                    }
+                } else {
+                    if (page === 1) setFallback();
+                    setHasMore(false);
+                }
+            } catch (e) {
+                if (page === 1) setFallback();
+                setHasMore(false);
+            }
+            setLoading(false);
+        }
+        loadProducts();
+    }, [page, navKey, isBaseHome, categories.length]);
+
+    function setFallback() {
+        const dummy: Product[] = [
+            { id: 1, name: "Restaurant Packaging Box 2", slug: "box-2", price: 19.00, image: "https://via.placeholder.com/400?text=Box+2", category_name: "Packaging", rating: "5.0 (2.3k)" },
+            { id: 2, name: "mehan ahmed 2", slug: "mehan-2", price: 0.66, image: "https://via.placeholder.com/400?text=Mehan+2", category_name: "Design", rating: "5.0 (5.8k)" },
+            { id: 3, name: "Ledies Parlor Menu Design 2", slug: "parlor-2", price: 4.25, image: "https://via.placeholder.com/400?text=Parlor+2", category_name: "Menu", rating: "5.0 (23.2k)" },
+            { id: 4, name: "Restaurant Packaging Box", slug: "box-1", price: 2.54, image: "https://via.placeholder.com/400?text=Box+1", category_name: "Packaging", rating: "4.8 (75.5k)" },
+            { id: 5, name: "Luxury Villa Resort", slug: "villa", price: 1200.00, image: "https://via.placeholder.com/400?text=Villa", category_name: "Travel", rating: "4.9 (1.1k)" },
+            { id: 6, name: "Chandelier Design", slug: "chandelier", price: 850.00, image: "https://via.placeholder.com/400?text=Chandelier", category_name: "Lighting", rating: "5.0 (456)" },
+        ];
+        setProducts(dummy);
+    }
+
+    const getCategoryStyles = (name: string) => {
+        return { bg: '#F1F5F9', text: '#475569' }; // Neutral Slate/Grey
+    };
+
+    const filteredProducts = currentCategory
+        ? products.filter(p => {
+            // 1. Direct match with current category
+            const isDirectMatch = Number(p.category_id) === Number(currentCategory.id) ||
+                p.category_name?.toLowerCase().trim() === currentCategory.name?.toLowerCase().trim();
+
+            if (isDirectMatch) return true;
+
+            // 2. Match with any sub-categories of the current category
+            const isSubMatch = subCategories.some(sub =>
+                Number(p.category_id) === Number(sub.id) ||
+                p.category_name?.toLowerCase().trim() === sub.name?.toLowerCase().trim()
+            );
+
+            return isSubMatch;
+        })
+        : products;
+
+    // Search Suggestion Logic
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setSuggestions([]);
+            return;
+        }
+
+        const query = searchQuery.toLowerCase().trim();
+        const matches: any[] = [];
+
+        // Match categories (Global)
+        categories.forEach(cat => {
+            if (cat.name.toLowerCase().includes(query)) {
+                matches.push({ type: 'category', id: cat.id, name: cat.name, slug: cat.slug });
+            }
+        });
+
+        // Match products (Global - from allProducts)
+        allProducts.forEach(p => {
+            if (p.name.toLowerCase().includes(query)) {
+                matches.push({ type: 'product', id: p.id, name: p.name, slug: p.slug });
+            }
+        });
+
+        setSuggestions(matches.slice(0, 8)); // Limit to 8 suggestions
+    }, [searchQuery, categories, allProducts]);
+
+    return (
+        <div suppressHydrationWarning>
+            {/* --- HEADER --- */}
+            <header className={`store-header ${searchFocused ? 'is-searching' : ''}`}>
+                <div className="store-header-top-row">
+                    {/* Mobile Menu Icon */}
+                    <button className="store-icon-btn mobile-only" onClick={() => setMobileSheetOpen(true)}>
+                        <MenuIcon />
+                    </button>
+
+                    <a href="/" className="store-logo">
+                        <img src="/logo.png" alt="Color Hut" />
+                    </a>
+
+                    {/* Desktop Categories */}
+                    <div className="store-categories-container desktop-only" ref={catMenuRef}>
+                        <button
+                            className="store-categories-btn"
+                            onClick={() => setCatMenuOpen(!catMenuOpen)}
+                        >
+                            <MenuIcon />
+                            Categories
+                        </button>
+                        {catMenuOpen && (
+                            <div className="store-cat-mega-wrapper">
+                                <div className="mega-menu-content">
+                                    {/* Left Column: Categories List */}
+                                    <div className="mega-menu-list">
+                                        {categories
+                                            .filter(cat => !cat.parent_id && !cat.parent_ids)
+                                            .map(cat => {
+                                                const hasChildren = categories.some(child => {
+                                                    const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                                    return childParents.includes(String(cat.id));
+                                                });
+                                                const isHovered = hoveredCatId === cat.id || (!hoveredCatId && categories.filter(c => !c.parent_id && !c.parent_ids)[0].id === cat.id);
+
+                                                return (
+                                                    <div key={cat.id} className="mega-menu-item-group">
+                                                        <a
+                                                            href={`/${cat.slug}`}
+                                                            className={`mega-menu-list-item ${isHovered ? 'is-active' : ''}`}
+                                                            onMouseEnter={() => setHoveredCatId(cat.id)}
+                                                            onClick={(e) => {
+                                                                if (window.innerWidth <= 900 && hasChildren) {
+                                                                    e.preventDefault();
+                                                                    setExpandedCatId(expandedCatId === cat.id ? null : cat.id);
+                                                                } else {
+                                                                    setCatMenuOpen(false);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <div className="mega-item-label">
+                                                                <span className="mega-icon-box"><FolderIcon /></span>
+                                                                {cat.name}
+                                                            </div>
+                                                            <ChevronDown
+                                                                className="mega-chevron-right"
+                                                                style={{
+                                                                    transform: expandedCatId === cat.id ? 'rotate(0deg)' : 'rotate(-90deg)',
+                                                                    transition: 'transform 0.3s ease'
+                                                                }}
+                                                            />
+                                                        </a>
+                                                        {expandedCatId === cat.id && hasChildren && (
+                                                            <div className="mega-mobile-accordion shadow-sm">
+                                                                {categories
+                                                                    .filter(child => {
+                                                                        const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                                                        return childParents.includes(String(cat.id));
+                                                                    })
+                                                                    .map(sub => (
+                                                                        <a
+                                                                            key={sub.id}
+                                                                            href={`/${sub.slug}`}
+                                                                            className="mega-mobile-sublink"
+                                                                            onClick={() => setCatMenuOpen(false)}
+                                                                        >
+                                                                            {sub.name}
+                                                                        </a>
+                                                                    ))
+                                                                }
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+
+                                    {/* Right Column: Sub-Categories Sidepane */}
+                                    <div className="mega-menu-sidepane">
+                                        <div className="mega-sidepane-header">
+                                            <h3>{categories.find(c => c.id === (hoveredCatId || categories.filter(cat => !cat.parent_id && !cat.parent_ids)[0]?.id))?.name}</h3>
+                                            <a href={`/${categories.find(c => c.id === (hoveredCatId || categories.filter(cat => !cat.parent_id && !cat.parent_ids)[0]?.id))?.slug}`} className="see-all-link">See all</a>
+                                        </div>
+                                        <div className="mega-sidepane-grid">
+                                            {categories
+                                                .filter(child => {
+                                                    const parentId = hoveredCatId || categories.filter(cat => !cat.parent_id && !cat.parent_ids)[0]?.id;
+                                                    const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                                    return childParents.includes(String(parentId));
+                                                })
+                                                .map(sub => {
+                                                    const catImg = sub.icon || allProducts.find(p => Number(p.category_id) === Number(sub.id))?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(sub.name)}&background=f8f9fa&color=F1641E&size=200`;
+                                                    return (
+                                                        <a
+                                                            key={sub.id}
+                                                            href={`/${sub.slug}`}
+                                                            className="mega-grid-card"
+                                                            onClick={() => setCatMenuOpen(false)}
+                                                        >
+                                                            <div className="mega-card-image">
+                                                                <img
+                                                                    src={catImg}
+                                                                    alt={sub.name}
+                                                                />
+                                                            </div>
+                                                            <span className="mega-card-title">{sub.name}</span>
+                                                        </a>
+                                                    );
+                                                })
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Search */}
+                    <div className="store-search-bar" ref={searchBarRef}>
+                        <input
+                            type="text"
+                            className="store-search-input"
+                            placeholder="Search for anything"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setSearchFocused(true)}
+                        />
+                        <button className="store-search-submit">
+                            <SearchIcon />
+                        </button>
+
+                        {searchFocused && suggestions.length > 0 && (
+                            <div className="store-search-suggestions">
+                                {suggestions.map((item, idx) => (
+                                    <a
+                                        key={`${item.type}-${item.id}`}
+                                        href={item.type === 'category' ? `/${item.slug}` : `/p/${item.slug}`}
+                                        className="store-suggestion-item"
+                                        onMouseDown={(e) => {
+                                            // onMouseDown fires before onBlur
+                                            e.preventDefault();
+                                            window.location.href = item.type === 'category' ? `/${item.slug}` : `/p/${item.slug}`;
+                                        }}
+                                    >
+                                        <div className="store-suggestion-icon">
+                                            {item.type === 'category' ? <MenuIcon /> : <SearchIcon />}
+                                        </div>
+                                        <div className="store-suggestion-text">{item.name}</div>
+                                        <div className="store-suggestion-type">{item.type}</div>
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+                        <button
+                            className="store-search-cancel"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setSearchFocused(false);
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+
+                    {/* Header Actions */}
+                    <div className="store-header-nav">
+                        <button className="store-icon-btn" title="Account">
+                            <UserIcon />
+                        </button>
+
+                        <button className="store-icon-btn desktop-only" title="Favorites">
+                            <HeartIcon />
+                        </button>
+
+                        <button className="store-icon-btn mobile-only" title="All Categories" onClick={() => setMobileSheetOpen(true)}>
+                            <GridIcon />
+                        </button>
+
+                        <button className="store-icon-btn" title="Cart">
+                            <CartIcon />
+                        </button>
+                    </div>
+                </div>
+
+                {/* --- SUBNAV --- */}
+                <nav className="store-subnav" ref={subNavRef as any}>
+                    <a href="/all" className="store-subnav-item"><GridIcon /> All Products</a>
+                    {categories
+                        .filter(cat => !cat.parent_id && !cat.parent_ids)
+                        .map((cat, i) => (
+                            <a key={cat.id} href={`/${cat.slug}`} className="store-subnav-item">
+                                {cat.name}
+                            </a>
+                        ))}
+                </nav>
+            </header>
+
+            <div className="store-container">
+                {/* --- MOBILE HERO --- */}
+                {isBaseHome && (
+                    <div className="store-mobile-hero mobile-only">
+                        <h2 className="store-hero-title serif">Make this your best Valentine's Day yet</h2>
+                        <a href="#" className="store-hero-btn">Shop our must-haves</a>
+                    </div>
+                )}
+
+                {/* --- PAGE TITLES --- */}
+                {!isBaseHome && (
+                    <div className="store-page-header">
+                        <h1 className="store-page-title serif">
+                            {currentCategory ? currentCategory.name : (slug === 'all' ? 'All Products' : 'Goblincore')}
+                        </h1>
+                        {subCategories.length > 0 && <p className="store-page-subtitle">Picks you'll love</p>}
+                    </div>
+                )}
+
+                {/* --- SUB-CATEGORIES (Etsy Style) --- */}
+                {subCategories.length > 0 && (
+                    <div className="narrowing-pathways-container" ref={pathwayRef}>
+                        {subCategories.map(sub => (
+                            <div key={sub.id} className="narrowing-pathway-item">
+                                <a href={`/${sub.slug}`} className="narrowing-pathway-chip">
+                                    <div className="pathway-icon">
+                                        <img
+                                            src={sub.icon || `https://ui-avatars.com/api/?name=${encodeURIComponent(sub.name)}&background=f0f0f0&color=333&size=200`}
+                                            alt={sub.name}
+                                        />
+                                    </div>
+                                    <span className="pathway-title">{sub.name}</span>
+                                </a>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+
+                {/* --- GRID --- */}
+                <div className="store-grid">
+                    {filteredProducts.map((p, idx) => {
+                        const isLast = filteredProducts.length === idx + 1;
+                        return (
+                            <ProductCard
+                                key={p.id}
+                                ref={isLast ? lastProductElementRef : null}
+                                p={p}
+                                idx={idx}
+                                getCategoryStyles={getCategoryStyles}
+                            />
+                        );
+                    })}
+                    {loading && [1, 2, 3, 4, 5, 6, 7, 8].map(i => <ProductSkeleton key={`loading-${i}`} />)}
+                </div>
+            </div>
+
+            {/* --- ABOUT SECTION --- */}
+            {isBaseHome && (
+                <section className="store-about-section">
+                    <div className="store-about-content">
+                        <div className="store-about-header">
+                            <h2 className="serif">What is Color Hut?</h2>
+                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" className="store-about-story">Watch our studio story on YouTube</a>
+                        </div>
+
+                        <div className="store-about-grid">
+                            <div className="store-about-col">
+                                <h3>Creative Branding Studio</h3>
+                                <p>
+                                    Color Hut is a leading branding agency based in Bangladesh, specializing in creating unforgettable visual identities.
+                                    We craft custom logos, color schemes, and typography that bring your brand's values to life and help you stand out.
+                                </p>
+                            </div>
+                            <div className="store-about-col">
+                                <h3>The Silent Salesman</h3>
+                                <p>
+                                    We believe a menu is the heart of a restaurant—a silent salesman that defines your brand.
+                                    Our premium menu design and printing services focus on unique, high-quality books that capture your culinary essence.
+                                </p>
+                            </div>
+                            <div className="store-about-col">
+                                <h3>Complete Design Solutions</h3>
+                                <p>
+                                    Our expertise extends beyond branding to complete design solutions.
+                                    From user-focused interior and exterior design to advanced digital marketing and ERP systems, we provide the tools businesses need to scale.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="store-about-footer">
+                            <h4>Trusted by brands like Dhaka Club, HASH & NOSH and Sea Shell.</h4>
+                            <a href="https://facebook.com/colorhutbd" target="_blank" className="store-help-btn">Connect on Facebook</a>
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* --- MOBILE FULL PAGE SHEET (Drill-down Style) --- */}
+            <div className={`store-mobile-overlay ${mobileSheetOpen ? 'active' : ''}`} onClick={() => setMobileSheetOpen(false)}></div>
+            <div className={`store-mobile-sheet ${mobileSheetOpen ? 'is-open' : ''} ${activeSheetCatId ? 'mobile-sheet-detail-view' : ''}`}>
+                <div className="mobile-sheet-header">
+                    {activeSheetCatId ? (
+                        <button className="mobile-sheet-back" onClick={() => setActiveSheetCatId(null)}>
+                            <ArrowLeft />
+                        </button>
+                    ) : (
+                        <div className="mobile-sheet-spacer"></div>
+                    )}
+
+                    <h3 className="mobile-sheet-title">
+                        {activeSheetCatId
+                            ? categories.find(c => c.id === activeSheetCatId)?.name
+                            : 'Browse Categories'}
+                    </h3>
+
+                    <button className="mobile-sheet-close" onClick={() => setMobileSheetOpen(false)}>
+                        <CloseIcon />
+                    </button>
+                </div>
+
+                <div className="mobile-sheet-body">
+                    {!activeSheetCatId ? (
+                        /* TOP LEVEL LIST */
+                        <div className="mobile-sheet-list">
+                            {categories
+                                .filter(cat => !cat.parent_id && !cat.parent_ids)
+                                .map(cat => {
+                                    const hasSub = categories.some(child => {
+                                        const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                        return childParents.includes(String(cat.id));
+                                    });
+                                    return (
+                                        <div
+                                            key={cat.id}
+                                            className="mobile-sheet-row"
+                                            onClick={() => {
+                                                if (hasSub) {
+                                                    setActiveSheetCatId(cat.id);
+                                                } else {
+                                                    setMobileSheetOpen(false);
+                                                    window.location.href = `/${cat.slug}`;
+                                                }
+                                            }}
+                                        >
+                                            <span>{cat.name}</span>
+                                            {hasSub && <ChevronRight className="row-chevron" />}
+                                        </div>
+                                    );
+                                })
+                            }
+                        </div>
+                    ) : (
+                        /* DETAIL LEVEL LIST */
+                        <div className="mobile-sheet-detail">
+                            <a
+                                href={`/${categories.find(c => c.id === activeSheetCatId)?.slug}`}
+                                className="mobile-sheet-view-all"
+                                onClick={() => setMobileSheetOpen(false)}
+                            >
+                                View all
+                            </a>
+                            <div className="mobile-sheet-list">
+                                {categories
+                                    .filter(child => {
+                                        const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                        return childParents.includes(String(activeSheetCatId));
+                                    })
+                                    .map(sub => (
+                                        <a
+                                            key={sub.id}
+                                            href={`/${sub.slug}`}
+                                            className="mobile-sheet-row sub-row"
+                                            onClick={() => setMobileSheetOpen(false)}
+                                        >
+                                            {sub.name}
+                                        </a>
+                                    ))
+                                }
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <Footer />
+        </div>
+    );
+}
