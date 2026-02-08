@@ -113,6 +113,22 @@ Now we tell the web server to send traffic to your Node app on port 3000.
 
 ---
 
+## Updating an Existing Deployment
+
+To update your live site with new changes:
+
+1.  **Prepare Update Zip**: Zip your project files *excluding* `node_modules`, `.env`, `.git`, and the `uploads` folder.
+2.  **Upload**: Go to CyberPanel File Manager, upload your zip to `public_html`, and **Extract** (Overwrite all).
+3.  **Update Dependencies** (Only if `package.json` changed):
+    *   Open Terminal/SSH.
+    *   `cd /home/yourdomain.com/public_html`
+    *   `npm install`
+4.  **Restart**:
+    *   **Method 1 Users**: Click "Restart" in the Node.js manager.
+    *   **Method 2 Users (PM2)**: Run `pm2 restart estore`.
+
+---
+
 ## Troubleshooting
 
 -   **503 Error / Service Unavailable**:
