@@ -114,7 +114,30 @@ app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 app.use('/admin', express.static(path.join(__dirname, 'admin'), staticOptions));
 app.use('/assets', express.static(path.join(__dirname, 'assets'), staticOptions));
 
+const { createClient } = require('redis');
+const RedisStore = require('connect-redis').default;
+
+let sessionStore = undefined; // Defaults to MemoryStore
+
+// Only use Redis if configured
+if (process.env.REDIS_HOST || process.env.REDIS_URL) {
+    const redisClient = createClient({
+        url: process.env.REDIS_URL || `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}`,
+        password: process.env.REDIS_PASSWORD
+    });
+
+    redisClient.connect().then(() => {
+        console.log('Redis connected for session storage.');
+    }).catch(console.error);
+
+    sessionStore = new RedisStore({
+        client: redisClient,
+        prefix: "estore:",
+    });
+}
+
 app.use(session({
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'supersecret',
     resave: false,
     saveUninitialized: false,
