@@ -111,7 +111,7 @@ export default function HeroSlider() {
             background: '#000',
             overflow: 'hidden',
             position: 'relative',
-            height: '140px',
+            height: '100px',
             display: 'block' // Overrides flex from class
         }}>
             <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -150,7 +150,7 @@ export default function HeroSlider() {
             {slides.length > 1 && (
                 <div style={{
                     position: 'absolute',
-                    bottom: '20px',
+                    bottom: '10px',
                     left: '50%',
                     transform: 'translateX(-50%)',
                     display: 'flex',

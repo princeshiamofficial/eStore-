@@ -3,6 +3,7 @@ import './globals.css';
 import { Metadata, Viewport } from 'next';
 
 import ContactMotion from './ContactMotion';
+import { TrackingHead, TrackingBody } from './TrackingScripts';
 
 export const metadata: Metadata = {
     title: 'Color Hut - Your Trusted Partner for Branding & Creative Solutions',
@@ -25,8 +26,10 @@ export default function RootLayout({
             <head>
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                <TrackingHead />
             </head>
             <body suppressHydrationWarning>
+                <TrackingBody />
                 {children}
                 <ContactMotion />
             </body>

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import HeroSlider from '../HeroSlider';
 
 // === ICONS ===
@@ -107,16 +108,34 @@ const ProductSkeleton = () => (
 
 const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: number, getCategoryStyles: any }>(({ p, idx, getCategoryStyles }, ref) => {
     const [hovered, setHovered] = useState(false);
+    const [imgIndex, setImgIndex] = useState(0);
     const videoRef = React.useRef<HTMLVideoElement>(null);
 
-    let imgUrl = p.image;
+    let images: string[] = [];
     try {
-        if (p.image?.startsWith('[')) imgUrl = JSON.parse(p.image)[0];
-    } catch (e) { }
+        if (p.image?.startsWith('[')) {
+            images = JSON.parse(p.image);
+        } else if (p.image) {
+            images = [p.image];
+        }
+    } catch (e) {
+        images = p.image ? [p.image] : [];
+    }
 
     const hasPlay = !!p.video_url;
+    const hasMultipleImages = images.length > 1;
     const catName = p.category_name || 'Handmade';
     const catStyle = getCategoryStyles(catName);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (!hasPlay && hasMultipleImages && !hovered) {
+            interval = setInterval(() => {
+                setImgIndex((prev) => (prev + 1) % images.length);
+            }, 2500); // Auto-slide every 2.5s
+        }
+        return () => clearInterval(interval);
+    }, [hasPlay, hasMultipleImages, images.length, hovered]);
 
     const handleMouseEnter = () => {
         if (typeof window !== 'undefined' && window.innerWidth <= 900) return;
@@ -134,6 +153,8 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
         }
     };
 
+    const currentImgUrl = images[imgIndex] || '';
+
     return (
         <a
             ref={ref}
@@ -145,15 +166,33 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
             aria-label={`View details for ${p.name}`}
         >
             <div className="store-image-box">
-                <img
-                    src={imgUrl}
-                    alt={p.name}
-                    loading="lazy"
-                    style={{ opacity: hovered && hasPlay ? 0 : 1 }}
-                    onError={(e) => {
-                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=f0f0f0&color=333&size=400`;
-                    }}
-                />
+                <AnimatePresence initial={false} mode="popLayout">
+                    <motion.img
+                        key={imgIndex}
+                        src={currentImgUrl}
+                        alt={p.name}
+                        loading="lazy"
+                        initial={{ opacity: 0, scale: 1.1, x: 20, filter: 'blur(4px)' }}
+                        animate={{ opacity: 1, scale: 1, x: 0, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, scale: 0.95, x: -20, filter: 'blur(2px)' }}
+                        transition={{
+                            duration: 0.7,
+                            ease: [0.16, 1, 0.3, 1] // Custom cubic-bezier for a snappy yet smooth finish
+                        }}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            opacity: hovered && hasPlay ? 0 : 1
+                        }}
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=f0f0f0&color=333&size=400`;
+                        }}
+                    />
+                </AnimatePresence>
                 {hasPlay && (
                     <video
                         ref={videoRef}
