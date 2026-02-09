@@ -2,6 +2,8 @@ import React from 'react';
 import './globals.css';
 import { Metadata, Viewport } from 'next';
 
+import ContactMotion from './ContactMotion';
+
 export const metadata: Metadata = {
     title: 'Color Hut - Your Trusted Partner for Branding & Creative Solutions',
     description: 'Shop for unique gifts, restaurant packaging, and custom branding solutions. Color Hut is your dedicated partner for logo design, menu printing, and premium creative work in Bangladesh.',
@@ -24,7 +26,10 @@ export default function RootLayout({
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
             </head>
-            <body suppressHydrationWarning>{children}</body>
+            <body suppressHydrationWarning>
+                {children}
+                <ContactMotion />
+            </body>
         </html>
     )
 }

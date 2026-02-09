@@ -114,30 +114,7 @@ app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 app.use('/admin', express.static(path.join(__dirname, 'admin'), staticOptions));
 app.use('/assets', express.static(path.join(__dirname, 'assets'), staticOptions));
 
-const { createClient } = require('redis');
-const RedisStore = require('connect-redis').default;
-
-let sessionStore = undefined; // Defaults to MemoryStore
-
-// Only use Redis if configured
-if (process.env.REDIS_HOST || process.env.REDIS_URL) {
-    const redisClient = createClient({
-        url: process.env.REDIS_URL || `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}`,
-        password: process.env.REDIS_PASSWORD
-    });
-
-    redisClient.connect().then(() => {
-        console.log('Redis connected for session storage.');
-    }).catch(console.error);
-
-    sessionStore = new RedisStore({
-        client: redisClient,
-        prefix: "estore:",
-    });
-}
-
 app.use(session({
-    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'supersecret',
     resave: false,
     saveUninitialized: false,
@@ -307,6 +284,7 @@ db.getConnection((err, connection) => {
             image TEXT,
             video_url VARCHAR(500),
             status ENUM('Published', 'Draft') DEFAULT 'Draft',
+            is_pinned BOOLEAN DEFAULT FALSE,
             views INT DEFAULT 0,
             rating DECIMAL(3, 1) DEFAULT 5.0,
             seo_keywords TEXT,
@@ -368,6 +346,17 @@ db.getConnection((err, connection) => {
         )
     `;
 
+    const createHeroSlidesTable = `
+        CREATE TABLE IF NOT EXISTS hero_slides (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            image_url VARCHAR(500) NOT NULL,
+            position INT DEFAULT 0,
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+    `;
+
     // Add seo_keywords if it doesn't exist (Migration)
     const addSeoKeywordsColumn = `ALTER TABLE products ADD COLUMN seo_keywords TEXT AFTER rating`;
 
@@ -376,6 +365,9 @@ db.getConnection((err, connection) => {
 
     // Add position if it doesn't exist (Migration)
     const addPositionColumn = `ALTER TABLE products ADD COLUMN position INT DEFAULT 0`;
+
+    // Add is_pinned if it doesn't exist (Migration)
+    const addIsPinnedColumn = `ALTER TABLE products ADD COLUMN is_pinned BOOLEAN DEFAULT FALSE AFTER status`;
 
     // Add slug if it doesn't exist (Migration)
     const addSlugColumn = `ALTER TABLE products ADD COLUMN slug VARCHAR(255) AFTER name`;
@@ -427,49 +419,55 @@ db.getConnection((err, connection) => {
                                 connection.query(addSeoKeywordsColumn, () => {
                                     connection.query(addSeoDescriptionColumn, () => {
                                         connection.query(addPositionColumn, () => {
-                                            connection.query(addSlugColumn, () => {
-                                                // Sync product slugs
-                                                connection.query("SELECT id, name FROM products WHERE slug IS NULL OR slug = ''", (err, rows) => {
-                                                    if (!err && rows) {
-                                                        rows.forEach(row => {
-                                                            const slug = generateSlug(row.name);
-                                                            connection.query('UPDATE products SET slug = ? WHERE id = ?', [slug, row.id]);
-                                                        });
-                                                    }
-                                                });
+                                            connection.query(addIsPinnedColumn, () => {
+                                                connection.query(addSlugColumn, () => {
+                                                    // Sync product slugs
+                                                    connection.query("SELECT id, name FROM products WHERE slug IS NULL OR slug = ''", (err, rows) => {
+                                                        if (!err && rows) {
+                                                            rows.forEach(row => {
+                                                                const slug = generateSlug(row.name);
+                                                                connection.query('UPDATE products SET slug = ? WHERE id = ?', [slug, row.id]);
+                                                            });
+                                                        }
+                                                    });
 
-                                                // Create Settings & Traffic
-                                                connection.query(createSettingsTable, () => {
-                                                    connection.query(createCategoryParentsTable, (err) => {
-                                                        if (err) console.error('Error creating category_parents table:', err);
+                                                    // Create Settings & Traffic
+                                                    connection.query(createSettingsTable, () => {
+                                                        connection.query(createCategoryParentsTable, (err) => {
+                                                            if (err) console.error('Error creating category_parents table:', err);
 
-                                                        // Migration: Move existing parent_id relationships to category_parents
-                                                        const migrateParents = `
+                                                            // Migration: Move existing parent_id relationships to category_parents
+                                                            const migrateParents = `
                                                             INSERT IGNORE INTO category_parents (category_id, parent_id)
                                                             SELECT id, parent_id FROM categories WHERE parent_id IS NOT NULL;
                                                         `;
-                                                        connection.query(migrateParents, (err) => {
-                                                            if (err) console.error('Error migrating category parents:', err);
-                                                        });
-                                                    });
-
-                                                    connection.query(addIconColumn, (err) => {
-                                                        if (err) console.error('Error adding icon column:', err);
-                                                    });
-
-                                                    connection.query(createTrafficLogsTable, () => {
-                                                        // Run index migrations
-                                                        addIndexes.forEach(idxQuery => {
-                                                            connection.query(idxQuery, (err) => {
-                                                                if (err && !err.message.includes('Duplicate key name')) {
-                                                                    // console.error('Index Error:', err.message);
-                                                                }
+                                                            connection.query(migrateParents, (err) => {
+                                                                if (err) console.error('Error migrating category parents:', err);
                                                             });
                                                         });
-                                                        console.log('Database Initialization Complete.');
-                                                        // Initial Sitemap Generation
-                                                        updateMySitemapFile();
-                                                        connection.release();
+
+                                                        connection.query(addIconColumn, (err) => {
+                                                            if (err) console.error('Error adding icon column:', err);
+                                                        });
+
+                                                        connection.query(createTrafficLogsTable, () => {
+                                                            connection.query(createHeroSlidesTable, (err) => {
+                                                                if (err) console.error('Error creating hero_slides table:', err);
+
+                                                                // Run index migrations
+                                                                addIndexes.forEach(idxQuery => {
+                                                                    connection.query(idxQuery, (err) => {
+                                                                        if (err && !err.message.includes('Duplicate key name')) {
+                                                                            // console.error('Index Error:', err.message);
+                                                                        }
+                                                                    });
+                                                                });
+                                                                console.log('Database Initialization Complete.');
+                                                                // Initial Sitemap Generation
+                                                                updateMySitemapFile();
+                                                                connection.release();
+                                                            });
+                                                        });
                                                     });
                                                 });
                                             });
@@ -720,9 +718,10 @@ app.get('/api/public/products', (req, res) => {
     const limit = parseInt(req.query.limit) || 12;
     const offset = (page - 1) * limit;
     const categoryId = req.query.categoryId;
+    const pinned = req.query.pinned === 'true';
 
     let query = `
-        SELECT p.id, p.name, p.slug, p.category_id, p.price, p.image, p.video_url, p.rating, p.position, c.name as category_name
+        SELECT p.id, p.name, p.slug, p.category_id, p.price, p.image, p.video_url, p.rating, p.position, p.is_pinned, c.name as category_name
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         WHERE p.status = 'Published' AND p.is_deleted = FALSE
@@ -733,6 +732,10 @@ app.get('/api/public/products', (req, res) => {
         // Support fetching products from both the main category and its subcategories
         query += ` AND (p.category_id = ? OR p.category_id IN (SELECT category_id FROM category_parents WHERE parent_id = ?))`;
         params.push(categoryId, categoryId);
+    }
+
+    if (pinned) {
+        query += ` AND p.is_pinned = TRUE`;
     }
 
     query += ` ORDER BY p.position ASC, p.created_at DESC LIMIT ? OFFSET ?`;
@@ -843,6 +846,42 @@ app.get('/api/public/recent-blogs', (req, res) => {
     db.query(query, (err, results) => {
         if (err) return res.status(500).json([]);
         res.json(results);
+    });
+});
+
+// ===== HERO SLIDES API =====
+app.get('/api/hero-slides', (req, res) => {
+    db.query('SELECT * FROM hero_slides WHERE is_active = TRUE ORDER BY position ASC, created_at DESC', (err, results) => {
+        if (err) {
+            console.error('Error fetching hero slides:', err);
+            return res.status(500).json({ error: 'Failed to fetch slides' });
+        }
+        res.json(results);
+    });
+});
+
+app.post('/api/hero-slides', requireAuth, upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'Image is required' });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    db.query('INSERT INTO hero_slides (image_url) VALUES (?)', [imageUrl], (err, result) => {
+        if (err) {
+            console.error('Error adding hero slide:', err);
+            return res.status(500).json({ error: 'Failed to add slide' });
+        }
+        res.json({ id: result.insertId, image_url: imageUrl });
+    });
+});
+
+app.delete('/api/hero-slides/:id', requireAuth, (req, res) => {
+    const slideId = req.params.id;
+    db.query('DELETE FROM hero_slides WHERE id = ?', [slideId], (err) => {
+        if (err) {
+            console.error('Error deleting hero slide:', err);
+            return res.status(500).json({ error: 'Failed to delete slide' });
+        }
+        res.json({ success: true });
     });
 });
 
@@ -1107,12 +1146,12 @@ app.post('/api/upload', requireAuth, upload.array('images', 10), async (req, res
 
 // Create product
 app.post('/api/products', requireAuth, (req, res) => {
-    const { name, category_id, description, image, video_url, status, rating, seo_keywords, seo_description, position } = req.body;
+    const { name, category_id, description, image, video_url, status, is_pinned, rating, seo_keywords, seo_description, position } = req.body;
     const slug = generateSlug(name);
     const catId = category_id === "" ? null : category_id;
 
-    const query = 'INSERT INTO products (name, slug, category_id, description, price, image, video_url, status, rating, seo_keywords, seo_description, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    db.query(query, [name, slug, catId, description, 0, image, video_url, status || 'Draft', rating || 5.0, seo_keywords, seo_description, position || 0], (err, result) => {
+    const query = 'INSERT INTO products (name, slug, category_id, description, price, image, video_url, status, is_pinned, rating, seo_keywords, seo_description, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    db.query(query, [name, slug, catId, description, 0, image, video_url, status || 'Draft', is_pinned ? 1 : 0, rating || 5.0, seo_keywords, seo_description, position || 0], (err, result) => {
         if (err) {
             console.error('Error creating product:', err);
             return res.status(500).json({ error: 'Failed to create product' });
@@ -1125,12 +1164,12 @@ app.post('/api/products', requireAuth, (req, res) => {
 
 // Update product
 app.put('/api/products/:id', requireAuth, (req, res) => {
-    const { name, category_id, description, image, video_url, status, rating, seo_keywords, seo_description, position } = req.body;
+    const { name, category_id, description, image, video_url, status, is_pinned, rating, seo_keywords, seo_description, position } = req.body;
     const slug = generateSlug(name);
     const catId = category_id === "" ? null : category_id;
 
-    const query = 'UPDATE products SET name = ?, slug = ?, category_id = ?, description = ?, image = ?, video_url = ?, status = ?, rating = ?, seo_keywords = ?, seo_description = ?, position = ? WHERE id = ?';
-    db.query(query, [name, slug, catId, description, image, video_url, status, rating, seo_keywords, seo_description, position || 0, req.params.id], (err, result) => {
+    const query = 'UPDATE products SET name = ?, slug = ?, category_id = ?, description = ?, image = ?, video_url = ?, status = ?, is_pinned = ?, rating = ?, seo_keywords = ?, seo_description = ?, position = ? WHERE id = ?';
+    db.query(query, [name, slug, catId, description, image, video_url, status, is_pinned ? 1 : 0, rating, seo_keywords, seo_description, position || 0, req.params.id], (err, result) => {
         if (err) {
             console.error('Error updating product:', err);
             return res.status(500).json({ error: 'Failed to update product' });
@@ -1392,6 +1431,10 @@ app.get('/admin/products', requireAuth, (req, res) => {
 
 app.get('/admin/categories', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin/categories.html'));
+});
+
+app.get('/admin/mobile-hero', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin/mobile-hero.html'));
 });
 
 app.get('/admin/pixel-traffic', requireAuth, (req, res) => {

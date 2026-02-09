@@ -2,8 +2,15 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
+import HeroSlider from '../HeroSlider';
 
 // === ICONS ===
+const YouTubeIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+);
+
 const SearchIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8"></circle>
@@ -85,6 +92,7 @@ interface Product {
     category_id?: number | string;
     category_name?: string;
     rating?: string | number;
+    is_pinned?: boolean | number;
 }
 
 const ProductSkeleton = () => (
@@ -165,6 +173,11 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
                         <PlayIcon />
                     </div>
                 )}
+                {!!p.is_pinned && (
+                    <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-orange-600 p-1.5 rounded-lg shadow-sm z-10">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v11l-4 4-4-4V5z" /></svg>
+                    </div>
+                )}
             </div>
             <div className="store-card-info">
                 <div className="store-title-row">
@@ -228,7 +241,7 @@ const Footer = () => {
                             <a href="https://facebook.com/colorhutbd" target="_blank" className="store-social-btn"><FacebookIcon /></a>
                             <a href="#" className="store-social-btn"><InstagramIcon /></a>
                             <a href="#" className="store-social-btn"><PinterestIcon /></a>
-                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" className="store-social-btn"><YouTubeIcon /></a>
+                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" className="store-social-btn"><FooterYouTubeIcon /></a>
                         </div>
                     </div>
                 </div>
@@ -264,7 +277,7 @@ const FacebookIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
 );
 
-const YouTubeIcon = () => (
+const FooterYouTubeIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a2.78 2.78 0 0 0 1.94 2c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.89 23 12 23 12s0-3.89-.46-5.58z"></path><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon></svg>
 );
 
@@ -422,6 +435,7 @@ export default function HomePage() {
             setLoading(true);
             try {
                 let url = `/api/public/products?page=${page}&limit=${fetchingLimit}`;
+                if (isBaseHome) url += `&pinned=true`;
 
                 if (currentCategory) {
                     url += `&categoryId=${currentCategory.id}`;
@@ -743,17 +757,14 @@ export default function HomePage() {
             <div className="store-container">
                 {/* --- MOBILE HERO --- */}
                 {isBaseHome && (
-                    <div className="store-mobile-hero mobile-only">
-                        <h2 className="store-hero-title serif">Make this your best Valentine's Day yet</h2>
-                        <a href="#" className="store-hero-btn">Shop our must-haves</a>
-                    </div>
+                    <HeroSlider />
                 )}
 
                 {/* --- PAGE TITLES --- */}
                 {!isBaseHome && (
                     <div className="store-page-header">
                         <h1 className="store-page-title serif">
-                            {currentCategory ? currentCategory.name : (slug === 'all' ? 'All Products' : 'Goblincore')}
+                            {currentCategory ? currentCategory.name : (slug === 'all' ? 'All Products' : 'Color Hut')}
                         </h1>
                         {subCategories.length > 0 && <p className="store-page-subtitle">Picks you'll love</p>}
                     </div>
@@ -803,7 +814,11 @@ export default function HomePage() {
                     <div className="store-about-content">
                         <div className="store-about-header">
                             <h2 className="serif">What is Color Hut?</h2>
-                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" className="store-about-story">Watch our studio story on YouTube</a>
+                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" className="store-about-story" style={{ color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <YouTubeIcon />
+                                Watch our studio story on YouTube
+                                <YouTubeIcon />
+                            </a>
                         </div>
 
                         <div className="store-about-grid">

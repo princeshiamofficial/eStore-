@@ -70,10 +70,6 @@ There are two main ways to do this in CyberPanel. **Method 1** is easier if your
     SESSION_SECRET=some_long_secret_string
     MAX_POOL=10
     NODE_ENV=production
-    # REDIS (Optional - for persistent sessions)
-    REDIS_HOST=127.0.0.1
-    REDIS_PORT=6379
-    # REDIS_PASSWORD=secret (if needed)
     PORT=3000
     ```
     *Note: If you have multiple Node apps, change the PORT (e.g., 3001, 3002) to avoid conflicts.*
