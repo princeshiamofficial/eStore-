@@ -44,6 +44,49 @@
             color: #ea580c;
             padding-left: 1.25rem;
         }
+
+        .category-tab {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .category-tab.active {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.3);
+        }
+
+        .category-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #ea580c;
+        }
+
+        .category-tab:not(.active):hover {
+            background: #fff7ed;
+            color: #ea580c;
+            transform: translateY(-2px);
+        }
+
+        .category-tab.dragging {
+            opacity: 0.5;
+            cursor: grabbing !important;
+        }
+
+        .category-tab:not([data-id="null"]) {
+            cursor: grab;
+        }
+
+        .category-tab:not([data-id="null"]):active {
+            cursor: grabbing;
+        }
     </style>
 </head>
 
@@ -82,6 +125,29 @@
                         </svg>
                         New Category
                     </button>
+                </div>
+            </div>
+
+            <!-- Main Category Tabs -->
+            <div class="mb-6">
+                <div class="flex gap-3 overflow-x-auto pb-4 scrollbar-hide" id="mainCategoryTabs">
+                    <!-- Tabs will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Search Bar for Sub-categories -->
+            <div class="mb-6" id="searchContainer">
+                <div class="relative group">
+                    <input type="text" id="subCategorySearch" placeholder="Search sub-categories..."
+                        oninput="filterSubCategories(this.value)"
+                        class="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 px-5 pl-12 outline-none focus:border-orange-500 focus:bg-white text-slate-800 font-bold transition-all placeholder:text-slate-300">
+                    <div
+                        class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-orange-500 transition-colors pointer-events-none">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
                 </div>
             </div>
 
@@ -181,20 +247,158 @@
     <script>
         let categories = [];
         let deleteId = null;
-
-
+        let selectedMainCategoryId = null;
+        let allCategories = [];
 
         // Load categories
         async function loadCategories() {
             try {
                 const response = await fetch('/api/categories');
                 categories = await response.json();
+                allCategories = [...categories];
                 populateParentCheckboxes();
+                renderMainCategoryTabs();
                 renderCategories();
                 initSortable();
             } catch (error) {
                 console.error('Error loading categories:', error);
             }
+        }
+
+        function renderMainCategoryTabs() {
+            const tabsContainer = document.getElementById('mainCategoryTabs');
+            const mainCategories = categories.filter(c => !c.parent_ids);
+
+            let tabsHTML = `
+                <button onclick="selectMainCategory(null)" data-id="null"
+                    class="category-tab ${selectedMainCategoryId === null ? 'active' : ''} px-6 py-3 rounded-2xl font-bold text-sm whitespace-nowrap flex-shrink-0">
+                    All Categories
+                </button>
+            `;
+
+            mainCategories.forEach(cat => {
+                tabsHTML += `
+                    <div class="relative group flex-shrink-0" data-id="${cat.id}">
+                        <button onclick="selectMainCategory(${cat.id})" ondblclick="event.stopPropagation(); toggleTabActions(${cat.id})"
+                            class="category-tab ${selectedMainCategoryId === cat.id ? 'active' : ''} px-6 py-3 pr-20 rounded-2xl font-bold text-sm whitespace-nowrap">
+                            ${cat.name}
+                        </button>
+                        <div id="tab-actions-${cat.id}" class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 pointer-events-none transition-opacity">
+                            <button onclick="event.stopPropagation(); editCategory(${cat.id})" 
+                                class="p-1.5 hover:bg-white/20 rounded-lg transition-all" title="Edit">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <button onclick="event.stopPropagation(); openDeleteModal(${cat.id})" 
+                                class="p-1.5 hover:bg-white/20 rounded-lg transition-all" title="Delete">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            tabsContainer.innerHTML = tabsHTML;
+            initTabsSortable();
+        }
+
+        function toggleTabActions(catId) {
+            const actionsEl = document.getElementById(`tab-actions-${catId}`);
+            const isVisible = actionsEl.classList.contains('opacity-100');
+
+            // Hide all other tab actions first
+            document.querySelectorAll('[id^="tab-actions-"]').forEach(el => {
+                el.classList.remove('opacity-100');
+                el.classList.add('opacity-0', 'pointer-events-none');
+            });
+
+            // Toggle current tab actions
+            if (!isVisible) {
+                actionsEl.classList.remove('opacity-0', 'pointer-events-none');
+                actionsEl.classList.add('opacity-100', 'pointer-events-auto');
+            }
+        }
+
+        // Close tab actions when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('[id^="tab-actions-"]') && !e.target.closest('.category-tab')) {
+                document.querySelectorAll('[id^="tab-actions-"]').forEach(el => {
+                    el.classList.remove('opacity-100', 'pointer-events-auto');
+                    el.classList.add('opacity-0', 'pointer-events-none');
+                });
+            }
+        });
+
+        let tabsSortableInstance = null;
+        function initTabsSortable() {
+            const tabsContainer = document.getElementById('mainCategoryTabs');
+            if (tabsSortableInstance) tabsSortableInstance.destroy();
+
+            tabsSortableInstance = Sortable.create(tabsContainer, {
+                animation: 150,
+                filter: '[data-id="null"]', // Prevent "All Categories" from being dragged
+                draggable: 'div[data-id]:not([data-id="null"])',
+                handle: '.category-tab',
+                ghostClass: 'dragging',
+                onEnd: async function (evt) {
+                    // Get the new order of main categories
+                    const tabs = Array.from(tabsContainer.children).filter(el => el.tagName === 'DIV' && el.dataset.id !== 'null');
+                    const orders = tabs.map((el, index) => ({
+                        id: parseInt(el.dataset.id),
+                        position: index
+                    }));
+
+                    try {
+                        const response = await fetch('/api/categories/reorder', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ orders })
+                        });
+
+                        if (!response.ok) {
+                            console.error('Failed to save tab reorder');
+                            loadCategories(); // Reset to server state
+                        } else {
+                            // Reload to update the categories array order
+                            await loadCategories();
+                        }
+                    } catch (error) {
+                        console.error('Error reordering tabs:', error);
+                        loadCategories();
+                    }
+                }
+            });
+        }
+
+        function selectMainCategory(id) {
+            selectedMainCategoryId = id;
+            document.getElementById('subCategorySearch').value = '';
+            renderMainCategoryTabs();
+            renderCategories();
+        }
+
+        function filterSubCategories(query) {
+            const q = query.toLowerCase().trim();
+            if (!q) {
+                renderCategories();
+                return;
+            }
+
+            // Filter categories based on search
+            const filtered = allCategories.filter(cat => {
+                if (selectedMainCategoryId === null) {
+                    return cat.name.toLowerCase().includes(q);
+                } else {
+                    // Only search in sub-categories of selected main category
+                    const parentIds = String(cat.parent_ids || '').split(',').map(id => id.trim());
+                    return parentIds.includes(String(selectedMainCategoryId)) && cat.name.toLowerCase().includes(q);
+                }
+            });
+
+            renderCategories(filtered);
         }
 
         function populateParentCheckboxes() {
@@ -251,11 +455,26 @@
         }
 
         // Render categories
-        function renderCategories() {
+        function renderCategories(categoriesToRender = null) {
             const grid = document.getElementById('categoriesGrid');
             const colors = ['orange', 'indigo', 'pink', 'emerald', 'purple', 'blue'];
 
-            grid.innerHTML = categories.map((cat, index) => {
+            let displayCategories = categoriesToRender || allCategories;
+
+            // Filter by selected main category
+            if (selectedMainCategoryId !== null) {
+                displayCategories = displayCategories.filter(cat => {
+                    const parentIds = String(cat.parent_ids || '').split(',').map(id => id.trim());
+                    return parentIds.includes(String(selectedMainCategoryId));
+                });
+            }
+
+            if (displayCategories.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-12"><p class="text-slate-400 font-bold text-sm uppercase tracking-widest">No categories found</p></div>';
+                return;
+            }
+
+            grid.innerHTML = displayCategories.map((cat, index) => {
                 const color = colors[index % colors.length];
                 return `
                     <div data-id="${cat.id}" class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 hover:shadow-2xl transition-all duration-300 group relative">
