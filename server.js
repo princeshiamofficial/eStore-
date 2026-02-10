@@ -227,7 +227,7 @@ db.getConnection((err, connection) => {
     console.log('Successfully connected to database');
 
     // Migration: Support any language & emojis (utf8mb4)
-    const charsetMigrations = [
+    const migrations = [
         `ALTER DATABASE \`${process.env.DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
         "ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
         "ALTER TABLE categories CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
@@ -235,13 +235,20 @@ db.getConnection((err, connection) => {
         "ALTER TABLE site_settings CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
         "ALTER TABLE traffic_logs CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
         "ALTER TABLE blogs CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
-        "ALTER TABLE category_parents CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+        "ALTER TABLE category_parents CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
+        // Multi-category support migration
+        "ALTER TABLE products DROP FOREIGN KEY products_ibfk_1", // Common name
+        "ALTER TABLE products MODIFY category_id VARCHAR(255)"
     ];
 
-    charsetMigrations.forEach(mq => {
+    migrations.forEach(mq => {
         connection.query(mq, (err) => {
             if (err) {
-                // Ignore errors if table doesn't exist yet, we'll handle it below
+                // Ignore errors if foreign key doesn't exist or table doesn't exist yet
+                if (mq.includes('DROP FOREIGN KEY')) {
+                    // Try another common name if the first fails
+                    connection.query("ALTER TABLE products DROP FOREIGN KEY products_category_id_foreign", () => { });
+                }
             }
         });
     });
@@ -278,7 +285,7 @@ db.getConnection((err, connection) => {
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             slug VARCHAR(255) NOT NULL UNIQUE,
-            category_id INT,
+            category_id VARCHAR(255),
             description TEXT,
             price DECIMAL(10, 2),
             image TEXT,
@@ -292,8 +299,7 @@ db.getConnection((err, connection) => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             is_deleted BOOLEAN DEFAULT FALSE,
-            deleted_at TIMESTAMP NULL,
-            FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+            deleted_at TIMESTAMP NULL
         )
     `;
 
@@ -730,7 +736,10 @@ app.get('/api/public/products', (req, res) => {
 
     if (categoryId) {
         // Support fetching products from both the main category and its subcategories
-        query += ` AND (p.category_id = ? OR p.category_id IN (SELECT category_id FROM category_parents WHERE parent_id = ?))`;
+        query += ` AND (FIND_IN_SET(?, p.category_id) OR EXISTS (
+            SELECT 1 FROM category_parents cp 
+            WHERE cp.parent_id = ? AND FIND_IN_SET(cp.category_id, p.category_id)
+        ))`;
         params.push(categoryId, categoryId);
     }
 
@@ -814,7 +823,7 @@ app.get('/api/public/related/:categoryId', (req, res) => {
     const query = `
         SELECT id, name, slug, image, video_url, rating 
         FROM products 
-        WHERE category_id = ? AND id != ? AND status = 'Published' AND is_deleted = FALSE 
+        WHERE (FIND_IN_SET(?, category_id)) AND id != ? AND status = 'Published' AND is_deleted = FALSE 
         LIMIT 4
     `;
     db.query(query, [categoryId, excludeId || 0], (err, results) => {
@@ -1055,31 +1064,139 @@ app.delete('/api/categories/:id/permanent', requireAuth, (req, res) => {
     });
 });
 
-// ===== PRODUCTS API =====
-// Get all products
-app.get('/api/products', requireAuth, (req, res) => {
-    const query = `
-        SELECT p.*, c.name as category_name 
-        FROM products p 
-        LEFT JOIN categories c ON p.category_id = c.id 
-        WHERE p.is_deleted = FALSE
-        ORDER BY p.position ASC, p.created_at DESC
-    `;
-    db.query(query, (err, results) => {
+// Reorder products
+app.post('/api/products/reorder', requireAuth, (req, res) => {
+    const { orders } = req.body; // Array of {id, position}
+    if (!orders || !Array.isArray(orders)) {
+        return res.status(400).json({ error: 'Invalid order data' });
+    }
+
+    const queries = orders.map(item => {
+        return new Promise((resolve, reject) => {
+            db.query('UPDATE products SET position = ? WHERE id = ?', [item.position, item.id], (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
+    });
+
+    Promise.all(queries)
+        .then(() => {
+            res.json({ message: 'Products reordered successfully' });
+        })
+        .catch(err => {
+            console.error('Error reordering products:', err);
+            res.status(500).json({ error: 'Failed to reorder products' });
+        });
+});
+
+// Get trash items
+app.get('/api/trash', requireAuth, (req, res) => {
+    const productsQuery = "SELECT id, name, 'Product' as type, image, deleted_at FROM products WHERE is_deleted = TRUE";
+    const categoriesQuery = "SELECT id, name, 'Category' as type, NULL as image, deleted_at FROM categories WHERE is_deleted = TRUE";
+
+    db.query(`${productsQuery} UNION ${categoriesQuery} ORDER BY deleted_at DESC`, (err, results) => {
         if (err) {
-            console.error('Error fetching products:', err);
-            return res.status(500).json({ error: 'Failed to fetch products' });
+            console.error('Error fetching trash:', err);
+            return res.status(500).json({ error: 'Failed to fetch trash' });
         }
         res.json(results);
+    });
+});
+
+// Empty trash
+app.delete('/api/trash/empty', requireAuth, (req, res) => {
+    db.query('DELETE FROM products WHERE is_deleted = TRUE', (err) => {
+        if (err) console.error('Error emptying products trash:', err);
+        db.query('DELETE FROM categories WHERE is_deleted = TRUE', (err) => {
+            if (err) console.error('Error emptying categories trash:', err);
+            res.json({ message: 'Trash emptied successfully' });
+        });
+    });
+});
+
+// ===== PRODUCTS API =====
+// Get products with pagination and filtering
+app.get('/api/products', requireAuth, (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 1000;
+    const offset = (page - 1) * limit;
+    const isPagination = req.query.page !== undefined;
+
+    const category = req.query.category;
+    const status = req.query.status;
+    const search = req.query.search;
+
+    let whereClause = 'p.is_deleted = FALSE';
+    let params = [];
+
+    if (category && category !== 'all') {
+        whereClause += ' AND FIND_IN_SET(?, p.category_id)';
+        params.push(category);
+    }
+    if (status && status !== 'all') {
+        whereClause += ' AND p.status = ?';
+        params.push(status);
+    }
+    if (search) {
+        whereClause += ' AND (p.name LIKE ? OR p.description LIKE ?)';
+        params.push(`%${search}%`, `%${search}%`);
+    }
+
+    const countQuery = `SELECT COUNT(*) as total FROM products p WHERE ${whereClause}`;
+
+    db.query(countQuery, params, (err, countResult) => {
+        if (err) {
+            console.error('Error counting products:', err);
+            return res.status(500).json({ error: 'Failed to fetch products' });
+        }
+
+        const total = countResult[0].total;
+
+        const dataQuery = `
+            SELECT p.*, (
+                SELECT GROUP_CONCAT(name SEPARATOR ', ') 
+                FROM categories 
+                WHERE FIND_IN_SET(id, p.category_id)
+            ) as category_name 
+            FROM products p 
+            WHERE ${whereClause}
+            ORDER BY p.is_pinned DESC, p.position ASC, p.created_at DESC
+            ${isPagination ? 'LIMIT ? OFFSET ?' : ''}
+        `;
+
+        const dataParams = isPagination ? [...params, limit, offset] : params;
+
+        db.query(dataQuery, dataParams, (err, results) => {
+            if (err) {
+                console.error('Error fetching products:', err);
+                return res.status(500).json({ error: 'Failed to fetch products' });
+            }
+
+            if (isPagination) {
+                res.json({
+                    products: results,
+                    total: total,
+                    page: page,
+                    limit: limit,
+                    hasMore: offset + results.length < total
+                });
+            } else {
+                res.json(results);
+            }
+        });
     });
 });
 
 // Get single product
 app.get('/api/products/:id', requireAuth, (req, res) => {
     const query = `
-        SELECT p.*, c.name as category_name 
+        SELECT p.*, (
+            SELECT GROUP_CONCAT(name SEPARATOR ', ') 
+            FROM categories 
+            WHERE FIND_IN_SET(id, p.category_id)
+        ) as category_name 
         FROM products p 
-        LEFT JOIN categories c ON p.category_id = c.id 
         WHERE p.id = ?
     `;
     db.query(query, [req.params.id], (err, results) => {
@@ -1677,9 +1794,12 @@ app.get('/p/:slug', async (req, res) => {
     const slug = req.params.slug;
 
     const query = `
-        SELECT p.*, c.name as category_name 
+        SELECT p.*, (
+            SELECT GROUP_CONCAT(name SEPARATOR ', ') 
+            FROM categories 
+            WHERE FIND_IN_SET(id, p.category_id)
+        ) as category_name 
         FROM products p 
-        LEFT JOIN categories c ON p.category_id = c.id 
         WHERE p.slug = ? AND p.status = 'Published' AND p.is_deleted = FALSE
     `;
     db.query(query, [slug], async (err, results) => {

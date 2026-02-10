@@ -82,6 +82,12 @@ const CloseIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
 );
 
+const WhatsAppIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03c0 2.12.541 4.189 1.57 6.007L0 24l6.135-1.61a11.803 11.803 0 005.911 1.6h.005c6.634 0 12.032-5.396 12.035-12.03a11.85 11.85 0 00-3.536-8.261" />
+    </svg>
+);
+
 // === TYPES ===
 interface Product {
     id: number;
@@ -96,6 +102,14 @@ interface Product {
     is_pinned?: boolean | number;
 }
 
+interface Category {
+    id: number;
+    name: string;
+    slug: string;
+    parent_ids?: string;
+    parent_id?: string;
+}
+
 const ProductSkeleton = () => (
     <div className="store-card">
         <div className="store-image-box skeleton"></div>
@@ -106,7 +120,7 @@ const ProductSkeleton = () => (
     </div>
 );
 
-const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: number, getCategoryStyles: any }>(({ p, idx, getCategoryStyles }, ref) => {
+const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: number, getCategoryStyles: any, categories: Category[], currentCategory?: Category | null }>(({ p, idx, getCategoryStyles, categories, currentCategory }, ref) => {
     const [hovered, setHovered] = useState(false);
     const [imgIndex, setImgIndex] = useState(0);
     const videoRef = React.useRef<HTMLVideoElement>(null);
@@ -124,6 +138,48 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
 
     const hasPlay = !!p.video_url;
     const hasMultipleImages = images.length > 1;
+
+    // Parse category_id to check for multiple categories
+    const categoryIds = String(p.category_id || '').split(',').map(id => id.trim()).filter(Boolean);
+    const hasMultipleCategories = categoryIds.length > 1;
+
+    // Determine what to display based on context
+    let displayNames: string[] = [];
+
+    if (currentCategory) {
+        // On a category page - show sub-category names
+        categoryIds.forEach(catId => {
+            const cat = categories.find(c => String(c.id) === catId);
+            if (cat) {
+                // Only show if this category belongs to current category context
+                const parentIds = String(cat.parent_ids || '').split(',').map(id => id.trim());
+                if (String(cat.id) === String(currentCategory.id) || parentIds.includes(String(currentCategory.id))) {
+                    displayNames.push(cat.name);
+                }
+            }
+        });
+    } else {
+        // On homepage - show main category names for multi-category products
+        if (hasMultipleCategories && categories.length > 0) {
+            categoryIds.forEach(catId => {
+                const cat = categories.find(c => String(c.id) === catId);
+                if (cat) {
+                    // Check if this is a main category (no parent_ids)
+                    if (!cat.parent_ids) {
+                        displayNames.push(cat.name);
+                    } else {
+                        // If it's a sub-category, find its main parent
+                        const parentIds = String(cat.parent_ids).split(',').map(id => id.trim());
+                        const mainParent = categories.find(c => parentIds.includes(String(c.id)) && !c.parent_ids);
+                        if (mainParent && !displayNames.includes(mainParent.name)) {
+                            displayNames.push(mainParent.name);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
     const catName = p.category_name || 'Handmade';
     const catStyle = getCategoryStyles(catName);
 
@@ -227,9 +283,22 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
                         <span style={{ color: '#595959' }}>({((idx + 1) * 342) % 3000})</span>
                     </div>
                 </div>
-                <div className="store-category-badge" style={{ backgroundColor: catStyle.bg, color: catStyle.text }}>
-                    {catName.toUpperCase()}
-                </div>
+                {displayNames.length > 0 ? (
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {displayNames.map((name, i) => {
+                            const style = getCategoryStyles(name);
+                            return (
+                                <div key={i} className="store-category-badge" style={{ backgroundColor: style.bg, color: style.text, fontSize: '9px', padding: '3px 8px' }}>
+                                    {name}
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="store-category-badge" style={{ backgroundColor: catStyle.bg, color: catStyle.text }}>
+                        {catName}
+                    </div>
+                )}
             </div>
         </a>
     );
@@ -497,8 +566,9 @@ export default function HomePage() {
                         // To be absolutely sure, let's filter the data if currentCategory exists.
                         const filteredData = currentCategory
                             ? data.filter((p: any) => {
-                                const isDirect = Number(p.category_id) === Number(currentCategory.id) || p.category_name === currentCategory.name;
-                                const isSub = subCategories.some(sub => Number(p.category_id) === Number(sub.id) || p.category_name === sub.name);
+                                const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
+                                const isDirect = pCatIds.includes(String(currentCategory.id)) || p.category_name === currentCategory.name;
+                                const isSub = subCategories.some(sub => pCatIds.includes(String(sub.id)) || p.category_name === sub.name);
                                 return isDirect || isSub;
                             })
                             : data;
@@ -541,15 +611,16 @@ export default function HomePage() {
 
     const filteredProducts = currentCategory
         ? products.filter(p => {
+            const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
             // 1. Direct match with current category
-            const isDirectMatch = Number(p.category_id) === Number(currentCategory.id) ||
+            const isDirectMatch = pCatIds.includes(String(currentCategory.id)) ||
                 p.category_name?.toLowerCase().trim() === currentCategory.name?.toLowerCase().trim();
 
             if (isDirectMatch) return true;
 
             // 2. Match with any sub-categories of the current category
             const isSubMatch = subCategories.some(sub =>
-                Number(p.category_id) === Number(sub.id) ||
+                pCatIds.includes(String(sub.id)) ||
                 p.category_name?.toLowerCase().trim() === sub.name?.toLowerCase().trim()
             );
 
@@ -840,6 +911,8 @@ export default function HomePage() {
                                 p={p}
                                 idx={idx}
                                 getCategoryStyles={getCategoryStyles}
+                                categories={categories}
+                                currentCategory={currentCategory}
                             />
                         );
                     })}
@@ -852,6 +925,10 @@ export default function HomePage() {
                 <section className="store-about-section">
                     <div className="store-about-content">
                         <div className="store-about-header">
+                            <a href="https://wa.me/8801989224436" target="_blank" className="store-about-whatsapp-btn">
+                                <WhatsAppIcon />
+                                Contact Us
+                            </a>
                             <h2 className="serif">What is Color Hut?</h2>
                             <a href="https://www.youtube.com/@colorhut_official" target="_blank" className="store-about-story" style={{ color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                 <YouTubeIcon />

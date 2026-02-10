@@ -58,6 +58,49 @@
             /* Firefox */
         }
 
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            display: block;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .category-main-branch .rotate-90 {
+            transform: rotate(90deg);
+        }
+
+        .cat-popup {
+            z-index: 100;
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .cat-popup.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         .dragging {
             opacity: 0.5;
             border: 2px dashed #f97316;
@@ -157,21 +200,17 @@
                     </table>
                 </div>
             </div>
-            <!-- Pagination Controls -->
-            <div class="flex items-center justify-between mt-6 border-t border-slate-100 pt-6">
-                <div class="text-sm text-slate-500 font-bold">
-                    Showing <span id="startRange">0</span> to <span id="endRange">0</span> of <span
-                        id="totalItems">0</span> results
-                </div>
-                <div class="flex gap-2">
-                    <button id="prevPageBtn" onclick="changePage(-1)"
-                        class="px-4 py-2 text-sm font-bold text-slate-500 bg-slate-50 rounded-xl hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        Previous
-                    </button>
-                    <button id="nextPageBtn" onclick="changePage(1)"
-                        class="px-4 py-2 text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        Next
-                    </button>
+            <!-- Loading Spinner at the bottom -->
+            <div id="infiniteScrollTrigger" class="h-10 flex items-center justify-center mt-10">
+                <div id="loadingSpinner" class="hidden">
+                    <svg class="animate-spin h-6 w-6 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
                 </div>
             </div>
         </div>
@@ -192,13 +231,56 @@
                         <input type="text" id="productName" required
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:bg-white text-slate-800 font-medium">
                     </div>
-                    <div>
+                    <div class="md:col-span-2 relative">
+                        <input type="hidden" id="productCategory" required>
                         <label
-                            class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Category</label>
-                        <select id="productCategory" required
-                            class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-orange-500 focus:bg-white text-slate-800 font-medium cursor-pointer">
-                            <option value="">Select Category</option>
-                        </select>
+                            class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 ml-1">Categories</label>
+
+                        <!-- Dropdown Trigger -->
+                        <div id="catTrigger" onclick="toggleCatPopup(event)"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-5 flex items-center justify-between cursor-pointer hover:bg-white hover:border-orange-500 transition-all group">
+                            <span id="catDisplay" class="font-bold text-slate-400 select-none">Select
+                                categories...</span>
+                            <div class="text-slate-300 group-hover:text-orange-500 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19 9l-7 7-7-7" stroke-width="2.5" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Popup Dialog -->
+                        <div id="catPopup"
+                            class="cat-popup absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-[2rem] p-6 shadow-2xl">
+                            <div class="relative group mb-4">
+                                <input type="text" id="catSearch" placeholder="Search categories..."
+                                    oninput="filterCategoryTree(this.value)"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-5 outline-none focus:border-orange-500 focus:bg-white text-slate-800 font-bold transition-all placeholder:text-slate-300 pr-12">
+                                <div
+                                    class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-orange-500 transition-colors pointer-events-none">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2.5"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div id="categoryTree" class="max-h-64 overflow-y-auto custom-scrollbar pr-2">
+                                <div
+                                    class="flex items-center justify-center p-8 text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">
+                                    <svg class="w-5 h-5 mr-3 animate-spin" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor">
+                                        <path
+                                            d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m6.36 6.36l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m6.36-6.36l2.83-2.83"
+                                            stroke-width="2.5" stroke-linecap="round" />
+                                    </svg>
+                                    Loading Categories...
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end">
+                                <button type="button" onclick="closeCatPopup()"
+                                    class="px-5 py-2 bg-orange-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-orange-600 transition-colors">Done</button>
+                            </div>
+                        </div>
                     </div>
                     <input type="hidden" id="productPosition" value="0">
 
@@ -362,6 +444,10 @@
                         class="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
                         Cancel
                     </button>
+                    <button type="button" id="saveAndAddNewBtn" onclick="saveProduct(event, true)"
+                        class="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition-colors hidden">
+                        Save & Add New
+                    </button>
                     <button type="submit"
                         class="flex-1 bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors">
                         Save Product
@@ -400,7 +486,10 @@
         let uploadedImages = [];
         let sortableInstance = null;
         let currentPage = 1;
-        const itemsPerPage = 12;
+        const itemsPerPage = 20;
+        let isLoading = false;
+        let hasMore = true;
+        let observer = null;
 
 
 
@@ -561,13 +650,14 @@
         async function init() {
             await Promise.all([
                 loadCategories(),
-                loadProducts()
+                loadProducts(true)
             ]);
+
+            setupInfiniteScroll();
 
             // Initialize Modern Dropdowns
             createModernDropdown('categoryFilter');
             createModernDropdown('statusFilter');
-            createModernDropdown('productCategory');
             createModernDropdown('productStatus');
         }
 
@@ -576,64 +666,259 @@
                 const response = await fetch('/api/categories');
                 categories = await response.json();
 
+                // Build filter select
                 const filter = document.getElementById('categoryFilter');
-                const dropdown = document.getElementById('productCategory');
-
                 filter.innerHTML = '<option value="all">All Categories</option>';
-                dropdown.innerHTML = '<option value="">Select Category</option>';
 
-                // Inclusive hierarchical display
                 const addedIds = new Set();
                 const mainCategories = categories.filter(c => !c.parent_ids);
 
                 mainCategories.forEach(main => {
-                    if (!addedIds.has(main.id)) {
-                        filter.innerHTML += `<option value="${main.id}">${main.name}</option>`;
-                        dropdown.innerHTML += `<option value="${main.id}">${main.name}</option>`;
-                        addedIds.add(main.id);
-                    }
-
-                    const subs = categories.filter(c => {
-                        const pIds = c.parent_ids ? c.parent_ids.split(',').map(Number) : [];
-                        return pIds.includes(main.id);
-                    });
-
+                    filter.innerHTML += `<option value="${main.id}">${main.name}</option>`;
+                    addedIds.add(main.id);
+                    const subs = categories.filter(c => String(c.parent_ids || '').split(',').map(Number).includes(main.id));
                     subs.forEach(sub => {
-                        if (!addedIds.has(sub.id)) {
-                            filter.innerHTML += `<option value="${sub.id}">-- ${sub.name}</option>`;
-                            dropdown.innerHTML += `<option value="${sub.id}">-- ${sub.name}</option>`;
-                            addedIds.add(sub.id);
-                        }
+                        filter.innerHTML += `<option value="${sub.id}">-- ${sub.name}</option>`;
+                        addedIds.add(sub.id);
                     });
                 });
 
-                // Fail-safe: Ensure all categories are visible even if they are orphaned or multi-level
                 categories.forEach(cat => {
                     if (!addedIds.has(cat.id)) {
-                        const prefix = cat.parent_ids ? '-- ' : '';
-                        filter.innerHTML += `<option value="${cat.id}">${prefix}${cat.name}</option>`;
-                        dropdown.innerHTML += `<option value="${cat.id}">${prefix}${cat.name}</option>`;
-                        addedIds.add(cat.id);
+                        filter.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
                     }
                 });
+
+                renderCategoryTree();
+
+                // Re-init filter dropdown
+                const wrapper = document.querySelector('#categoryFilter').closest('.modern-dropdown-wrapper');
+                if (wrapper) wrapper.remove();
+                createModernDropdown('categoryFilter');
+
             } catch (error) {
                 console.error('Error loading categories:', error);
             }
         }
 
-        async function loadProducts() {
-            try {
-                const response = await fetch('/api/products');
-                products = await response.json();
-                applyFilters();
-            } catch (error) {
-                console.error('Error loading products:', error);
+        function renderCategoryTree() {
+            const container = document.getElementById('categoryTree');
+            const mainCategories = categories.filter(c => !c.parent_ids);
+
+            let html = '';
+            mainCategories.forEach(main => {
+                const subs = categories.filter(c => String(c.parent_ids || '').split(',').map(Number).includes(main.id));
+
+                html += `
+                <div class="category-main-branch mb-4 last:mb-0" data-main-id="${main.id}">
+                    <div class="flex items-center gap-3 py-2 px-3 hover:bg-slate-100 rounded-xl cursor-pointer group transition-all" onclick="toggleCategoryBranch(this)">
+                        <div class="branch-toggle text-slate-400 group-hover:text-orange-500 transition-transform">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <span class="font-bold text-slate-700 select-none">${main.name}</span>
+                    </div>
+                    <div class="category-subs hidden ml-11 mt-1 space-y-2 border-l-2 border-slate-100 pl-4">
+                        ${subs.map(sub => `
+                            <label class="flex items-center gap-3 cursor-pointer group" onclick="event.stopPropagation()">
+                                <input type="checkbox" class="cat-checkbox sub-cat hidden" value="${sub.id}" data-parent="${main.id}" onchange="onCategoryChange(this, false)">
+                                <div class="custom-checkbox w-5 h-5 border-2 border-slate-200 rounded-lg flex items-center justify-center transition-all bg-white overflow-hidden pointer-events-none">
+                                    <svg class="w-3 h-3 text-white opacity-0 scale-50 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-600 text-sm group-hover:text-slate-900 transition-colors select-none">${sub.name}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html || '<p class="text-center p-4 text-slate-400 font-bold uppercase tracking-widest text-xs">No categories found</p>';
+        }
+
+        function toggleCategoryBranch(el) {
+            const branch = el.closest('.category-main-branch');
+            const subs = branch.querySelector('.category-subs');
+            const icon = branch.querySelector('.branch-toggle');
+            if (subs.classList.contains('hidden')) {
+                subs.classList.remove('hidden');
+                icon.classList.add('rotate-90');
+            } else {
+                subs.classList.add('hidden');
+                icon.classList.remove('rotate-90');
             }
         }
 
-        function renderProducts(items) {
+        function onCategoryChange(el, isMain) {
+            const wrap = el.closest('label').querySelector('.custom-checkbox');
+            const icon = wrap.querySelector('svg');
+
+            if (el.checked) {
+                wrap.classList.add('bg-orange-500', 'border-orange-500');
+                wrap.classList.remove('bg-white', 'border-slate-200');
+                icon.classList.remove('opacity-0', 'scale-50');
+                icon.classList.add('opacity-100', 'scale-100');
+
+                // Constraint: Only 1 sub-category per main category
+                if (!isMain) {
+                    const branch = el.closest('.category-main-branch');
+                    branch.querySelectorAll('.sub-cat').forEach(other => {
+                        if (other !== el && other.checked) {
+                            other.checked = false;
+                            onCategoryChange(other, false);
+                        }
+                    });
+                }
+            } else {
+                wrap.classList.remove('bg-orange-500', 'border-orange-500');
+                wrap.classList.add('bg-white', 'border-slate-200');
+                icon.classList.add('opacity-0', 'scale-50');
+                icon.classList.remove('opacity-100', 'scale-100');
+            }
+
+            // Update hidden input
+            const selected = Array.from(document.querySelectorAll('.cat-checkbox:checked')).map(c => c.value);
+            document.getElementById('productCategory').value = selected.join(',');
+
+            // Update display text
+            const display = document.getElementById('catDisplay');
+            if (selected.length === 0) {
+                display.innerText = 'Select categories...';
+                display.classList.add('text-slate-400');
+                display.classList.remove('text-slate-700');
+            } else {
+                const names = Array.from(document.querySelectorAll('.cat-checkbox:checked'))
+                    .map(c => c.closest('label').querySelector('span').innerText);
+                display.innerText = names.join(', ');
+                display.classList.remove('text-slate-400');
+                display.classList.add('text-slate-700');
+            }
+        }
+
+        function toggleCatPopup(e) {
+            if (e) e.stopPropagation();
+            const popup = document.getElementById('catPopup');
+            popup.classList.toggle('active');
+        }
+
+        function closeCatPopup() {
+            document.getElementById('catPopup').classList.remove('active');
+        }
+
+        // Close popup on outside click
+        document.addEventListener('click', function (e) {
+            const popup = document.getElementById('catPopup');
+            const trigger = document.getElementById('catTrigger');
+            if (popup && !popup.contains(e.target) && !trigger.contains(e.target)) {
+                closeCatPopup();
+            }
+        });
+
+        function syncCategoryTree(commaIds) {
+            const ids = String(commaIds || '').split(',').filter(Boolean);
+            document.querySelectorAll('.cat-checkbox').forEach(cb => {
+                cb.checked = ids.includes(cb.value);
+                onCategoryChange(cb, cb.classList.contains('main-cat'));
+            });
+        }
+
+        function filterCategoryTree(query) {
+            const q = query.toLowerCase().trim();
+            const branches = document.querySelectorAll('.category-main-branch');
+
+            branches.forEach(branch => {
+                const mainName = branch.querySelector('.font-bold.text-slate-700').textContent.toLowerCase();
+                const subs = branch.querySelectorAll('.category-subs label');
+                let hasVisibleSub = false;
+
+                subs.forEach(label => {
+                    const subName = label.querySelector('span').textContent.toLowerCase();
+                    if (subName.includes(q)) {
+                        label.classList.remove('hidden');
+                        hasVisibleSub = true;
+                    } else {
+                        label.classList.add('hidden');
+                    }
+                });
+
+                if (mainName.includes(q) || hasVisibleSub) {
+                    branch.classList.remove('hidden');
+                    if (q.length > 0) {
+                        branch.querySelector('.category-subs').classList.remove('hidden');
+                        branch.querySelector('.branch-toggle').classList.add('rotate-90');
+                    } else {
+                        // Reset to hidden state if query is empty
+                        branch.querySelector('.category-subs').classList.add('hidden');
+                        branch.querySelector('.branch-toggle').classList.remove('rotate-90');
+                    }
+                } else {
+                    branch.classList.add('hidden');
+                }
+            });
+        }
+
+        async function loadProducts(isInitial = false) {
+            if (isLoading || (!hasMore && !isInitial)) return;
+
+            isLoading = true;
+            if (isInitial) {
+                currentPage = 1;
+                products = [];
+                hasMore = true;
+                const tbody = document.querySelector('tbody');
+                if (tbody) tbody.innerHTML = '';
+            }
+
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            if (loadingSpinner) loadingSpinner.classList.remove('hidden');
+
+            try {
+                const category = document.getElementById('categoryFilter').value;
+                const status = document.getElementById('statusFilter').value;
+                const search = document.getElementById('searchInput').value;
+
+                let url = `/api/products?page=${currentPage}&limit=${itemsPerPage}`;
+                if (category !== 'all') url += `&category=${category}`;
+                if (status !== 'all') url += `&status=${status}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.products) {
+                    const newProducts = data.products;
+                    products = [...products, ...newProducts];
+                    hasMore = data.hasMore;
+
+                    renderProducts(newProducts, !isInitial); // Append if not initial
+                    currentPage++;
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+            } finally {
+                isLoading = false;
+                if (loadingSpinner) loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        // Setup Infinite Scroll
+        function setupInfiniteScroll() {
+            const trigger = document.getElementById('infiniteScrollTrigger');
+            if (observer) observer.disconnect();
+
+            observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && hasMore && !isLoading) {
+                    loadProducts();
+                }
+            }, {
+                rootMargin: '200px'
+            });
+
+            if (trigger) observer.observe(trigger);
+        }
+
+        function renderProducts(items, append = false) {
             const tableBody = document.querySelector('tbody');
-            tableBody.innerHTML = items.map(product => {
+            const html = items.map(product => {
                 let images = [];
                 try {
                     images = product.image ? (product.image.startsWith('[') ? JSON.parse(product.image) : [product.image]) : [];
@@ -700,60 +985,21 @@
                 </tr>
                 `;
             }).join('');
-        }
 
-        function applyFilters() {
-            const category = document.getElementById('categoryFilter').value;
-            const status = document.getElementById('statusFilter').value;
-            const search = document.getElementById('searchInput').value.toLowerCase();
-
-            let filtered = products;
-
-            if (category !== 'all') {
-                filtered = filtered.filter(p => p.category_id == category);
+            if (append) {
+                tableBody.insertAdjacentHTML('beforeend', html);
+            } else {
+                tableBody.innerHTML = html;
             }
-            if (status !== 'all') {
-                filtered = filtered.filter(p => p.status === status);
-            }
-            if (search) {
-                filtered = filtered.filter(p =>
-                    p.name.toLowerCase().includes(search) ||
-                    (p.description && p.description.toLowerCase().includes(search))
-                );
-            }
-
-            renderPagination(filtered);
-        }
-
-        function renderPagination(filteredItems) {
-            const totalItems = filteredItems.length;
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-            // Validate current page
-            if (currentPage < 1) currentPage = 1;
-            if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
-
-            const startStr = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-            const endStr = Math.min(currentPage * itemsPerPage, totalItems);
-
-            document.getElementById('startRange').textContent = startStr;
-            document.getElementById('endRange').textContent = endStr;
-            document.getElementById('totalItems').textContent = totalItems;
-
-            document.getElementById('prevPageBtn').disabled = currentPage === 1;
-            document.getElementById('nextPageBtn').disabled = currentPage === totalPages || totalPages === 0;
-
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const paginatedItems = filteredItems.slice(startIndex, endIndex);
-
-            renderProducts(paginatedItems);
             initSortable();
         }
 
+        function applyFilters() {
+            loadProducts(true);
+        }
+
         function changePage(delta) {
-            currentPage += delta;
-            applyFilters();
+            // Manual pagination removed for infinity scroll
         }
 
         function initSortable() {
@@ -806,6 +1052,10 @@
             updatePinUI(false);
             document.getElementById('productSeoKeywords').value = '';
             document.getElementById('productSeoDescription').value = '';
+            document.getElementById('catSearch').value = '';
+            filterCategoryTree('');
+            syncCategoryTree('');
+            document.getElementById('saveAndAddNewBtn').classList.remove('hidden');
             document.getElementById('productModal').classList.remove('hidden');
         }
 
@@ -813,8 +1063,8 @@
             document.getElementById('productModal').classList.add('hidden');
         }
 
-        async function saveProduct(e) {
-            e.preventDefault();
+        async function saveProduct(e, addNew = false) {
+            if (e) e.preventDefault();
             const id = document.getElementById('productId').value;
             const data = {
                 name: document.getElementById('productName').value,
@@ -840,8 +1090,12 @@
                 });
 
                 if (response.ok) {
-                    closeProductModal();
-                    loadProducts();
+                    loadProducts(true);
+                    if (addNew) {
+                        openProductModal();
+                    } else {
+                        closeProductModal();
+                    }
                 } else {
                     const err = await response.json();
                     alert('Error: ' + err.error);
@@ -867,6 +1121,9 @@
             document.getElementById('productPosition').value = product.position || 0;
             document.getElementById('productSeoKeywords').value = product.seo_keywords || '';
             document.getElementById('productSeoDescription').value = product.seo_description || '';
+            document.getElementById('catSearch').value = '';
+            filterCategoryTree('');
+            syncCategoryTree(product.category_id);
             document.getElementById('productIsPinned').value = product.is_pinned ? '1' : '0';
             updatePinUI(product.is_pinned);
 
@@ -877,6 +1134,7 @@
             }
             renderImagePreviews();
 
+            document.getElementById('saveAndAddNewBtn').classList.add('hidden');
             document.getElementById('productModal').classList.remove('hidden');
         }
 
@@ -985,7 +1243,7 @@
                 const response = await fetch(`/api/products/${deleteId}`, { method: 'DELETE' });
                 if (response.ok) {
                     closeDeleteModal();
-                    loadProducts();
+                    loadProducts(true);
                 }
             } catch (error) {
                 console.error('Error deleting product:', error);
@@ -1025,7 +1283,7 @@
                         is_pinned: !currentStatus
                     })
                 });
-                if (response.ok) loadProducts();
+                if (response.ok) loadProducts(true);
             } catch (error) {
                 console.error('Error toggling pin:', error);
             }

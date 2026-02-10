@@ -402,22 +402,11 @@
                     <div class="pt-8 border-t border-slate-200/60 flex flex-col md:flex-row gap-4">
                         <button onclick="inquireWhatsApp()"
                             class="flex-1 bg-slate-950 text-white px-12 py-5 rounded-[2rem] text-lg font-bold hover:bg-orange-600 transition-all shadow-2xl shadow-slate-300 active:scale-95 flex items-center justify-center gap-3 animate-attract">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
-                                </path>
+                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03c0 2.12.541 4.189 1.57 6.007L0 24l6.135-1.61a11.803 11.803 0 005.911 1.6h.005c6.634 0 12.032-5.396 12.035-12.03a11.85 11.85 0 00-3.536-8.261" />
                             </svg>
                             WhatsApp
-                        </button>
-                        <button onclick="openQuoteSheet()"
-                            class="flex-1 bg-white text-slate-900 border-2 border-slate-100 px-12 py-5 rounded-[2rem] text-lg font-bold hover:border-orange-500 hover:text-orange-500 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3">
-                            <svg class="w-6 h-6 text-slate-900 group-hover:text-orange-500 transition-colors"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            Get a Quote
                         </button>
                     </div>
                 </div>
@@ -450,105 +439,6 @@
         </section>
     </main>
 
-    <!-- Quote Funnel Sheet -->
-    <div id="quoteSheetOverlay" onclick="closeQuoteSheet()"
-        class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[110] hidden transition-opacity duration-500 opacity-0">
-    </div>
-    <div id="quoteSheet"
-        class="fixed bottom-0 left-0 right-0 bg-white z-[120] rounded-t-[3rem] shadow-2xl transition-all duration-500 translate-y-full max-h-[90vh] overflow-y-auto scrollbar-hide">
-        <div class="p-8 md:p-12 max-w-2xl mx-auto">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-slate-900">Get a Quote</h2>
-                <button onclick="closeQuoteSheet()"
-                    class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-orange-500 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                </button>
-            </div>
-
-            <form id="quoteForm" onsubmit="submitQuote(event)" class="space-y-6">
-                <input type="hidden" id="quoteProduct" name="product">
-
-                <div class="space-y-5">
-                    <!-- Name -->
-                    <div>
-                        <label class="block text-base font-semibold text-slate-900 mb-2">Name</label>
-                        <input type="text" name="name" placeholder="Your full name" required
-                            class="w-full bg-white border border-slate-200 rounded-xl py-3.5 px-5 outline-none focus:border-slate-400 font-medium text-slate-700 transition-all placeholder:text-slate-400">
-                    </div>
-
-                    <!-- Business Type -->
-                    <div>
-                        <label class="block text-base font-semibold text-slate-900 mb-2">Business Type</label>
-                        <div class="relative">
-                            <select name="business_type" id="business_type_select" required
-                                onchange="updateAddressLabel(this.value)"
-                                class="w-full bg-white border border-slate-200 rounded-xl py-3.5 px-5 outline-none focus:border-slate-400 font-medium text-slate-700 appearance-none transition-all cursor-pointer">
-                                <option value="" disabled selected>Select Business Type</option>
-                                <option value="Restaurant">Restaurant</option>
-                                <option value="Parlor">Parlor</option>
-                                <option value="Others">Others</option>
-                            </select>
-                            <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Address -->
-                    <div>
-                        <label id="addressLabel" class="block text-base font-semibold text-slate-900 mb-2">Business
-                            Address</label>
-                        <input type="text" id="addressInput" name="address" placeholder="Store or Office Location"
-                            required
-                            class="w-full bg-white border border-slate-200 rounded-xl py-3.5 px-5 outline-none focus:border-slate-400 font-medium text-slate-700 transition-all placeholder:text-slate-400">
-                    </div>
-
-                    <!-- Contact -->
-                    <div>
-                        <label class="block text-base font-semibold text-slate-900 mb-2">Contact Number</label>
-                        <input type="tel" name="phone" placeholder="Phone number" required
-                            class="w-full bg-white border border-slate-200 rounded-xl py-3.5 px-5 outline-none focus:border-slate-400 font-medium text-slate-700 transition-all placeholder:text-slate-400">
-                    </div>
-
-                    <!-- Service -->
-                    <div>
-                        <label class="block text-base font-semibold text-slate-900 mb-2">Service</label>
-                        <div class="relative">
-                            <select name="service" required
-                                class="w-full bg-white border border-slate-200 rounded-xl py-3.5 px-5 outline-none focus:border-slate-400 font-medium text-slate-700 appearance-none transition-all cursor-pointer">
-                                <option value="" disabled selected>Select a service</option>
-                                <option value="Brand Identity">Brand Identity</option>
-                                <option value="UI/UX Design">UI/UX Design</option>
-                                <option value="Web Development">Web Development</option>
-                                <option value="Custom Artwork">Custom Artwork</option>
-                                <option value="Other">Other</option>
-                            </select>
-                            <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="pt-2">
-                    <button type="submit"
-                        class="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-slate-900 transition-all active:scale-[0.98] text-lg">
-                        Submit
-                    </button>
-                </div>
-            </form>
-            </form>
-        </div>
-    </div>
 
     <script>
         // Global state
@@ -647,7 +537,6 @@
             }
         }
 
-        // Quote Sheet Logic replaced by assets/quote-funnel.js
 
 
         const mediaObserver = new MutationObserver((mutations) => {
@@ -1118,7 +1007,6 @@
         initPage();
     </script>
     <script src="/assets/tracker.js" defer></script>
-    <script src="/assets/quote-funnel.js" defer></script>
     <script>
         // Content Protection: Block image/video save & downloader extensions
         document.addEventListener('contextmenu', e => {
