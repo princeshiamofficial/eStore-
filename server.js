@@ -128,22 +128,23 @@ app.get('/api/public/watermark/:filename', async (req, res) => {
         const width = metadata.width;
         const height = metadata.height;
 
-        // Create a Repeating SVG Pattern (Freepik Style)
-        // We use a grey color (#808080) and diagonal rotation
-        const svgWidth = 250;
-        const svgHeight = 150;
+        // Grid spacing
+        const svgWidth = 350; // Increased spacing
+        const svgHeight = 250;
 
+        // Use fill and fill-opacity for better SVG compatibility
         const svgOverlay = `
-        <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <pattern id="wm" x="0" y="0" width="${svgWidth}" height="${svgHeight}" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)">
+                <pattern id="wm" width="${svgWidth}" height="${svgHeight}" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
                     <text 
-                        x="50%" 
-                        y="50%" 
-                        font-family="Arial, sans-serif" 
-                        font-size="24" 
-                        font-weight="bold" 
-                        fill="rgba(128, 128, 128, 0.2)" 
+                        x="${svgWidth / 2}" 
+                        y="${svgHeight / 2}" 
+                        font-family="sans-serif" 
+                        font-size="42" 
+                        font-weight="900" 
+                        fill="#000000" 
+                        fill-opacity="0.15"
                         text-anchor="middle" 
                         dominant-baseline="middle">
                         COLOR HUT
@@ -161,9 +162,9 @@ app.get('/api/public/watermark/:filename', async (req, res) => {
             left: 0
         }]);
 
-        // Ensure crystal clear quality (100) and no color loss
+        // Ensure high quality
         if (format === 'jpeg' || format === 'jpg') {
-            processedImage = processedImage.jpeg({ quality: 100, chromaSubsampling: '4:4:4', progressive: true });
+            processedImage = processedImage.jpeg({ quality: 100, chromaSubsampling: '4:4:4' });
         } else if (format === 'webp') {
             processedImage = processedImage.webp({ quality: 100, lossless: true });
         } else if (format === 'png') {
