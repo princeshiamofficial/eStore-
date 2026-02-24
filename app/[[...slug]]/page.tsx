@@ -209,16 +209,13 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
         }
     };
 
-    let rawImgUrl = images[imgIndex] || '';
-    if (rawImgUrl && !rawImgUrl.startsWith('http') && !rawImgUrl.startsWith('/')) {
-        rawImgUrl = '/' + rawImgUrl;
+    let currentImgUrl = images[imgIndex] || '';
+    if (currentImgUrl && !currentImgUrl.startsWith('http') && !currentImgUrl.startsWith('/')) {
+        currentImgUrl = '/uploads/' + currentImgUrl;
     }
-    if (rawImgUrl.includes('/opt-') && !rawImgUrl.includes('/uploads/') && !rawImgUrl.includes('/api/')) {
-        rawImgUrl = '/uploads' + rawImgUrl;
+    if (currentImgUrl.includes('/opt-') && !currentImgUrl.includes('/uploads/') && !currentImgUrl.includes('/api/')) {
+        currentImgUrl = '/uploads' + currentImgUrl;
     }
-    const currentImgUrl = rawImgUrl.includes('/uploads/')
-        ? rawImgUrl.replace('/uploads/', '/api/public/watermark/')
-        : rawImgUrl;
 
     return (
         <a
