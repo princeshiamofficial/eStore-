@@ -356,7 +356,7 @@ const MeetingCallSection = () => {
     };
 
     return (
-        <section className="store-meeting-section">
+        <section id="meeting-request" className="store-meeting-section">
             <div className="meeting-dot-pattern"></div>
             <div className="store-meeting-container">
                 <div className="store-meeting-info">
