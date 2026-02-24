@@ -142,7 +142,7 @@ const db = mysql.createPool({
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
     connectTimeout: 10000, // 10 seconds timeout
-    foundRows: true, // Return matched rows instead of changed rows
+    // foundRows: true, // Invalid option in some mysql2 versions
     charset: 'utf8mb4'
 });
 
@@ -452,13 +452,27 @@ db.getConnection((err, connection) => {
                                                             });
                                                         });
 
-                                                        connection.query(addIconColumn, (err) => {
-                                                            if (err) console.error('Error adding icon column:', err);
-                                                        });
-
                                                         connection.query(createTrafficLogsTable, () => {
                                                             connection.query(createHeroSlidesTable, (err) => {
                                                                 if (err) console.error('Error creating hero_slides table:', err);
+
+                                                                // Create Meeting Requests Table
+                                                                const createMeetingRequestsTable = `
+                                                                    CREATE TABLE IF NOT EXISTS meeting_requests (
+                                                                        id INT AUTO_INCREMENT PRIMARY KEY,
+                                                                        business_type VARCHAR(50),
+                                                                        business_name VARCHAR(255),
+                                                                        full_name VARCHAR(255),
+                                                                        designation VARCHAR(255),
+                                                                        whatsapp_number VARCHAR(50),
+                                                                        menu_type VARCHAR(50),
+                                                                        address TEXT,
+                                                                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                                                                    )
+                                                                `;
+                                                                connection.query(createMeetingRequestsTable, (err) => {
+                                                                    if (err) console.error('Error creating meeting_requests table:', err);
+                                                                });
 
                                                                 // Run index migrations
                                                                 addIndexes.forEach(idxQuery => {
@@ -549,6 +563,12 @@ function requireAuth(req, res, next) {
     if (req.session && req.session.user && req.session.user.role === 'admin') {
         return next();
     }
+
+    // For API requests, return 401 instead of redirecting to login page
+    if (req.path.startsWith('/api/')) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+    }
+
     return res.redirect('/admin/login');
 }
 
@@ -1127,12 +1147,16 @@ app.get('/api/products', requireAuth, (req, res) => {
     const status = req.query.status;
     const search = req.query.search;
 
+
     let whereClause = 'p.is_deleted = FALSE';
     let params = [];
 
     if (category && category !== 'all') {
-        whereClause += ' AND FIND_IN_SET(?, p.category_id)';
-        params.push(category);
+        whereClause += ` AND (FIND_IN_SET(?, p.category_id) OR EXISTS (
+            SELECT 1 FROM category_parents cp 
+            WHERE cp.parent_id = ? AND FIND_IN_SET(cp.category_id, p.category_id)
+        ))`;
+        params.push(category, category);
     }
     if (status && status !== 'all') {
         whereClause += ' AND p.status = ?';
@@ -1566,6 +1590,10 @@ app.get('/admin/seo', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin/seo.html'));
 });
 
+app.get('/admin/meeting-requests', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin/meeting-requests.html'));
+});
+
 // Socket.io for real-time updates
 // ===== SETTINGS & TRAFFIC API =====
 
@@ -1743,6 +1771,44 @@ app.post('/api/public/track', (req, res) => {
 
     trafficBuffer.push({ ip, source: source || '', path: path || '', userAgent: userAgent || '' });
     res.sendStatus(200);
+});
+
+// Post Meeting Request
+app.post('/api/public/meeting-request', (req, res) => {
+    const { businessType, businessName, fullName, designation, whatsappNumber, menuType, address } = req.body;
+    const query = 'INSERT INTO meeting_requests (business_type, business_name, full_name, designation, whatsapp_number, menu_type, address) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    db.query(query, [businessType, businessName, fullName, designation, whatsappNumber, menuType, address], (err) => {
+        if (err) {
+            console.error('Error saving meeting request:', err);
+            return res.status(500).json({ error: 'Failed to save request' });
+        }
+        res.json({ message: 'Meeting request submitted successfully' });
+    });
+});
+
+// Get Meeting Requests (Admin)
+app.get('/api/admin/meeting-requests', requireAuth, (req, res) => {
+    db.query('SELECT * FROM meeting_requests ORDER BY created_at DESC', (err, results) => {
+        if (err) {
+            console.error('Error fetching meeting requests:', err);
+            return res.status(500).json({ error: 'Failed to fetch requests' });
+        }
+        res.json(results);
+    });
+});
+
+// Delete Meeting Request (Admin)
+app.delete('/api/admin/meeting-requests/:id', requireAuth, (req, res) => {
+    const id = req.params.id;
+    console.log(`Attempting to delete meeting request ID: ${id}`);
+    db.query('DELETE FROM meeting_requests WHERE id = ?', [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting meeting request:', err);
+            return res.status(500).json({ error: 'Failed to delete request' });
+        }
+        console.log(`Delete successful. Rows affected: ${result.affectedRows}`);
+        res.json({ message: 'Meeting request deleted successfully' });
+    });
 });
 
 // Cleanup: Move static after explicit routes if needed, 

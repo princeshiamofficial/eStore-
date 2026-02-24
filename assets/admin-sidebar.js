@@ -73,6 +73,14 @@ function renderAdminSidebar() {
                 <span class="${hideTextClass} ml-3 whitespace-nowrap">Pixel & Traffic</span>
             </a>
 
+            <a href="/admin/meeting-requests" title="Meeting Requests"
+                class="sidebar-link ${currentPage.includes('meeting-requests') ? 'active' : ''} flex items-center ${centerIconClass} py-3 text-sm font-bold ${currentPage.includes('meeting-requests') ? 'text-slate-700' : 'text-slate-500 hover:text-orange-500'}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span class="${hideTextClass} ml-3 whitespace-nowrap">Meeting Requests</span>
+            </a>
+
             <a href="/admin/seo" title="SEO Settings"
                 class="sidebar-link ${currentPage.includes('seo') ? 'active' : ''} flex items-center ${centerIconClass} py-3 text-sm font-bold ${currentPage.includes('seo') ? 'text-slate-700' : 'text-slate-500 hover:text-orange-500'}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -306,6 +306,195 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
 ProductCard.displayName = 'ProductCard';
 
 
+const MeetingCallSection = () => {
+    const [formData, setFormData] = useState({
+        businessType: '',
+        businessName: '',
+        fullName: '',
+        designation: '',
+        whatsappNumber: '',
+        address: '',
+        menuType: ''
+    });
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            const response = await fetch('/api/public/meeting-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            if (response.ok) {
+                alert('Thank you! Your meeting request has been received.');
+                setFormData({
+                    businessType: '',
+                    businessName: '',
+                    fullName: '',
+                    designation: '',
+                    whatsappNumber: '',
+                    address: '',
+                    menuType: ''
+                });
+            } else {
+                alert('Failed to submit request. Please try again.');
+            }
+        } catch (err) {
+            console.error('Submission error:', err);
+            alert('Something went wrong. Please try again later.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <section className="store-meeting-section">
+            <div className="meeting-dot-pattern"></div>
+            <div className="store-meeting-container">
+                <div className="store-meeting-info">
+                    <h2 className="serif">Elevate Your Brand with a Strategic Meeting</h2>
+                    <p>Book a dedicated session with our design experts to discuss your business vision and how we can help you stand out in the market.</p>
+
+                    <div className="store-meeting-benefits">
+                        <div className="benefit-item">
+                            <div className="benefit-icon">✓</div>
+                            <span>Personalized Brand Consultation</span>
+                        </div>
+                        <div className="benefit-item">
+                            <div className="benefit-icon">✓</div>
+                            <span>Menu Optimization Strategies</span>
+                        </div>
+                        <div className="benefit-item">
+                            <div className="benefit-icon">✓</div>
+                            <span>Digital Identity Roadmap</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="store-meeting-form-card">
+                    <form onSubmit={handleSubmit} className="meeting-form-grid">
+                        <div className="form-group">
+                            <label>Business Type</label>
+                            <select
+                                name="businessType"
+                                value={formData.businessType}
+                                onChange={handleChange}
+                                className="form-control"
+                                required
+                            >
+                                <option value="" disabled>Select business type</option>
+                                <option value="restaurant">Restaurant</option>
+                                <option value="parlor">Parlor</option>
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label>
+                                {formData.businessType === 'restaurant'
+                                    ? 'Restaurant Name'
+                                    : formData.businessType === 'parlor'
+                                        ? 'Parlor Name'
+                                        : 'Business Name'}
+                            </label>
+                            <input
+                                type="text"
+                                name="businessName"
+                                value={formData.businessName}
+                                onChange={handleChange}
+                                placeholder={`Enter ${formData.businessType || 'business'} name`}
+                                className="form-control"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Full Name</label>
+                            <input
+                                type="text"
+                                name="fullName"
+                                value={formData.fullName}
+                                onChange={handleChange}
+                                placeholder="Enter your full name"
+                                className="form-control"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Designation</label>
+                            <input
+                                type="text"
+                                name="designation"
+                                value={formData.designation}
+                                onChange={handleChange}
+                                placeholder="e.g. Owner, Manager"
+                                className="form-control"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>WhatsApp Number</label>
+                            <input
+                                type="tel"
+                                name="whatsappNumber"
+                                value={formData.whatsappNumber}
+                                onChange={handleChange}
+                                placeholder="+880..."
+                                className="form-control"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Menu Type</label>
+                            <select
+                                name="menuType"
+                                value={formData.menuType}
+                                onChange={handleChange}
+                                className="form-control"
+                                required
+                            >
+                                <option value="" disabled>Select menu type</option>
+                                <option value="new">New Menu</option>
+                                <option value="update">Update Existing</option>
+                            </select>
+                        </div>
+
+                        <div className="form-group full-width">
+                            <label>Address</label>
+                            <textarea
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                placeholder="Enter business address"
+                                className="form-control"
+                                rows={3}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group full-width">
+                            <button type="submit" className="meeting-submit-btn" disabled={isSubmitting}>
+                                {isSubmitting ? 'Submitting...' : 'Request Meeting Call'}
+                                <ChevronRight />
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    );
+};
+
 const Footer = () => {
     return (
         <footer className="store-footer">
@@ -1056,6 +1245,7 @@ export default function HomePage() {
                 </div>
             </div>
 
+            <MeetingCallSection />
             <Footer />
         </div>
     );

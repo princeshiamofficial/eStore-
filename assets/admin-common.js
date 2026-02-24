@@ -126,15 +126,15 @@ function createModernDropdown(selectId, options = {}) {
 
     // Create Trigger
     const trigger = document.createElement('div');
-    trigger.className = 'modern-dropdown-trigger w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 flex items-center justify-between cursor-pointer hover:border-orange-500 hover:bg-white transition-all group overflow-hidden';
+    trigger.className = 'modern-dropdown-trigger w-full bg-white border border-slate-100 rounded-2xl py-3 px-5 flex items-center justify-between cursor-pointer hover:border-orange-200 hover:shadow-lg hover:shadow-orange-500/5 transition-all duration-300 group overflow-hidden';
 
     const selectedText = document.createElement('span');
-    selectedText.className = 'font-bold text-slate-700 pointer-events-none truncate flex-1 mr-2';
-    selectedText.textContent = select.options[select.selectedIndex]?.text || 'Select...';
+    selectedText.className = 'text-sm font-bold text-slate-800 pointer-events-none truncate flex-1 mr-3 tracking-tight';
+    selectedText.innerHTML = select.options[select.selectedIndex]?.text || 'Select...';
 
     const icon = document.createElement('div');
-    icon.className = 'text-slate-400 group-hover:text-orange-500 transition-colors pointer-events-none flex-shrink-0';
-    icon.innerHTML = `<svg class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
+    icon.className = 'text-slate-300 group-hover:text-orange-500 transition-all duration-300 pointer-events-none flex-shrink-0';
+    icon.innerHTML = `<svg class="w-4 h-4 transition-transform duration-500 ease-out" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
 
     trigger.appendChild(selectedText);
     trigger.appendChild(icon);
@@ -142,15 +142,15 @@ function createModernDropdown(selectId, options = {}) {
 
     // Create Menu
     const menu = document.createElement('div');
-    menu.className = 'modern-dropdown-menu hidden absolute top-full left-0 w-full mt-2 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl z-[100] flex flex-col max-h-[300px] overflow-hidden';
+    menu.className = 'modern-dropdown-menu hidden absolute top-[calc(100%+8px)] left-0 min-w-full w-max max-w-[400px] bg-white/90 backdrop-blur-2xl border border-white/20 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-[100] flex flex-col max-h-[320px] overflow-hidden origin-top scale-95 opacity-0 transition-all duration-300 ease-out';
 
     // Search Input
     const searchContainer = document.createElement('div');
-    searchContainer.className = 'p-3 border-b border-slate-100 bg-white sticky top-0 z-10';
+    searchContainer.className = 'p-4 border-b border-slate-50/50 bg-white/50';
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
-    searchInput.placeholder = 'Search...';
-    searchInput.className = 'w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm font-bold outline-none focus:border-orange-500 transition-all';
+    searchInput.placeholder = 'Type to filter...';
+    searchInput.className = 'w-full bg-slate-100/50 border-none rounded-xl py-2.5 px-4 text-xs font-bold outline-none focus:ring-2 focus:ring-orange-500/20 transition-all placeholder:text-slate-400';
     searchContainer.appendChild(searchInput);
     menu.appendChild(searchContainer);
 
@@ -168,12 +168,12 @@ function createModernDropdown(selectId, options = {}) {
 
             hasResults = true;
             const item = document.createElement('div');
-            item.className = `px-5 py-3 text-sm font-bold cursor-pointer transition-colors ${opt.selected ? 'bg-orange-50 text-orange-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`;
-            item.textContent = opt.text;
+            item.className = `px-6 py-3 text-xs font-black uppercase tracking-wider cursor-pointer transition-all duration-200 whitespace-nowrap mx-2 my-1 rounded-xl ${opt.selected ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600'}`;
+            item.innerHTML = opt.text;
             item.onclick = (e) => {
                 e.stopPropagation();
                 select.value = opt.value;
-                selectedText.textContent = opt.text;
+                selectedText.innerHTML = opt.text;
                 select.dispatchEvent(new Event('change'));
                 closeMenu();
             };
@@ -250,7 +250,7 @@ function createModernDropdown(selectId, options = {}) {
     Object.defineProperty(select, 'value', {
         set: function (v) {
             descriptor.set.call(this, v);
-            selectedText.textContent = this.options[this.selectedIndex]?.text || 'Select...';
+            selectedText.innerHTML = this.options[this.selectedIndex]?.text || 'Select...';
         },
         get: function () {
             return descriptor.get.call(this);
@@ -258,7 +258,7 @@ function createModernDropdown(selectId, options = {}) {
     });
 
     select.addEventListener('change', () => {
-        selectedText.textContent = select.options[select.selectedIndex]?.text || 'Select...';
+        selectedText.innerHTML = select.options[select.selectedIndex]?.text || 'Select...';
     });
 
     return { wrapper, trigger, menu };
@@ -284,11 +284,14 @@ function initAdminCommon() {
             background: #cbd5e1;
         }
         @keyframes dropdownScaleIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
         .modern-dropdown-menu:not(.hidden) {
-            animation: dropdownScaleIn 0.1s linear forwards;
+            animation: dropdownScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .modern-dropdown-menu div {
+            white-space: nowrap !important;
         }
     `;
     document.head.appendChild(style);
