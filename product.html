@@ -429,10 +429,22 @@
         function getThumb(src) {
             if (!src || src.startsWith('blob:') || src.startsWith('data:')) return src;
 
+            // Normalize: Ensure leading slash for local paths
+            if (!src.startsWith('http') && !src.startsWith('/')) {
+                src = '/' + src;
+            }
+
+            // Ensure /uploads/ prefix for files that are definitely uploads but lack the prefix
+            if (src.includes('/opt-') && !src.includes('/uploads/') && !src.includes('/api/')) {
+                src = '/uploads' + src;
+            }
+
+            // If it's already a watermarked URL, don't touch it further
+            if (src.includes('/api/public/watermark/')) return src;
+
             // Use watermarked version for public view
             if (src.includes('/uploads/')) {
-                src = src.replace('/uploads/', '/api/public/watermark/');
-                return src; // Don't use small thumb if we want full watermark protection
+                return src.replace('/uploads/', '/api/public/watermark/');
             }
 
             if (src.includes('/opt-') && !src.includes('/thumb-')) {
@@ -773,9 +785,20 @@
                 } catch (e) { images = [product.image]; }
 
                 galleryItems = images.map(url => {
-                    const src = (url && url.startsWith('/uploads/'))
-                        ? url.replace('/uploads/', '/api/public/watermark/')
-                        : url;
+                    if (!url) return { type: 'image', src: '' };
+                    let src = url;
+                    // Normalize leading slash
+                    if (!src.startsWith('http') && !src.startsWith('/')) {
+                        src = '/' + src;
+                    }
+                    // Ensure /uploads prefix
+                    if (src.includes('/opt-') && !src.includes('/uploads/') && !src.includes('/api/')) {
+                        src = '/uploads' + src;
+                    }
+                    // Apply watermark route
+                    if (src.includes('/uploads/')) {
+                        src = src.replace('/uploads/', '/api/public/watermark/');
+                    }
                     return { type: 'image', src: src };
                 });
 
