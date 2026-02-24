@@ -915,10 +915,11 @@ app.get('/api/public/related/:categoryId', (req, res) => {
     const excludeId = req.query.exclude;
 
     const query = `
-        SELECT id, name, slug, image, video_url, rating 
-        FROM products 
-        WHERE (FIND_IN_SET(?, category_id)) AND id != ? AND status = 'Published' AND is_deleted = FALSE 
-        ORDER BY position ASC, created_at DESC
+        SELECT p.id, p.name, p.slug, p.image, p.video_url, p.rating, c.name as category_name
+        FROM products p
+        LEFT JOIN categories c ON FIND_IN_SET(c.id, p.category_id)
+        WHERE (FIND_IN_SET(?, p.category_id)) AND p.id != ? AND p.status = 'Published' AND p.is_deleted = FALSE 
+        ORDER BY p.position ASC, p.created_at DESC
     `;
     db.query(query, [categoryId, excludeId || 0], (err, results) => {
         if (err) return res.status(500).json([]);
