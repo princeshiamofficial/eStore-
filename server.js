@@ -109,11 +109,10 @@ app.get('/uploads/thumb-:filename', async (req, res, next) => {
     next();
 });
 
-// Dynamic Watermark Generation
+// Dynamic Watermark Generation (Freepik Style Grid)
 app.get('/api/public/watermark/:filename', async (req, res) => {
     const filename = req.params.filename;
     const originalPath = path.join(uploadDir, filename);
-    const watermarkPath = path.join(__dirname, 'public', 'logo.png');
 
     if (!fs.existsSync(originalPath)) {
         return res.status(404).send('Image not found');
@@ -126,42 +125,57 @@ app.get('/api/public/watermark/:filename', async (req, res) => {
     try {
         const image = sharp(originalPath);
         const metadata = await image.metadata();
+        const width = metadata.width;
+        const height = metadata.height;
 
-        // Watermark should be about 20% of the width
-        const wmWidth = Math.floor(metadata.width * 0.20);
+        // Create a Repeating SVG Pattern (Freepik Style)
+        // We use a grey color (#808080) and diagonal rotation
+        const svgWidth = 250;
+        const svgHeight = 150;
 
-        let wmBuffer;
-        if (fs.existsSync(watermarkPath)) {
-            wmBuffer = await sharp(watermarkPath)
-                .resize({ width: wmWidth })
-                .toBuffer();
+        const svgOverlay = `
+        <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="wm" x="0" y="0" width="${svgWidth}" height="${svgHeight}" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)">
+                    <text 
+                        x="50%" 
+                        y="50%" 
+                        font-family="Arial, sans-serif" 
+                        font-size="24" 
+                        font-weight="bold" 
+                        fill="rgba(128, 128, 128, 0.2)" 
+                        text-anchor="middle" 
+                        dominant-baseline="middle">
+                        COLOR HUT
+                    </text>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#wm)" />
+        </svg>
+        `;
+
+        const format = metadata.format || 'jpeg';
+        let processedImage = image.composite([{
+            input: Buffer.from(svgOverlay),
+            top: 0,
+            left: 0
+        }]);
+
+        // Ensure crystal clear quality (100) and no color loss
+        if (format === 'jpeg' || format === 'jpg') {
+            processedImage = processedImage.jpeg({ quality: 100, chromaSubsampling: '4:4:4', progressive: true });
+        } else if (format === 'webp') {
+            processedImage = processedImage.webp({ quality: 100, lossless: true });
+        } else if (format === 'png') {
+            processedImage = processedImage.png({ compressionLevel: 0 });
         }
 
-        if (wmBuffer) {
-            const format = metadata.format || 'jpeg';
-            let processedImage = image.composite([{
-                input: wmBuffer,
-                gravity: 'center',
-                blend: 'over'
-            }]);
+        const bufferedImage = await processedImage.toBuffer();
 
-            // Ensure crystal clear quality (100) and no color loss
-            if (format === 'jpeg' || format === 'jpg') {
-                processedImage = processedImage.jpeg({ quality: 100, chromaSubsampling: '4:4:4', progressive: true });
-            } else if (format === 'webp') {
-                processedImage = processedImage.webp({ quality: 100, lossless: true });
-            } else if (format === 'png') {
-                processedImage = processedImage.png({ compressionLevel: 0 }); // Zero compression for PNG
-            }
+        res.setHeader('Content-Type', 'image/' + format);
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        return res.send(bufferedImage);
 
-            const bufferedImage = await processedImage.toBuffer();
-
-            res.setHeader('Content-Type', 'image/' + format);
-            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-            return res.send(bufferedImage);
-        } else {
-            return res.sendFile(originalPath);
-        }
     } catch (err) {
         console.error('Watermark Generation Failed:', err);
         return res.sendFile(originalPath);
