@@ -451,6 +451,13 @@
         // Shared Hosting Optimization: Thumbnail detection
         function getThumb(src) {
             if (!src || src.startsWith('blob:') || src.startsWith('data:')) return src;
+
+            // Use watermarked version for public view
+            if (src.includes('/uploads/')) {
+                src = src.replace('/uploads/', '/api/public/watermark/');
+                return src; // Don't use small thumb if we want full watermark protection
+            }
+
             if (src.includes('/opt-') && !src.includes('/thumb-')) {
                 const parts = src.split('/');
                 const filename = parts.pop();
@@ -788,7 +795,12 @@
                     images = product.image ? (product.image.startsWith('[') ? JSON.parse(product.image) : [product.image]) : [];
                 } catch (e) { images = [product.image]; }
 
-                galleryItems = images.map(url => ({ type: 'image', src: url }));
+                galleryItems = images.map(url => {
+                    const src = (url && url.startsWith('/uploads/'))
+                        ? url.replace('/uploads/', '/api/public/watermark/')
+                        : url;
+                    return { type: 'image', src: src };
+                });
 
                 if (product.video_url) {
                     // Position video as the 2nd item if there are at least 1 image

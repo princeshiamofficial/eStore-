@@ -109,6 +109,55 @@ app.get('/uploads/thumb-:filename', async (req, res, next) => {
     next();
 });
 
+// Dynamic Watermark Generation
+app.get('/api/public/watermark/:filename', async (req, res) => {
+    const filename = req.params.filename;
+    const originalPath = path.join(uploadDir, filename);
+    const watermarkPath = path.join(__dirname, 'public', 'logo.png');
+
+    if (!fs.existsSync(originalPath)) {
+        return res.status(404).send('Image not found');
+    }
+
+    if (!sharp) {
+        return res.sendFile(originalPath);
+    }
+
+    try {
+        const image = sharp(originalPath);
+        const metadata = await image.metadata();
+
+        // Watermark should be about 20% of the width
+        const wmWidth = Math.floor(metadata.width * 0.20);
+
+        let wmBuffer;
+        if (fs.existsSync(watermarkPath)) {
+            wmBuffer = await sharp(watermarkPath)
+                .resize({ width: wmWidth })
+                .toBuffer();
+        }
+
+        if (wmBuffer) {
+            const bufferedImage = await image
+                .composite([{
+                    input: wmBuffer,
+                    gravity: 'center', // Center position for maximum protection
+                    blend: 'over'
+                }])
+                .toBuffer();
+
+            res.setHeader('Content-Type', 'image/' + (metadata.format || 'jpeg'));
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+            return res.send(bufferedImage);
+        } else {
+            return res.sendFile(originalPath);
+        }
+    } catch (err) {
+        console.error('Watermark Generation Failed:', err);
+        return res.sendFile(originalPath);
+    }
+});
+
 app.use('/uploads', express.static(uploadDir, staticOptions));
 app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 app.use('/admin', express.static(path.join(__dirname, 'admin'), staticOptions));

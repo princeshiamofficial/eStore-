@@ -209,7 +209,10 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
         }
     };
 
-    const currentImgUrl = images[imgIndex] || '';
+    const rawImgUrl = images[imgIndex] || '';
+    const currentImgUrl = rawImgUrl.startsWith('/uploads/')
+        ? rawImgUrl.replace('/uploads/', '/api/public/watermark/')
+        : rawImgUrl;
 
     return (
         <a
