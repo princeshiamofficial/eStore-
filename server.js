@@ -128,23 +128,23 @@ app.get('/api/public/watermark/:filename', async (req, res) => {
         const width = metadata.width;
         const height = metadata.height;
 
-        // Grid spacing
-        const svgWidth = 350; // Increased spacing
-        const svgHeight = 250;
+        // Tighter Grid spacing for smaller text
+        const svgWidth = 200;
+        const svgHeight = 120;
 
         // Use fill and fill-opacity for better SVG compatibility
         const svgOverlay = `
         <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <pattern id="wm" width="${svgWidth}" height="${svgHeight}" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+                <pattern id="wm" width="${svgWidth}" height="${svgHeight}" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)">
                     <text 
                         x="${svgWidth / 2}" 
                         y="${svgHeight / 2}" 
                         font-family="sans-serif" 
-                        font-size="42" 
-                        font-weight="900" 
+                        font-size="18" 
+                        font-weight="bold" 
                         fill="#000000" 
-                        fill-opacity="0.15"
+                        fill-opacity="0.12"
                         text-anchor="middle" 
                         dominant-baseline="middle">
                         COLOR HUT
