@@ -1841,3 +1841,212 @@ body {
 .meeting-submit-btn:active {
     transform: translateY(-1px);
 }
+
+.form-options-grid {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.form-option {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 14px 10px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+}
+
+.form-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.form-option.active {
+    background: rgba(241, 100, 30, 0.1);
+    border-color: #F1641E;
+    color: #F1641E;
+    box-shadow: 0 0 0 4px rgba(241, 100, 30, 0.1);
+}
+
+/* === MEETING POPUP MODAL === */
+.meeting-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.meeting-popup-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.meeting-popup-content {
+    background: white;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 24px;
+    position: relative;
+    padding: 32px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #1a1a1a;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.meeting-popup-overlay.active .meeting-popup-content {
+    transform: scale(1) translateY(0);
+}
+
+.meeting-popup-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #f5f5f5;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.meeting-popup-close:hover {
+    background: #eee;
+    color: #000;
+    transform: rotate(90deg);
+}
+
+.meeting-popup-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.meeting-popup-header-icon {
+    width: 56px;
+    height: 56px;
+    background: #fff0eb;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #F1641E;
+    flex-shrink: 0;
+}
+
+.meeting-popup-header-text h3 {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0;
+    color: #1a1a1a;
+}
+
+.meeting-popup-header-text p {
+    font-size: 14px;
+    color: #666;
+    margin: 4px 0 0 0;
+}
+
+.meeting-popup-form .form-group {
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.form-row .form-group {
+    flex: 1;
+    margin-bottom: 0 !important;
+}
+
+.meeting-popup-form .form-group label {
+    color: #1a1a1a;
+    font-size: 13px;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.meeting-popup-form .form-control {
+    background: #fcfcfc;
+    border: 1px solid #e0e0e0;
+    color: #1a1a1a;
+    border-radius: 12px;
+}
+
+.meeting-popup-form .form-control:focus {
+    background: #fff;
+    border-color: #F1641E;
+    box-shadow: 0 0 0 4px rgba(241, 100, 30, 0.1);
+}
+
+.meeting-popup-form .form-control::placeholder {
+    color: #aaa;
+}
+
+.meeting-popup-form .form-option {
+    background: #f8f8f8;
+    border-color: #eee;
+    color: #666;
+}
+
+.meeting-popup-form .form-option:hover {
+    background: #f0f0f0;
+}
+
+.meeting-popup-form .form-option.active {
+    background: rgba(241, 100, 30, 0.05);
+}
+
+.meeting-popup-submit {
+    background: #F1641E;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.meeting-popup-submit:hover {
+    background: #ff5a0a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(241, 100, 30, 0.3);
+}
+
+.meeting-popup-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

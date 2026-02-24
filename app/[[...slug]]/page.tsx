@@ -88,6 +88,13 @@ const WhatsAppIcon = () => (
     </svg>
 );
 
+const MailIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+        <polyline points="22,6 12,13 2,6" />
+    </svg>
+);
+
 // === TYPES ===
 interface Product {
     id: number;
@@ -312,10 +319,10 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
 ProductCard.displayName = 'ProductCard';
 
 
-const MeetingCallSection = () => {
+const MeetingRequestPopup = () => {
+    const [isOpen, setIsOpen] = useState(false);
     const [formData, setFormData] = useState({
         businessType: '',
-        businessName: '',
         fullName: '',
         designation: '',
         whatsappNumber: '',
@@ -325,13 +332,42 @@ const MeetingCallSection = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    useEffect(() => {
+        // Check if user has already submitted successfully
+        const hasSubmitted = localStorage.getItem('meeting_request_submitted');
+        if (hasSubmitted) return;
+
+        // Show after a small delay
+        const timer = setTimeout(() => {
+            setIsOpen(true);
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    const handleClose = () => {
+        setIsOpen(false);
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+        if (name === 'businessType') {
+            setFormData(prev => ({ ...prev, [name]: value, designation: '' }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const handleOptionChange = (name: string, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!formData.businessType) {
+            alert('Please select a Business Type first.');
+            return;
+        }
         setIsSubmitting(true);
         try {
             const response = await fetch('/api/public/meeting-request', {
@@ -341,15 +377,8 @@ const MeetingCallSection = () => {
             });
             if (response.ok) {
                 alert('Thank you! Your meeting request has been received.');
-                setFormData({
-                    businessType: '',
-                    businessName: '',
-                    fullName: '',
-                    designation: '',
-                    whatsappNumber: '',
-                    address: '',
-                    menuType: ''
-                });
+                localStorage.setItem('meeting_request_submitted', 'true');
+                setIsOpen(false);
             } else {
                 alert('Failed to submit request. Please try again.');
             }
@@ -362,31 +391,24 @@ const MeetingCallSection = () => {
     };
 
     return (
-        <section id="meeting-request" className="store-meeting-section">
-            <div className="meeting-dot-pattern"></div>
-            <div className="store-meeting-container">
-                <div className="store-meeting-info">
-                    <h2 className="serif">Elevate Your Brand with a Strategic Meeting</h2>
-                    <p>Book a dedicated session with our design experts to discuss your business vision and how we can help you stand out in the market.</p>
+        <div className={`meeting-popup-overlay ${isOpen ? 'active' : ''}`} onClick={(e) => e.target === e.currentTarget && handleClose()}>
+            <div className="meeting-popup-content">
+                <button className="meeting-popup-close" onClick={handleClose}>
+                    <CloseIcon />
+                </button>
 
-                    <div className="store-meeting-benefits">
-                        <div className="benefit-item">
-                            <div className="benefit-icon">✓</div>
-                            <span>Personalized Brand Consultation</span>
-                        </div>
-                        <div className="benefit-item">
-                            <div className="benefit-icon">✓</div>
-                            <span>Menu Optimization Strategies</span>
-                        </div>
-                        <div className="benefit-item">
-                            <div className="benefit-icon">✓</div>
-                            <span>Digital Identity Roadmap</span>
-                        </div>
+                <div className="meeting-popup-header">
+                    <div className="meeting-popup-header-icon">
+                        <MailIcon />
+                    </div>
+                    <div className="meeting-popup-header-text">
+                        <h3>Make an Meeting Call</h3>
+                        <p>Discuss your vision with our experts.</p>
                     </div>
                 </div>
 
-                <div className="store-meeting-form-card">
-                    <form onSubmit={handleSubmit} className="meeting-form-grid">
+                <form onSubmit={handleSubmit} className="meeting-popup-form">
+                    <div className="form-row">
                         <div className="form-group">
                             <label>Business Type</label>
                             <select
@@ -403,101 +425,116 @@ const MeetingCallSection = () => {
                         </div>
 
                         <div className="form-group">
-                            <label>
-                                {formData.businessType === 'restaurant'
-                                    ? 'Restaurant Name'
-                                    : formData.businessType === 'parlor'
-                                        ? 'Parlor Name'
-                                        : 'Business Name'}
-                            </label>
-                            <input
-                                type="text"
-                                name="businessName"
-                                value={formData.businessName}
-                                onChange={handleChange}
-                                placeholder={`Enter ${formData.businessType || 'business'} name`}
-                                className="form-control"
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Full Name</label>
-                            <input
-                                type="text"
-                                name="fullName"
-                                value={formData.fullName}
-                                onChange={handleChange}
-                                placeholder="Enter your full name"
-                                className="form-control"
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
                             <label>Designation</label>
-                            <input
-                                type="text"
-                                name="designation"
-                                value={formData.designation}
-                                onChange={handleChange}
-                                placeholder="e.g. Owner, Manager"
-                                className="form-control"
-                                required
-                            />
+                            {formData.businessType === 'parlor' ? (
+                                <select
+                                    name="designation"
+                                    value={formData.designation}
+                                    onChange={handleChange}
+                                    className="form-control"
+                                    required
+                                >
+                                    <option value="" disabled>Select designation</option>
+                                    <option value="Owner">Owner</option>
+                                    <option value="Staff">Staff</option>
+                                    <option value="Management">Management</option>
+                                    <option value="Official">Official</option>
+                                </select>
+                            ) : formData.businessType === 'restaurant' ? (
+                                <select
+                                    name="designation"
+                                    value={formData.designation}
+                                    onChange={handleChange}
+                                    className="form-control"
+                                    required
+                                >
+                                    <option value="" disabled>Select designation</option>
+                                    <option value="Owner">Owner</option>
+                                    <option value="Chef">Chef</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Management">Management</option>
+                                    <option value="Official">Official</option>
+                                </select>
+                            ) : (
+                                <input
+                                    type="text"
+                                    name="designation"
+                                    value={formData.designation}
+                                    onChange={handleChange}
+                                    placeholder="Select business type first"
+                                    className="form-control"
+                                    required
+                                    disabled={!formData.businessType}
+                                />
+                            )}
                         </div>
+                    </div>
 
-                        <div className="form-group">
-                            <label>WhatsApp Number</label>
-                            <input
-                                type="tel"
-                                name="whatsappNumber"
-                                value={formData.whatsappNumber}
-                                onChange={handleChange}
-                                placeholder="+880..."
-                                className="form-control"
-                                required
-                            />
-                        </div>
+                    <div className="form-group">
+                        <label>Full Name</label>
+                        <input
+                            type="text"
+                            name="fullName"
+                            value={formData.fullName}
+                            onChange={handleChange}
+                            placeholder="Enter your full name"
+                            className="form-control"
+                            required
+                        />
+                    </div>
 
-                        <div className="form-group">
-                            <label>Menu Type</label>
-                            <select
-                                name="menuType"
-                                value={formData.menuType}
-                                onChange={handleChange}
-                                className="form-control"
-                                required
+                    <div className="form-group">
+                        <label>Menu Type</label>
+                        <div className="form-options-grid">
+                            <button
+                                type="button"
+                                className={`form-option ${formData.menuType === 'new' ? 'active' : ''}`}
+                                onClick={() => handleOptionChange('menuType', 'new')}
                             >
-                                <option value="" disabled>Select menu type</option>
-                                <option value="new">New Menu</option>
-                                <option value="update">Update Existing</option>
-                            </select>
-                        </div>
-
-                        <div className="form-group full-width">
-                            <label>Address</label>
-                            <textarea
-                                name="address"
-                                value={formData.address}
-                                onChange={handleChange}
-                                placeholder="Enter business address"
-                                className="form-control"
-                                rows={3}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group full-width">
-                            <button type="submit" className="meeting-submit-btn" disabled={isSubmitting}>
-                                {isSubmitting ? 'Submitting...' : 'Request Meeting Call'}
-                                <ChevronRight />
+                                New Menu
+                            </button>
+                            <button
+                                type="button"
+                                className={`form-option ${formData.menuType === 'update' ? 'active' : ''}`}
+                                onClick={() => handleOptionChange('menuType', 'update')}
+                            >
+                                Update Menu
                             </button>
                         </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label>WhatsApp Number</label>
+                        <input
+                            type="tel"
+                            name="whatsappNumber"
+                            value={formData.whatsappNumber}
+                            onChange={handleChange}
+                            placeholder="+880..."
+                            className="form-control"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Address</label>
+                        <textarea
+                            name="address"
+                            value={formData.address}
+                            onChange={handleChange}
+                            placeholder="Enter business address"
+                            className="form-control"
+                            rows={2}
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" className="meeting-popup-submit" disabled={isSubmitting || !formData.businessType}>
+                        {isSubmitting ? 'Submitting...' : 'Request Meeting Call'}
+                    </button>
+                </form>
             </div>
-        </section>
+        </div>
     );
 };
 
@@ -1251,7 +1288,7 @@ export default function HomePage() {
                 </div>
             </div>
 
-            <MeetingCallSection />
+            <MeetingRequestPopup />
             <Footer />
         </div>
     );
