@@ -138,15 +138,25 @@ app.get('/api/public/watermark/:filename', async (req, res) => {
         }
 
         if (wmBuffer) {
-            const bufferedImage = await image
-                .composite([{
-                    input: wmBuffer,
-                    gravity: 'center', // Center position for maximum protection
-                    blend: 'over'
-                }])
-                .toBuffer();
+            const format = metadata.format || 'jpeg';
+            let processedImage = image.composite([{
+                input: wmBuffer,
+                gravity: 'center',
+                blend: 'over'
+            }]);
 
-            res.setHeader('Content-Type', 'image/' + (metadata.format || 'jpeg'));
+            // Ensure crystal clear quality (100) and no color loss
+            if (format === 'jpeg' || format === 'jpg') {
+                processedImage = processedImage.jpeg({ quality: 100, chromaSubsampling: '4:4:4', progressive: true });
+            } else if (format === 'webp') {
+                processedImage = processedImage.webp({ quality: 100, lossless: true });
+            } else if (format === 'png') {
+                processedImage = processedImage.png({ compressionLevel: 0 }); // Zero compression for PNG
+            }
+
+            const bufferedImage = await processedImage.toBuffer();
+
+            res.setHeader('Content-Type', 'image/' + format);
             res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
             return res.send(bufferedImage);
         } else {
