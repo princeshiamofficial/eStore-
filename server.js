@@ -918,7 +918,7 @@ app.get('/api/public/related/:categoryId', (req, res) => {
         SELECT id, name, slug, image, video_url, rating 
         FROM products 
         WHERE (FIND_IN_SET(?, category_id)) AND id != ? AND status = 'Published' AND is_deleted = FALSE 
-        LIMIT 4
+        ORDER BY position ASC, created_at DESC
     `;
     db.query(query, [categoryId, excludeId || 0], (err, results) => {
         if (err) return res.status(500).json([]);
