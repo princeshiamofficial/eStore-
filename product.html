@@ -856,6 +856,48 @@
             }
         }
 
+        // ── Related-Creations card interactive behaviour ──────────────────
+        function rcCardEnter(el) {
+            if (window.innerWidth <= 900) return;
+
+            // 1. Video hover-play (reuse existing helper)
+            playHoverVideo(el);
+
+            // 2. Multi-image slide
+            const imgs = JSON.parse(el.dataset.images || '[]');
+            if (imgs.length <= 1) return;
+            let idx = 0;
+            el._rcSlide = setInterval(() => {
+                idx = (idx + 1) % imgs.length;
+                const imgEl = el.querySelector('.rc-image-box img');
+                if (imgEl) {
+                    imgEl.style.opacity = '0';
+                    setTimeout(() => {
+                        imgEl.src = getThumb(imgs[idx]);
+                        imgEl.style.opacity = '1';
+                    }, 200);
+                }
+            }, 2500);
+        }
+
+        function rcCardLeave(el) {
+            // Stop slide interval
+            if (el._rcSlide) { clearInterval(el._rcSlide); el._rcSlide = null; }
+            // Restore first image
+            const imgs = JSON.parse(el.dataset.images || '[]');
+            const imgEl = el.querySelector('.rc-image-box img');
+            if (imgEl && imgs.length > 0) {
+                imgEl.style.opacity = '0';
+                setTimeout(() => { imgEl.src = getThumb(imgs[0]); imgEl.style.opacity = '1'; }, 200);
+            }
+            // Pause video
+            pauseHoverVideo(el);
+        }
+
+        function encodeForAttr(arr) {
+            return JSON.stringify(arr).replace(/"/g, '&quot;');
+        }
+
         function enableDragToScroll(container) {
             if (!container) return;
 
@@ -1034,18 +1076,18 @@
                     const fakeCount = (((related.indexOf(item) + 1) * 342) % 3000);
 
                     return `
-                        <a href="/p/${item.slug}" class="rc-card">
+                        <a href="/p/${item.slug}" class="rc-card"
+                           data-images="${encodeForAttr(images)}"
+                           onmouseenter="rcCardEnter(this)" onmouseleave="rcCardLeave(this)">
                             <div class="rc-image-box">
                                 <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                                      data-src="${getThumb(mainImage)}"
-                                     class="w-full h-full"
-                                     style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"
+                                     style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:opacity 0.2s;"
                                      alt="${item.name}"
                                      ${priorityAttr} loading="${loadingAttr}">
                                 ${hasVideo ? `
                                     <video src="${item.video_url}" muted playsinline loop
-                                           class="rc-video-hover"
-                                           onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+                                           style="opacity:0;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:opacity 0.3s;"></video>
                                     <div class="rc-play-overlay">
                                         <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><path d="M0 0l10 6-10 6z"/></svg>
                                     </div>
@@ -1067,6 +1109,11 @@
                             </div>
                         </a>`;
                 }).join('');
+
+                // Wire up lazy-load for the new cards
+                document.querySelectorAll('#related-grid img[data-src]').forEach(img => {
+                    img.src = img.dataset.src;
+                });
 
                 // Render Side Related Grid
                 const sideRelatedGrid = document.getElementById('side-related-grid');
