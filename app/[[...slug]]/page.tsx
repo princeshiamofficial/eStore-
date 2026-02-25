@@ -421,6 +421,9 @@ const MeetingRequestPopup = () => {
         const { name, value } = e.target;
         if (name === 'businessType') {
             setFormData(prev => ({ ...prev, [name]: value, designation: '' }));
+        } else if (name === 'whatsappNumber') {
+            const filteredValue = value.replace(/[^+0-9]/g, '');
+            setFormData(prev => ({ ...prev, [name]: filteredValue }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
