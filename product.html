@@ -444,7 +444,8 @@
             <span id="breadcrumb-title" class="text-orange-500">Product Title</span>
         </nav>
 
-        <div class="flex flex-col lg:flex-row gap-16 md:gap-24 mb-32">
+        <div class="flex flex-col lg:flex-row gap-16 md:gap-24 mb-32" itemScope itemType="http://schema.org/Product"
+            vocab="http://schema.org/" typeof="Product">
             <!-- Image Section -->
             <!-- Left Column Wrapper -->
             <div class="w-full lg:w-[720px] flex-shrink-0 flex flex-col gap-10">
@@ -462,7 +463,8 @@
                             <img id="product-img"
                                 src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                                 data-src="" class="w-full h-full object-contain transition-opacity duration-500"
-                                alt="Product Image" fetchpriority="high" width="600" height="600">
+                                alt="Product Image" fetchpriority="high" width="600" height="600" itemProp="image"
+                                property="image">
 
 
 
@@ -537,7 +539,8 @@
                     <span id="product-cat"
                         class="inline-block text-xs md:text-sm font-black uppercase tracking-[0.3em] text-orange-500 mb-4">Category</span>
                     <h1 id="product-title"
-                        class="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-tight mb-6">
+                        class="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-tight mb-6"
+                        itemProp="name" property="name">
                         Product
                         Title</h1>
                     <div id="product-rating" class="flex gap-1 items-center mb-8">
@@ -551,7 +554,8 @@
                             Vision
                         </h3>
                         <div id="product-desc"
-                            class="markdown-content text-lg md:text-xl text-slate-500 leading-relaxed font-medium">
+                            class="markdown-content text-lg md:text-xl text-slate-500 leading-relaxed font-medium"
+                            itemProp="description" property="description">
                             This premium design is part of our curated studio collection. Expertly crafted with
                             attention to detail, it embodies the minimalist elegance and functional excellence that
                             defines Color Hut's creative signature. Ideal for brands seeking to establish a

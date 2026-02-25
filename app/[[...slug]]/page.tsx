@@ -1226,7 +1226,7 @@ export default function HomePage() {
                                 <WhatsAppIcon />
                                 Contact Us
                             </a>
-                            <h2 className="serif">What is Color Hut?</h2>
+                            <h2 className="serif" itemProp="name" property="name">What is Color Hut?</h2>
                             <a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer" className="store-about-story" style={{ color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                 <YouTubeIcon />
                                 Watch our studio story on YouTube
@@ -1237,7 +1237,7 @@ export default function HomePage() {
                         <div className="store-about-grid">
                             <div className="store-about-col">
                                 <h3>Creative Branding Studio</h3>
-                                <p>
+                                <p itemProp="description" property="description">
                                     Color Hut is a leading branding agency based in Bangladesh, specializing in creating unforgettable visual identities.
                                     We craft custom logos, color schemes, and typography that bring your brand's values to life and help you stand out.
                                 </p>

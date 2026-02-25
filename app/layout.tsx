@@ -49,7 +49,7 @@ export default function RootLayout({
     };
 
     return (
-        <html lang="en" suppressHydrationWarning>
+        <html lang="en" prefix="og: http://ogp.me/ns# website: http://ogp.me/ns/website#" suppressHydrationWarning>
             <head>
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -59,7 +59,7 @@ export default function RootLayout({
                 />
                 <TrackingHead />
             </head>
-            <body suppressHydrationWarning>
+            <body itemScope itemType="http://schema.org/WebPage" suppressHydrationWarning>
                 <TrackingBody />
                 {children}
                 <ContactMotion />
