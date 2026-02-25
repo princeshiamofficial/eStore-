@@ -2064,8 +2064,7 @@ body {
     }
 
     .form-row {
-        flex-direction: column;
-        gap: 20px;
+        gap: 12px;
     }
 
     .meeting-popup-header {
@@ -2089,6 +2088,11 @@ body {
 
     .form-option {
         padding: 12px 8px;
+        font-size: 13px;
+    }
+
+    .modern-select-trigger {
+        padding: 12px 14px;
         font-size: 13px;
     }
 }
