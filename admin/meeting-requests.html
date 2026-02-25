@@ -166,6 +166,24 @@
             }
         }
 
+        function formatDate(dateInput) {
+            if (!dateInput) return 'N/A';
+            let dateStr = dateInput;
+            if (typeof dateInput === 'string' && !dateInput.includes('Z') && !dateInput.includes('+')) {
+                dateStr = dateInput.replace(' ', 'T') + 'Z';
+            }
+            const dateObj = new Date(dateStr);
+            return isNaN(dateObj.getTime()) ? 'Invalid Date' : dateObj.toLocaleString('en-GB', {
+                timeZone: 'Asia/Dhaka',
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
         function renderRequests() {
             const tableBody = document.getElementById('requestsTableBody');
             const noRequests = document.getElementById('noRequests');
@@ -178,14 +196,7 @@
 
             noRequests.classList.add('hidden');
             tableBody.innerHTML = requests.map(req => {
-                const date = new Date(req.created_at).toLocaleString('en-GB', {
-                    timeZone: 'Asia/Dhaka',
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+                const date = formatDate(req.created_at);
 
                 return `
                     <tr class="group hover:bg-slate-50 transition-colors">
@@ -251,7 +262,7 @@
                 { label: 'Menu Type', value: req.menu_type === 'new' ? 'New Menu' : 'Update Existing' },
                 { label: 'WhatsApp Number', value: req.whatsapp_number },
                 { label: 'Address', value: req.address, fullWidth: true },
-                { label: 'Submitted On', value: new Date(req.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' }), fullWidth: true }
+                { label: 'Submitted On', value: formatDate(req.created_at), fullWidth: true }
             ];
 
             modalContent.innerHTML = fields.map(field => `
