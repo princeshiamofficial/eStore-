@@ -136,6 +136,10 @@ export default function HeroSlider() {
                         <img
                             src={slides[currentIndex].image}
                             alt={slides[currentIndex].title || 'Slide'}
+                            loading="eager"
+                            fetchPriority="high"
+                            width={800}
+                            height={100}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
 

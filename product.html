@@ -1089,7 +1089,8 @@
                                      data-src="${getThumb(mainImage)}"
                                      style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:opacity 0.2s;"
                                      alt="${item.name}"
-                                     ${priorityAttr} loading="${loadingAttr}">
+                                     ${priorityAttr} loading="${loadingAttr}"
+                                     width="400" height="320">
                                 ${hasVideo ? `
                                     <video src="${item.video_url}" muted playsinline loop
                                            style="opacity:0;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:opacity 0.3s;"></video>
@@ -1176,7 +1177,7 @@
 
                 return `
                     <button onclick="switchMedia(${index})" class="relative w-20 h-20 lg:w-full lg:h-24 rounded-lg overflow-hidden transition-all duration-300 flex-shrink-0 border-2 ${activeClass} shimmer-sweep">
-                        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="${getThumb(item.src)}" class="w-full h-full object-contain">
+                        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="${getThumb(item.src)}" class="w-full h-full object-contain" width="100" height="100">
                     </button>`;
             }).join('');
 
@@ -1241,7 +1242,7 @@
                 const mediaContainer = document.getElementById('media-container');
                 if (mediaContainer) {
                     mediaContainer.innerHTML = `
-                        <img id="product-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="${item.src}" class="w-full h-full object-contain" alt="Gallery item">
+                        <img id="product-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="${item.src}" class="w-full h-full object-contain" alt="Gallery item" width="600" height="600">
                         <div id="video-frame" class="hidden w-full h-full"></div>
 
                     `;

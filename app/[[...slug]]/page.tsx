@@ -240,7 +240,10 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
                         key={imgIndex}
                         src={currentImgUrl}
                         alt={p.name}
-                        loading="lazy"
+                        loading={idx < 6 ? "eager" : "lazy"}
+                        fetchPriority={idx < 6 ? "high" : "auto"}
+                        width={400}
+                        height={320}
                         initial={{ opacity: 0, scale: 1.1, x: 20, filter: 'blur(4px)' }}
                         animate={{ opacity: 1, scale: 1, x: 0, filter: 'blur(0px)' }}
                         exit={{ opacity: 0, scale: 0.95, x: -20, filter: 'blur(2px)' }}
@@ -956,7 +959,7 @@ export default function HomePage() {
                     </button>
 
                     <a href="/" className="store-logo">
-                        <img src="/logo.png" alt="Color Hut" />
+                        <img src="/logo.png" alt="Color Hut" width={140} height={44} style={{ objectFit: 'contain' }} />
                     </a>
 
                     {/* Desktop Categories */}
