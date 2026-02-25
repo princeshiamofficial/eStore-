@@ -1601,7 +1601,7 @@ app.get('/product', async (req, res) => {
                         let firstImage = images[0];
                         if (!firstImage.startsWith('http')) {
                             const cleanPath = firstImage.startsWith('/') ? firstImage : `/uploads/${firstImage}`;
-                            shareImage = `${req.protocol}://${req.get('host')}${cleanPath}`;
+                            shareImage = `https://store.colorhutbd.xyz${cleanPath}`;
                         } else {
                             shareImage = firstImage;
                         }
@@ -1609,7 +1609,7 @@ app.get('/product', async (req, res) => {
                 }
             } catch (e) { }
 
-            const shareUrl = `${req.protocol}://${req.get('host')}/product?id=${product.id}`;
+            const shareUrl = `https://store.colorhutbd.xyz/product?id=${product.id}`;
             const cleanDescription = (product.description || '')
                 .replace(/[#*`_]/g, '')
                 .replace(/\s+/g, ' ')
@@ -1967,7 +1967,7 @@ app.get('/p/:slug', async (req, res) => {
                         let firstImage = images[0];
                         if (!firstImage.startsWith('http')) {
                             const cleanPath = firstImage.startsWith('/') ? firstImage : `/uploads/${firstImage}`;
-                            shareImage = `${req.protocol}://${req.get('host')}${cleanPath}`;
+                            shareImage = `https://store.colorhutbd.xyz${cleanPath}`;
                         } else {
                             shareImage = firstImage;
                         }
@@ -1975,7 +1975,7 @@ app.get('/p/:slug', async (req, res) => {
                 }
             } catch (e) { }
 
-            const shareUrl = `${req.protocol}://${req.get('host')}/p/${product.slug}`;
+            const shareUrl = `https://store.colorhutbd.xyz/p/${product.slug}`;
             const cleanDescription = (product.description || '')
                 .replace(/[#*`_]/g, '')
                 .replace(/\s+/g, ' ')

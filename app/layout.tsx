@@ -6,11 +6,12 @@ import ContactMotion from './ContactMotion';
 import { TrackingHead, TrackingBody } from './TrackingScripts';
 
 export const metadata: Metadata = {
+    metadataBase: new URL('https://store.colorhutbd.xyz'),
     title: 'Color Hut - Your Trusted Partner for Branding & Creative Solutions',
     description: 'Shop for unique gifts, restaurant packaging, and custom branding solutions. Color Hut is your dedicated partner for logo design, menu printing, and premium creative work in Bangladesh.',
     keywords: 'Branding, Logo Design, Menu Printing, Packaging, Gift Shop, Bangladesh, Creative Studio',
     alternates: {
-        canonical: 'https://store.colorhutbd.xyz/',
+        canonical: '/',
     },
     robots: {
         index: true,
@@ -26,11 +27,13 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Color Hut - Branding & Creative Solutions',
         description: 'Premium creative agency in Bangladesh specializing in logo design and branding.',
-        url: 'https://store.colorhutbd.xyz/',
+        url: '/',
         siteName: 'Color Hut',
         images: [
             {
-                url: 'https://store.colorhutbd.xyz/preview.png',
+                url: '/preview.png',
+                secureUrl: 'https://store.colorhutbd.xyz/preview.png',
+                type: 'image/png',
                 width: 1200,
                 height: 630,
                 alt: 'Color Hut Preview',
