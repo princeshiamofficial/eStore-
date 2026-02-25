@@ -500,7 +500,7 @@ const MeetingRequestPopup = () => {
                             <ModernSelect
                                 name="designation"
                                 value={formData.designation}
-                                placeholder={!formData.businessType ? "Select business type first" : "Select designation"}
+                                placeholder={!formData.businessType ? "Select business type" : "Select designation"}
                                 disabled={!formData.businessType}
                                 options={
                                     formData.businessType === 'parlor'
