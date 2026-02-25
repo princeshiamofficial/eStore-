@@ -30,16 +30,23 @@ export const metadata: Metadata = {
         siteName: 'Color Hut',
         images: [
             {
-                url: 'https://store.colorhutbd.xyz/image/logo.png',
-                width: 800,
-                height: 600,
+                url: 'https://store.colorhutbd.xyz/preview.png',
+                width: 1200,
+                height: 630,
+                alt: 'Color Hut Preview',
             },
         ],
         locale: 'en_US',
         type: 'website',
     },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Color Hut - Branding & Creative Solutions',
+        description: 'Premium creative agency in Bangladesh specializing in logo design and branding.',
+        images: ['https://store.colorhutbd.xyz/preview.png'],
+    },
     other: {
-        'fb:app_id': '966242223397117', // Common placeholder or user's ID
+        'fb:app_id': '966242223397117',
     },
 };
 
