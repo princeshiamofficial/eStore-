@@ -1593,7 +1593,7 @@ app.get('/product', async (req, res) => {
             const product = results[0];
 
             // Image handling (extract first image if it's an array)
-            let shareImage = 'https://store.colorhutbd.xyz/banner.jpg';
+            let shareImage = 'https://store.colorhutbd.xyz/banner.jpg?v=1';
             try {
                 if (product.image) {
                     const images = product.image.startsWith('[') ? JSON.parse(product.image) : [product.image];
@@ -1959,7 +1959,7 @@ app.get('/p/:slug', async (req, res) => {
             if (!data) return res.status(500).send('Error loading page');
 
             // Image handling
-            let shareImage = 'https://store.colorhutbd.xyz/preview.png';
+            let shareImage = 'https://store.colorhutbd.xyz/banner.jpg?v=1';
             try {
                 if (product.image) {
                     const images = product.image.startsWith('[') ? JSON.parse(product.image) : [product.image];
