@@ -1,4 +1,5 @@
 require('dotenv').config();
+process.env.TZ = 'Asia/Dhaka';
 const next = require('next');
 const dev = process.env.NODE_ENV !== 'production';
 const nextApp = next({ dev });
@@ -210,6 +211,7 @@ console.log('Attempting DB Connection:', { ...dbConfig, password: '****' });
 
 const db = mysql.createPool({
     ...dbConfig,
+    timezone: '+06:00',
     waitForConnections: true,
     connectionLimit: 2, // Ultra-low limit for strict shared hosting (prevents fork errors)
     queueLimit: 0,

@@ -168,20 +168,8 @@
 
         function formatDate(dateInput) {
             if (!dateInput) return 'N/A';
-
-            let d;
-            if (typeof dateInput === 'string') {
-                let str = dateInput.trim().replace(' ', 'T');
-                if (!str.includes('Z') && !str.includes('+')) str += 'Z';
-                d = new Date(str);
-            } else {
-                d = new Date(dateInput);
-            }
-
+            const d = new Date(dateInput);
             if (isNaN(d.getTime())) return 'Invalid Date';
-
-            // Manually add 6 hours for Bangladesh Time (GMT+6)
-            const bdTime = new Date(d.getTime() + (6 * 60 * 60 * 1000));
 
             return new Intl.DateTimeFormat('en-US', {
                 year: 'numeric',
@@ -189,9 +177,8 @@
                 day: 'numeric',
                 hour: 'numeric',
                 minute: '2-digit',
-                hour12: true,
-                timeZone: 'UTC' // We manually shifted, so display as-is from UTC perspective
-            }).format(bdTime);
+                hour12: true
+            }).format(d);
         }
 
         function renderRequests() {
