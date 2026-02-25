@@ -168,20 +168,26 @@
 
         function formatDate(dateInput) {
             if (!dateInput) return 'N/A';
-            let d = new Date(dateInput);
 
-            // If naked database string (no T, no Z), force UTC interpretation
-            if (typeof dateInput === 'string' && !dateInput.includes('T') && !dateInput.includes('Z')) {
-                d = new Date(dateInput.replace(' ', 'T') + 'Z');
+            let d;
+            if (typeof dateInput === 'string') {
+                let str = dateInput.trim().replace(' ', 'T');
+                // If no timezone offset or Z, force it as UTC
+                if (!str.includes('Z') && !str.includes('+') && !str.match(/-\d{2}:?\d{2}$/)) {
+                    str += 'Z';
+                }
+                d = new Date(str);
+            } else {
+                d = new Date(dateInput);
             }
 
             if (isNaN(d.getTime())) return 'Invalid Date';
 
             return new Intl.DateTimeFormat('en-US', {
                 timeZone: 'Asia/Dhaka',
-                day: 'numeric',
-                month: 'short',
                 year: 'numeric',
+                month: 'short',
+                day: 'numeric',
                 hour: 'numeric',
                 minute: '2-digit',
                 hour12: true
