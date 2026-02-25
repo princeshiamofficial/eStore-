@@ -316,6 +316,74 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
         </a>
     );
 });
+const ModernSelect = ({
+    name,
+    value,
+    options,
+    placeholder,
+    onChange,
+    disabled = false
+}: {
+    name: string;
+    value: string;
+    options: { label: string; value: string }[];
+    placeholder: string;
+    onChange: (name: string, value: string) => void;
+    disabled?: boolean;
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleToggle = () => {
+        if (!disabled) setIsOpen(!isOpen);
+    };
+
+    const handleSelect = (val: string) => {
+        onChange(name, val);
+        setIsOpen(false);
+    };
+
+    const selectedOption = options.find(opt => opt.value === value);
+
+    return (
+        <div className="modern-select-container" ref={containerRef}>
+            <div
+                className={`modern-select-trigger ${isOpen ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
+                onClick={handleToggle}
+            >
+                <span className={!selectedOption ? 'placeholder-text' : ''}>
+                    {selectedOption ? selectedOption.label : placeholder}
+                </span>
+                <ChevronDown className="modern-select-chevron" />
+            </div>
+
+            {isOpen && (
+                <div className="modern-select-dropdown">
+                    {options.map((opt) => (
+                        <div
+                            key={opt.value}
+                            className={`modern-select-option ${value === opt.value ? 'selected' : ''}`}
+                            onClick={() => handleSelect(opt.value)}
+                        >
+                            {opt.label}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 ProductCard.displayName = 'ProductCard';
 
 
@@ -359,7 +427,11 @@ const MeetingRequestPopup = () => {
     };
 
     const handleOptionChange = (name: string, value: string) => {
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === 'businessType') {
+            setFormData(prev => ({ ...prev, [name]: value, designation: '' }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -411,62 +483,45 @@ const MeetingRequestPopup = () => {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Business Type</label>
-                            <select
+                            <ModernSelect
                                 name="businessType"
                                 value={formData.businessType}
-                                onChange={handleChange}
-                                className="form-control"
-                                required
-                            >
-                                <option value="" disabled>Select business type</option>
-                                <option value="restaurant">Restaurant</option>
-                                <option value="parlor">Parlor</option>
-                            </select>
+                                placeholder="Select business type"
+                                options={[
+                                    { label: 'Restaurant', value: 'restaurant' },
+                                    { label: 'Parlor', value: 'parlor' }
+                                ]}
+                                onChange={handleOptionChange}
+                            />
                         </div>
 
                         <div className="form-group">
                             <label>Designation</label>
-                            {formData.businessType === 'parlor' ? (
-                                <select
-                                    name="designation"
-                                    value={formData.designation}
-                                    onChange={handleChange}
-                                    className="form-control"
-                                    required
-                                >
-                                    <option value="" disabled>Select designation</option>
-                                    <option value="Owner">Owner</option>
-                                    <option value="Staff">Staff</option>
-                                    <option value="Management">Management</option>
-                                    <option value="Official">Official</option>
-                                </select>
-                            ) : formData.businessType === 'restaurant' ? (
-                                <select
-                                    name="designation"
-                                    value={formData.designation}
-                                    onChange={handleChange}
-                                    className="form-control"
-                                    required
-                                >
-                                    <option value="" disabled>Select designation</option>
-                                    <option value="Owner">Owner</option>
-                                    <option value="Chef">Chef</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Management">Management</option>
-                                    <option value="Official">Official</option>
-                                </select>
-                            ) : (
-                                <input
-                                    type="text"
-                                    name="designation"
-                                    value={formData.designation}
-                                    onChange={handleChange}
-                                    placeholder="Select business type first"
-                                    className="form-control"
-                                    required
-                                    disabled={!formData.businessType}
-                                />
-                            )}
+                            <ModernSelect
+                                name="designation"
+                                value={formData.designation}
+                                placeholder={!formData.businessType ? "Select business type first" : "Select designation"}
+                                disabled={!formData.businessType}
+                                options={
+                                    formData.businessType === 'parlor'
+                                        ? [
+                                            { label: 'Owner', value: 'Owner' },
+                                            { label: 'Staff', value: 'Staff' },
+                                            { label: 'Management', value: 'Management' },
+                                            { label: 'Official', value: 'Official' }
+                                        ]
+                                        : formData.businessType === 'restaurant'
+                                            ? [
+                                                { label: 'Owner', value: 'Owner' },
+                                                { label: 'Chef', value: 'Chef' },
+                                                { label: 'Manager', value: 'Manager' },
+                                                { label: 'Management', value: 'Management' },
+                                                { label: 'Official', value: 'Official' }
+                                            ]
+                                            : []
+                                }
+                                onChange={handleOptionChange}
+                            />
                         </div>
                     </div>
 

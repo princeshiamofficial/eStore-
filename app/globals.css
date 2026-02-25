@@ -2050,3 +2050,141 @@ body {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+@media (max-width: 600px) {
+    .meeting-popup-overlay {
+        padding: 15px;
+    }
+
+    .meeting-popup-content {
+        padding: 24px 20px;
+        border-radius: 20px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .meeting-popup-header {
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .meeting-popup-header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+    }
+
+    .meeting-popup-header-text h3 {
+        font-size: 18px;
+    }
+
+    .form-options-grid {
+        gap: 8px;
+    }
+
+    .form-option {
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+}
+
+/* === MODERN SELECT DROPDOWN === */
+.modern-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.modern-select-trigger {
+    background: #fcfcfc;
+    border: 1px solid #e0e0e0;
+    color: #1a1a1a;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.modern-select-trigger:hover {
+    border-color: #F1641E;
+    background: #fff;
+}
+
+.modern-select-trigger.active {
+    border-color: #F1641E;
+    box-shadow: 0 0 0 4px rgba(241, 100, 30, 0.1);
+}
+
+.modern-select-trigger.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #f5f5f5;
+}
+
+.modern-select-chevron {
+    transition: transform 0.3s ease;
+    color: #999;
+}
+
+.modern-select-trigger.active .modern-select-chevron {
+    transform: rotate(180deg);
+    color: #F1641E;
+}
+
+.modern-select-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 14px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    padding: 8px;
+    transform-origin: top;
+    animation: selectIn 0.25s cubic-bezier(0, 0, 0.2, 1);
+}
+
+@keyframes selectIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modern-select-option {
+    padding: 12px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    color: #444;
+    font-weight: 500;
+}
+
+.modern-select-option:hover {
+    background: #fff0eb;
+    color: #F1641E;
+}
+
+.modern-select-option.selected {
+    background: #F1641E;
+    color: white;
+}
+
+.placeholder-text {
+    color: #999;
+}
