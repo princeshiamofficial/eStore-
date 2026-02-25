@@ -31,7 +31,7 @@ export const metadata: Metadata = {
         siteName: 'Color Hut',
         images: [
             {
-                url: 'https://store.colorhutbd.xyz/preview.png',
+                url: 'https://store.colorhutbd.xyz/preview.jpg',
                 width: 1200,
                 height: 630,
                 alt: 'Color Hut Preview',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: 'Color Hut - Branding & Creative Solutions',
         description: 'Premium creative agency in Bangladesh specializing in logo design and branding.',
-        images: ['https://store.colorhutbd.xyz/preview.png'],
+        images: ['https://store.colorhutbd.xyz/preview.jpg'],
     },
     other: {
         'fb:app_id': '966242223397117',

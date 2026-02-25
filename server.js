@@ -1593,7 +1593,7 @@ app.get('/product', async (req, res) => {
             const product = results[0];
 
             // Image handling (extract first image if it's an array)
-            let shareImage = 'https://store.colorhutbd.xyz/preview.png';
+            let shareImage = 'https://store.colorhutbd.xyz/preview.jpg';
             try {
                 if (product.image) {
                     const images = product.image.startsWith('[') ? JSON.parse(product.image) : [product.image];
