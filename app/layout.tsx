@@ -38,6 +38,9 @@ export const metadata: Metadata = {
         locale: 'en_US',
         type: 'website',
     },
+    other: {
+        'fb:app_id': '966242223397117', // Common placeholder or user's ID
+    },
 };
 
 export const viewport: Viewport = {
