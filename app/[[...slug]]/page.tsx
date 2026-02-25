@@ -1018,8 +1018,14 @@ export default function HomePage() {
                         const filteredData = currentCategory
                             ? data.filter((p: any) => {
                                 const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
-                                const isDirect = pCatIds.includes(String(currentCategory.id)) || p.category_name === currentCategory.name;
-                                const isSub = subCategories.some(sub => pCatIds.includes(String(sub.id)) || p.category_name === sub.name);
+                                const pCatNames = String(p.category_name || '').split(',').map(n => n.trim().toLowerCase());
+                                const targetName = String(currentCategory.name || '').toLowerCase().trim();
+
+                                const isDirect = pCatIds.includes(String(currentCategory.id)) || pCatNames.includes(targetName);
+                                const isSub = subCategories.some(sub => {
+                                    const subName = String(sub.name || '').toLowerCase().trim();
+                                    return pCatIds.includes(String(sub.id)) || pCatNames.includes(subName);
+                                });
                                 return isDirect || isSub;
                             })
                             : data;
@@ -1063,17 +1069,19 @@ export default function HomePage() {
     const filteredProducts = currentCategory
         ? products.filter(p => {
             const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
+            const pCatNames = String(p.category_name || '').split(',').map(n => n.trim().toLowerCase());
+            const targetName = String(currentCategory.name || '').toLowerCase().trim();
+
             // 1. Direct match with current category
-            const isDirectMatch = pCatIds.includes(String(currentCategory.id)) ||
-                p.category_name?.toLowerCase().trim() === currentCategory.name?.toLowerCase().trim();
+            const isDirectMatch = pCatIds.includes(String(currentCategory.id)) || pCatNames.includes(targetName);
 
             if (isDirectMatch) return true;
 
             // 2. Match with any sub-categories of the current category
-            const isSubMatch = subCategories.some(sub =>
-                pCatIds.includes(String(sub.id)) ||
-                p.category_name?.toLowerCase().trim() === sub.name?.toLowerCase().trim()
-            );
+            const isSubMatch = subCategories.some(sub => {
+                const subName = String(sub.name || '').toLowerCase().trim();
+                return pCatIds.includes(String(sub.id)) || pCatNames.includes(subName);
+            });
 
             return isSubMatch;
         })

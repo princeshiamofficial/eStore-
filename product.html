@@ -1305,8 +1305,9 @@
 
                 renderGallery();
 
-                // Fetch related products
-                const relatedResponse = await fetch(`/api/public/related/${product.category_id}?exclude=${product.id}`);
+                // Fetch related products (cleaning up the category_id string)
+                const catIds = String(product.category_id || '').split(',').map(id => id.trim()).filter(Boolean).join(',');
+                const relatedResponse = await fetch(`/api/public/related/${catIds}?exclude=${product.id}`);
                 const related = await relatedResponse.json();
 
                 const relatedGrid = document.getElementById('related-grid');

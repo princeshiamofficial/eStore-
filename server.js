@@ -823,9 +823,12 @@ app.get('/api/public/products', (req, res) => {
     const pinned = req.query.pinned === 'true';
 
     let query = `
-        SELECT p.id, p.name, p.slug, p.category_id, p.price, p.image, p.video_url, p.rating, p.position, p.is_pinned, c.name as category_name
+        SELECT p.id, p.name, p.slug, p.category_id, p.price, p.image, p.video_url, p.rating, p.position, p.is_pinned, (
+            SELECT GROUP_CONCAT(name SEPARATOR ', ') 
+            FROM categories 
+            WHERE FIND_IN_SET(id, p.category_id)
+        ) as category_name
         FROM products p
-        LEFT JOIN categories c ON p.category_id = c.id
         WHERE p.status = 'Published' AND p.is_deleted = FALSE
     `;
     const params = [];
@@ -865,9 +868,12 @@ app.get('/api/public/products/:id', (req, res) => {
 
         // Then fetch the product details
         const query = `
-            SELECT p.*, c.name as category_name 
+            SELECT p.*, (
+                SELECT GROUP_CONCAT(name SEPARATOR ', ') 
+                FROM categories 
+                WHERE FIND_IN_SET(id, p.category_id)
+            ) as category_name 
             FROM products p 
-            LEFT JOIN categories c ON p.category_id = c.id 
             WHERE p.id = ? AND p.status = 'Published' AND p.is_deleted = FALSE
         `;
         db.query(query, [productId], (err, results) => {
@@ -893,9 +899,12 @@ app.get('/api/public/products/slug/:slug', (req, res) => {
         if (err) console.error('Error incrementing view count:', err);
 
         const query = `
-            SELECT p.*, c.name as category_name 
+            SELECT p.*, (
+                SELECT GROUP_CONCAT(name SEPARATOR ', ') 
+                FROM categories 
+                WHERE FIND_IN_SET(id, p.category_id)
+            ) as category_name 
             FROM products p 
-            LEFT JOIN categories c ON p.category_id = c.id 
             WHERE p.slug = ? AND p.status = 'Published' AND p.is_deleted = FALSE
         `;
         db.query(query, [slug], (err, results) => {
@@ -916,14 +925,34 @@ app.get('/api/public/related/:categoryId', (req, res) => {
     const categoryId = req.params.categoryId;
     const excludeId = req.query.exclude;
 
+    // Handle multiple category IDs if provided
+    const ids = String(categoryId).split(',').map(id => id.trim()).filter(Boolean);
+
+    let whereIdClause = '';
+    const params = [];
+
+    if (ids.length > 0) {
+        whereIdClause = '(' + ids.map(id => {
+            params.push(id);
+            return 'FIND_IN_SET(?, p.category_id)';
+        }).join(' OR ') + ')';
+    } else {
+        whereIdClause = '1'; // Fallback
+    }
+
     const query = `
-        SELECT p.id, p.name, p.slug, p.image, p.video_url, p.rating, c.name as category_name
+        SELECT p.id, p.name, p.slug, p.image, p.video_url, p.rating, (
+            SELECT GROUP_CONCAT(name SEPARATOR ', ') 
+            FROM categories 
+            WHERE FIND_IN_SET(id, p.category_id)
+        ) as category_name
         FROM products p
-        LEFT JOIN categories c ON FIND_IN_SET(c.id, p.category_id)
-        WHERE (FIND_IN_SET(?, p.category_id)) AND p.id != ? AND p.status = 'Published' AND p.is_deleted = FALSE 
+        WHERE ${whereIdClause} AND p.id != ? AND p.status = 'Published' AND p.is_deleted = FALSE 
         ORDER BY p.position ASC, p.created_at DESC
     `;
-    db.query(query, [categoryId, excludeId || 0], (err, results) => {
+    params.push(excludeId || 0);
+
+    db.query(query, params, (err, results) => {
         if (err) return res.status(500).json([]);
         res.json(results);
     });
@@ -1580,9 +1609,12 @@ app.get('/product', async (req, res) => {
         }
 
         const query = `
-            SELECT p.*, c.name as category_name 
+            SELECT p.*, (
+                SELECT GROUP_CONCAT(name SEPARATOR ', ') 
+                FROM categories 
+                WHERE FIND_IN_SET(id, p.category_id)
+            ) as category_name 
             FROM products p 
-            LEFT JOIN categories c ON p.category_id = c.id 
             WHERE p.id = ? AND p.status = 'Published' AND p.is_deleted = FALSE
         `;
         db.query(query, [productId], (err, results) => {
