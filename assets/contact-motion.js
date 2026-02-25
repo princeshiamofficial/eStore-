@@ -296,7 +296,7 @@
         setTimeout(() => {
             if (!isOpen) { // Only show if menu is closed
                 tooltipContainer.classList.add('visible');
-                typeWriter('Hi! Chat with us...', bubble);
+                typeWriter('Hi! Contact with us...', bubble);
 
                 // Hide after 10 seconds
                 setTimeout(() => {

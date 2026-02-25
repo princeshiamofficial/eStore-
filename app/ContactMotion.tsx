@@ -79,7 +79,7 @@ const ContactMotion = () => {
                             alignItems: 'center',
                             gap: '1px'
                         }}>
-                            {"Hi! Chat with us...".split('').map((char, index) => (
+                            {"Hi! Contact with us...".split('').map((char, index) => (
                                 <motion.span
                                     key={index}
                                     initial={{ opacity: 0 }}
