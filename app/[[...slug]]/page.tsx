@@ -633,13 +633,13 @@ const Footer = () => {
                         <ul className="store-footer-links">
                             <li><a href="#">Help Center</a></li>
                             <li><a href="#">Privacy settings</a></li>
-                            <li><a href="https://www.youtube.com/@colorhut_official" target="_blank">Studio Gallery</a></li>
+                            <li><a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer">Studio Gallery</a></li>
                         </ul>
                         <div className="store-footer-socials" style={{ marginTop: '24px' }}>
-                            <a href="https://facebook.com/colorhutbd" target="_blank" className="store-social-btn"><FacebookIcon /></a>
+                            <a href="https://facebook.com/colorhutbd" target="_blank" rel="noopener noreferrer" className="store-social-btn"><FacebookIcon /></a>
                             <a href="#" className="store-social-btn"><InstagramIcon /></a>
                             <a href="#" className="store-social-btn"><PinterestIcon /></a>
-                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" className="store-social-btn"><FooterYouTubeIcon /></a>
+                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer" className="store-social-btn"><FooterYouTubeIcon /></a>
                         </div>
                     </div>
                 </div>
@@ -1154,6 +1154,13 @@ export default function HomePage() {
                 </nav>
             </header>
 
+            {/* SEO Critical H1 - Visually Hidden on Home */}
+            {isBaseHome && (
+                <h1 style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 }}>
+                    Color Hut - Branding & Creative Solutions in Bangladesh
+                </h1>
+            )}
+
             <div className="store-container">
                 {/* --- MOBILE HERO --- */}
                 {isBaseHome && (
@@ -1215,12 +1222,12 @@ export default function HomePage() {
                 <section className="store-about-section">
                     <div className="store-about-content">
                         <div className="store-about-header">
-                            <a href="https://wa.me/8801989224436" target="_blank" className="store-about-whatsapp-btn">
+                            <a href="https://wa.me/8801989224436" target="_blank" rel="noopener noreferrer" className="store-about-whatsapp-btn">
                                 <WhatsAppIcon />
                                 Contact Us
                             </a>
                             <h2 className="serif">What is Color Hut?</h2>
-                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" className="store-about-story" style={{ color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer" className="store-about-story" style={{ color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                 <YouTubeIcon />
                                 Watch our studio story on YouTube
                                 <YouTubeIcon />
@@ -1253,7 +1260,7 @@ export default function HomePage() {
 
                         <div className="store-about-footer">
                             <h4>Trusted by brands like Dhaka Club, HASH & NOSH and Sea Shell.</h4>
-                            <a href="https://facebook.com/colorhutbd" target="_blank" className="store-help-btn">Connect on Facebook</a>
+                            <a href="https://facebook.com/colorhutbd" target="_blank" rel="noopener noreferrer" className="store-help-btn">Connect on Facebook</a>
                         </div>
                     </div>
                 </section>
