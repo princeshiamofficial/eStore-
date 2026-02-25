@@ -95,6 +95,19 @@ const MailIcon = () => (
     </svg>
 );
 
+const CheckIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+);
+
+const PlaneIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+    </svg>
+);
+
 // === TYPES ===
 interface Product {
     id: number;
@@ -390,8 +403,7 @@ const ModernSelect = ({
 ProductCard.displayName = 'ProductCard';
 
 
-const MeetingRequestPopup = () => {
-    const [isOpen, setIsOpen] = useState(false);
+const MeetingRequestPopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
     const [formData, setFormData] = useState({
         businessType: '',
         fullName: '',
@@ -404,20 +416,16 @@ const MeetingRequestPopup = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
+        if (!isOpen) return;
         // Check if user has already submitted successfully
-        const hasSubmitted = localStorage.getItem('meeting_request_submitted');
-        if (hasSubmitted) return;
-
-        // Show after a small delay
-        const timer = setTimeout(() => {
-            setIsOpen(true);
-        }, 3000);
-
-        return () => clearTimeout(timer);
-    }, []);
+        const hasSubmitted = localStorage.getItem('request_submitted');
+        if (hasSubmitted) {
+            onClose();
+        }
+    }, [isOpen, onClose]);
 
     const handleClose = () => {
-        setIsOpen(false);
+        onClose();
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -455,8 +463,8 @@ const MeetingRequestPopup = () => {
             });
             if (response.ok) {
                 alert('Thank you! Your meeting request has been received.');
-                localStorage.setItem('meeting_request_submitted', 'true');
-                setIsOpen(false);
+                localStorage.setItem('request_submitted', 'true');
+                onClose();
             } else {
                 alert('Failed to submit request. Please try again.');
             }
@@ -599,6 +607,138 @@ const MeetingRequestPopup = () => {
     );
 };
 
+const MeetingFormSection = ({ initialBusinessType }: { initialBusinessType?: string }) => {
+    const [formData, setFormData] = useState({
+        businessType: initialBusinessType || '',
+        fullName: '',
+        designation: '',
+        whatsappNumber: '',
+        address: '',
+        menuType: ''
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        if (name === 'businessType') {
+            setFormData(prev => ({ ...prev, [name]: value, designation: '' }));
+        } else if (name === 'whatsappNumber') {
+            const filteredValue = value.replace(/[^+0-9]/g, '');
+            setFormData(prev => ({ ...prev, [name]: filteredValue }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const handleOptionChange = (name: string, value: string) => {
+        if (name === 'businessType') {
+            setFormData(prev => ({ ...prev, [name]: value, designation: '' }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!formData.businessType) {
+            alert('Please select a Business Type first.');
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            const response = await fetch('/api/public/meeting-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            if (response.ok) {
+                alert('Thank you! Your meeting request has been received.');
+                localStorage.setItem('request_submitted', 'true');
+                setFormData({
+                    businessType: '',
+                    fullName: '',
+                    designation: '',
+                    whatsappNumber: '',
+                    address: '',
+                    menuType: ''
+                });
+            } else {
+                alert('Failed to submit request. Please try again.');
+            }
+        } catch (err) {
+            console.error('Submission error:', err);
+            alert('Something went wrong. Please try again later.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <section className="store-meeting-section" id="meeting-call">
+            <div className="store-meeting-container">
+                <div className="store-meeting-info">
+                    <h2 className="serif">Make a Meeting Call</h2>
+                    <p>Discuss your vision with our experts. Whether it's a new menu design or a complete branding overhaul, we're here to help you stand out.</p>
+                </div>
+
+                <div className="store-meeting-form-card">
+                    <form onSubmit={handleSubmit} className="meeting-inline-form">
+                        <div className="meeting-form-grid">
+                            <div className="form-group">
+                                <label>Full Name</label>
+                                <input
+                                    type="text"
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleChange}
+                                    placeholder="e.g: Abdul Awal"
+                                    className="form-control"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>WhatsApp Number</label>
+                                <input
+                                    type="tel"
+                                    name="whatsappNumber"
+                                    value={formData.whatsappNumber}
+                                    onChange={handleChange}
+                                    placeholder="e.g: 01800000000"
+                                    className="form-control"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Menu Type</label>
+                                <div className="form-options-grid">
+                                    <button
+                                        type="button"
+                                        className={`form-option ${formData.menuType === 'new' ? 'active' : ''}`}
+                                        onClick={() => handleOptionChange('menuType', 'new')}
+                                    >
+                                        New Menu
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`form-option ${formData.menuType === 'update' ? 'active' : ''}`}
+                                        onClick={() => handleOptionChange('menuType', 'update')}
+                                    >
+                                        Update Menu
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" className="meeting-submit-btn" style={{ marginTop: '32px' }} disabled={isSubmitting || !formData.businessType}>
+                            {isSubmitting ? 'Submitting...' : 'Request Meeting Call'}
+                            <PlaneIcon />
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    );
+};
+
 const Footer = () => {
     return (
         <footer className="store-footer">
@@ -708,6 +848,11 @@ export default function HomePage() {
     const [allProducts, setAllProducts] = useState<any[]>([]); // For global search suggestions
     const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
     const [activeSheetCatId, setActiveSheetCatId] = useState<number | null>(null);
+    const [meetingPopupOpen, setMeetingPopupOpen] = useState(false);
+
+    const currentPath = pathname || '/';
+    const isBaseHome = currentPath === '/';
+    const slug = currentPath.split('/').filter(Boolean).pop();
 
     const subNavRef = useRef<HTMLDivElement>(null);
     const pathwayRef = useRef<HTMLDivElement>(null);
@@ -726,18 +871,31 @@ export default function HomePage() {
     }, [loading, hasMore]);
 
     useEffect(() => {
-        if (mobileSheetOpen) {
+        if (mobileSheetOpen || meetingPopupOpen) {
             document.body.classList.add('no-scroll');
         } else {
             document.body.classList.remove('no-scroll');
         }
         return () => document.body.classList.remove('no-scroll');
-    }, [mobileSheetOpen]);
+    }, [mobileSheetOpen, meetingPopupOpen]);
 
-    // Determine current category based on pathname
-    const currentPath = pathname || '/';
-    const isBaseHome = currentPath === '/';
-    const slug = currentPath.split('/').filter(Boolean).pop();
+    useEffect(() => {
+        // Auto show meeting popup after delay if not on excluded pages
+        const excludedSlugs = ['restaurant', 'parlor', 'parlour'];
+        const isExcludedPage = slug && excludedSlugs.includes(slug.toLowerCase());
+        const isRelevantPage = isBaseHome || !isExcludedPage;
+
+        if (isRelevantPage) {
+            const hasSubmitted = localStorage.getItem('request_submitted');
+            if (!hasSubmitted) {
+                const timer = setTimeout(() => {
+                    setMeetingPopupOpen(true);
+                }, 4000);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [slug]);
+
 
     // Mouse Wheel Horizontal Scroll Logic
     useEffect(() => {
@@ -1222,7 +1380,7 @@ export default function HomePage() {
 
             {/* --- ABOUT SECTION --- */}
             {isBaseHome && (
-                <section className="store-about-section" vocab="http://schema.org/" typeof="Organization">
+                <section className="store-about-section" vocab="http://schema.org/" {...{ typeof: "Organization" }}>
                     <div className="store-about-content">
                         <div className="store-about-header">
                             <a href="https://wa.me/8801989224436" target="_blank" rel="noopener noreferrer" className="store-about-whatsapp-btn">
@@ -1356,7 +1514,10 @@ export default function HomePage() {
                 </div>
             </div>
 
-            <MeetingRequestPopup />
+            <MeetingRequestPopup isOpen={meetingPopupOpen} onClose={() => setMeetingPopupOpen(false)} />
+            {(slug?.toLowerCase() === 'restaurant' || slug?.toLowerCase() === 'parlor' || slug?.toLowerCase() === 'parlour') && (
+                <MeetingFormSection initialBusinessType={slug?.toLowerCase() === 'restaurant' ? 'restaurant' : 'parlor'} />
+            )}
             <Footer />
         </div>
     );

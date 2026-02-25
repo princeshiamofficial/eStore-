@@ -85,7 +85,7 @@ export default function RootLayout({
                 />
                 <TrackingHead />
             </head>
-            <body itemScope itemType="http://schema.org/WebPage" vocab="http://schema.org/" typeof="WebPage" suppressHydrationWarning>
+            <body itemScope itemType="http://schema.org/WebPage" vocab="http://schema.org/" {...{ typeof: "WebPage" }} suppressHydrationWarning>
                 <TrackingBody />
                 {children}
                 <ContactMotion />
