@@ -9,6 +9,20 @@ export const metadata: Metadata = {
     title: 'Color Hut - Your Trusted Partner for Branding & Creative Solutions',
     description: 'Shop for unique gifts, restaurant packaging, and custom branding solutions. Color Hut is your dedicated partner for logo design, menu printing, and premium creative work in Bangladesh.',
     keywords: 'Branding, Logo Design, Menu Printing, Packaging, Gift Shop, Bangladesh, Creative Studio',
+    alternates: {
+        canonical: 'https://store.colorhutbd.xyz/',
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+        },
+    },
 };
 
 export const viewport: Viewport = {
@@ -21,11 +35,28 @@ export default function RootLayout({
 }: {
     children: React.ReactNode
 }) {
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Color Hut",
+        "url": "https://store.colorhutbd.xyz/",
+        "logo": "https://store.colorhutbd.xyz/image/logo.png",
+        "description": "Premium creative agency in Bangladesh specializing in logo design, menu printing, and custom branding solutions.",
+        "sameAs": [
+            "https://www.facebook.com/colorhutbd",
+            "https://www.instagram.com/colorhutbd"
+        ]
+    };
+
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                />
                 <TrackingHead />
             </head>
             <body suppressHydrationWarning>
