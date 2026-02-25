@@ -31,9 +31,7 @@ export const metadata: Metadata = {
         siteName: 'Color Hut',
         images: [
             {
-                url: '/preview.png',
-                secureUrl: 'https://store.colorhutbd.xyz/preview.png',
-                type: 'image/png',
+                url: 'https://store.colorhutbd.xyz/preview.png',
                 width: 1200,
                 height: 630,
                 alt: 'Color Hut Preview',
