@@ -178,7 +178,8 @@
 
             noRequests.classList.add('hidden');
             tableBody.innerHTML = requests.map(req => {
-                const date = new Date(req.created_at).toLocaleDateString('en-GB', {
+                const date = new Date(req.created_at).toLocaleString('en-GB', {
+                    timeZone: 'Asia/Dhaka',
                     day: 'numeric',
                     month: 'short',
                     year: 'numeric',
@@ -250,7 +251,7 @@
                 { label: 'Menu Type', value: req.menu_type === 'new' ? 'New Menu' : 'Update Existing' },
                 { label: 'WhatsApp Number', value: req.whatsapp_number },
                 { label: 'Address', value: req.address, fullWidth: true },
-                { label: 'Submitted On', value: new Date(req.created_at).toLocaleString(), fullWidth: true }
+                { label: 'Submitted On', value: new Date(req.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' }), fullWidth: true }
             ];
 
             modalContent.innerHTML = fields.map(field => `
