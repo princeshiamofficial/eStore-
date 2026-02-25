@@ -1219,7 +1219,7 @@ export default function HomePage() {
 
             {/* --- ABOUT SECTION --- */}
             {isBaseHome && (
-                <section className="store-about-section">
+                <section className="store-about-section" vocab="http://schema.org/" typeof="Organization">
                     <div className="store-about-content">
                         <div className="store-about-header">
                             <a href="https://wa.me/8801989224436" target="_blank" rel="noopener noreferrer" className="store-about-whatsapp-btn">

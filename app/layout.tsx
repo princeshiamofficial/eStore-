@@ -23,6 +23,21 @@ export const metadata: Metadata = {
             'max-snippet': -1,
         },
     },
+    openGraph: {
+        title: 'Color Hut - Branding & Creative Solutions',
+        description: 'Premium creative agency in Bangladesh specializing in logo design and branding.',
+        url: 'https://store.colorhutbd.xyz/',
+        siteName: 'Color Hut',
+        images: [
+            {
+                url: 'https://store.colorhutbd.xyz/image/logo.png',
+                width: 800,
+                height: 600,
+            },
+        ],
+        locale: 'en_US',
+        type: 'website',
+    },
 };
 
 export const viewport: Viewport = {
@@ -59,7 +74,7 @@ export default function RootLayout({
                 />
                 <TrackingHead />
             </head>
-            <body itemScope itemType="http://schema.org/WebPage" suppressHydrationWarning>
+            <body itemScope itemType="http://schema.org/WebPage" vocab="http://schema.org/" typeof="WebPage" suppressHydrationWarning>
                 <TrackingBody />
                 {children}
                 <ContactMotion />
