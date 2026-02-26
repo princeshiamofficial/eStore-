@@ -463,7 +463,7 @@ const MeetingRequestPopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: ()
             });
             if (response.ok) {
                 localStorage.setItem('request_submitted', 'true');
-                window.location.href = '/thank-you';
+                window.location.href = '/thank-you/';
             } else {
                 alert('Failed to submit request. Please try again.');
             }
@@ -677,7 +677,7 @@ const MeetingFormSection = ({ initialBusinessType, onStartFilling }: { initialBu
             });
             if (response.ok) {
                 localStorage.setItem('request_submitted', 'true');
-                window.location.href = '/thank-you';
+                window.location.href = '/thank-you/';
             } else {
                 alert('Failed to submit request. Please try again.');
             }

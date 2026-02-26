@@ -18,6 +18,32 @@ app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
 
+// Force trailing slash on public pages for SEO and Google Tag compatibility
+app.use((req, res, next) => {
+    if (req.method === 'GET') {
+        const urlPath = req.path;
+        console.log(`[Request] ${urlPath}`);
+
+        // Skip root, files (containing a dot), and internal system paths
+        if (urlPath !== '/' &&
+            !urlPath.includes('.') &&
+            !urlPath.startsWith('/_next') &&
+            !urlPath.startsWith('/api') &&
+            !urlPath.startsWith('/admin') &&
+            !urlPath.startsWith('/uploads') &&
+            !urlPath.startsWith('/assets')) {
+
+            if (!urlPath.endsWith('/')) {
+                const query = req.url.slice(urlPath.length);
+                console.log(`[Redirecting] ${urlPath} -> ${urlPath}/`);
+                res.set('Cache-Control', 'public, max-age=31536000');
+                return res.redirect(301, urlPath + '/' + query);
+            }
+        }
+    }
+    next();
+});
+
 const path = require('path');
 const mysql = require('mysql2');
 const multer = require('multer');
@@ -68,24 +94,6 @@ const upload = multer({ storage: storage });
 app.use(compression()); // Compress all responses
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Trailing Slash Redirection Middleware
-app.use((req, res, next) => {
-    const { method, path, url } = req;
-
-    // Only handle GET requests
-    if (method !== 'GET') return next();
-
-    // Skip root, already-slashed, or file-like paths (contain a dot before the last slash point)
-    if (path === '/' || path.endsWith('/') || path.includes('.')) return next();
-
-    // Skip System/API paths
-    if (path.startsWith('/api') || path.startsWith('/admin') || path.startsWith('/uploads') || path.startsWith('/assets')) return next();
-
-    // Perform permanent redirect to slashed version
-    const query = url.indexOf('?') !== -1 ? url.substring(url.indexOf('?')) : '';
-    res.redirect(301, path + '/' + query);
-});
 
 // Optimize static file serving with caching
 const staticOptions = {
@@ -602,7 +610,8 @@ app.use((req, res, next) => {
     // Only trigger for public page visits (not static files or uploads) to avoid excessive processing
     const isPublicPage = req.method === 'GET' && !req.path.includes('.') &&
         !req.path.startsWith('/api') && !req.path.startsWith('/admin') &&
-        !req.path.startsWith('/uploads');
+        !req.path.startsWith('/uploads') && !req.path.startsWith('/_next') &&
+        !req.path.startsWith('/assets');
 
     if (isPublicPage) {
         updateMySitemapFile();
@@ -626,17 +635,17 @@ function updateMySitemapFile() {
             let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
             xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
             xml += `  <url><loc>${baseUrl}/</loc><priority>1.0</priority><changefreq>daily</changefreq></url>\n`;
-            xml += `  <url><loc>${baseUrl}/all</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>\n`;
+            xml += `  <url><loc>${baseUrl}/all/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>\n`;
 
             if (categories) {
                 categories.forEach(cat => {
-                    if (cat.slug) xml += `  <url><loc>${baseUrl}/${cat.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>\n`;
+                    if (cat.slug) xml += `  <url><loc>${baseUrl}/${cat.slug}/</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>\n`;
                 });
             }
 
             if (products) {
                 products.forEach(prod => {
-                    if (prod.slug) xml += `  <url><loc>${baseUrl}/p/${prod.slug}</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>\n`;
+                    if (prod.slug) xml += `  <url><loc>${baseUrl}/p/${prod.slug}/</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>\n`;
                 });
             }
 
