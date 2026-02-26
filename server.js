@@ -69,6 +69,24 @@ app.use(compression()); // Compress all responses
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Trailing Slash Redirection Middleware
+app.use((req, res, next) => {
+    const { method, path, url } = req;
+
+    // Only handle GET requests
+    if (method !== 'GET') return next();
+
+    // Skip root, already-slashed, or file-like paths (contain a dot before the last slash point)
+    if (path === '/' || path.endsWith('/') || path.includes('.')) return next();
+
+    // Skip System/API paths
+    if (path.startsWith('/api') || path.startsWith('/admin') || path.startsWith('/uploads') || path.startsWith('/assets')) return next();
+
+    // Perform permanent redirect to slashed version
+    const query = url.indexOf('?') !== -1 ? url.substring(url.indexOf('?')) : '';
+    res.redirect(301, path + '/' + query);
+});
+
 // Optimize static file serving with caching
 const staticOptions = {
     maxAge: '1y',
