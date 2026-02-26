@@ -606,7 +606,7 @@ const MeetingRequestPopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: ()
     );
 };
 
-const ImagePopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+const ImagePopup = ({ isOpen, onClose, onAction }: { isOpen: boolean, onClose: () => void, onAction?: () => void }) => {
     return (
         <div className={`image-popup-overlay ${isOpen ? 'active' : ''}`} onClick={(e) => e.target === e.currentTarget && onClose()}>
             <div className="image-popup-content">
@@ -621,10 +621,7 @@ const ImagePopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                         style={{ cursor: 'pointer' }}
                         onClick={() => {
                             onClose();
-                            const element = document.getElementById('meeting-call');
-                            if (element) {
-                                element.scrollIntoView({ behavior: 'smooth' });
-                            }
+                            onAction?.();
                         }}
                     />
                     {/* Text content removed per user request */}
@@ -872,6 +869,7 @@ export default function HomePage() {
     const [meetingPopupOpen, setMeetingPopupOpen] = useState(false);
     const [imagePopupOpen, setImagePopupOpen] = useState(false);
     const [isFillingForm, setIsFillingForm] = useState(false);
+    const [isAutoScrolling, setIsAutoScrolling] = useState(false);
 
     const currentPath = pathname || '/';
     const isBaseHome = currentPath === '/';
@@ -883,7 +881,7 @@ export default function HomePage() {
 
     const observer = useRef<IntersectionObserver | null>(null);
     const lastProductElementRef = useCallback((node: HTMLElement | null) => {
-        if (loading) return;
+        if (loading || isAutoScrolling) return;
         if (observer.current) observer.current.disconnect();
         observer.current = new IntersectionObserver(entries => {
             if (entries[0].isIntersecting && hasMore) {
@@ -891,7 +889,7 @@ export default function HomePage() {
             }
         });
         if (node) observer.current.observe(node);
-    }, [loading, hasMore]);
+    }, [loading, hasMore, isAutoScrolling]);
 
     useEffect(() => {
         if (mobileSheetOpen || meetingPopupOpen || imagePopupOpen) {
@@ -1574,7 +1572,19 @@ export default function HomePage() {
             </div>
 
             <MeetingRequestPopup isOpen={meetingPopupOpen} onClose={() => handlePopupClose('meeting')} />
-            <ImagePopup isOpen={imagePopupOpen} onClose={() => handlePopupClose('image')} />
+            <ImagePopup
+                isOpen={imagePopupOpen}
+                onClose={() => handlePopupClose('image')}
+                onAction={() => {
+                    setIsAutoScrolling(true);
+                    const element = document.getElementById('meeting-call');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                    // Release the scroll lock after animation finishes
+                    setTimeout(() => setIsAutoScrolling(false), 1500);
+                }}
+            />
             {(slug?.toLowerCase() === 'restaurant' || slug?.toLowerCase() === 'parlor' || slug?.toLowerCase() === 'parlour') && (
                 <MeetingFormSection
                     initialBusinessType={slug?.toLowerCase() === 'restaurant' ? 'restaurant' : 'parlor'}
