@@ -40,18 +40,7 @@ export function TrackingHead() {
                 </Script>
             )}
 
-            {/* Google Tag Manager */}
-            {config.gtm_enabled && config.gtm_id && (
-                <Script id="gtm" strategy="afterInteractive">
-                    {`
-                        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-                        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-                        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-                        })(window,document,'script','dataLayer','${config.gtm_id}');
-                    `}
-                </Script>
-            )}
+
         </>
     );
 }
@@ -87,17 +76,7 @@ export function TrackingBody() {
                 </noscript>
             )}
 
-            {/* GTM Noscript */}
-            {config.gtm_enabled && config.gtm_id && (
-                <noscript>
-                    <iframe
-                        src={`https://www.googletagmanager.com/ns.html?id=${config.gtm_id}`}
-                        height="0"
-                        width="0"
-                        style={{ display: 'none', visibility: 'hidden' }}
-                    />
-                </noscript>
-            )}
+
         </>
     );
 }
