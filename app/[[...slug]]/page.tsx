@@ -462,9 +462,8 @@ const MeetingRequestPopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: ()
                 body: JSON.stringify(formData)
             });
             if (response.ok) {
-                alert('Thank you! Your meeting request has been received.');
                 localStorage.setItem('request_submitted', 'true');
-                onClose();
+                window.location.href = '/thank-you';
             } else {
                 alert('Failed to submit request. Please try again.');
             }
@@ -607,7 +606,35 @@ const MeetingRequestPopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: ()
     );
 };
 
-const MeetingFormSection = ({ initialBusinessType }: { initialBusinessType?: string }) => {
+const ImagePopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+    return (
+        <div className={`image-popup-overlay ${isOpen ? 'active' : ''}`} onClick={(e) => e.target === e.currentTarget && onClose()}>
+            <div className="image-popup-content">
+                <button className="image-popup-close" onClick={onClose} aria-label="Close popup">
+                    <CloseIcon />
+                </button>
+                <div className="image-popup-body">
+                    <img
+                        src="/popup.jpg"
+                        alt="Special Design Solutions"
+                        className="popup-banner-img"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                            onClose();
+                            const element = document.getElementById('meeting-call');
+                            if (element) {
+                                element.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }}
+                    />
+                    {/* Text content removed per user request */}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const MeetingFormSection = ({ initialBusinessType, onStartFilling }: { initialBusinessType?: string, onStartFilling?: () => void }) => {
     const [formData, setFormData] = useState({
         businessType: initialBusinessType || '',
         fullName: '',
@@ -652,16 +679,8 @@ const MeetingFormSection = ({ initialBusinessType }: { initialBusinessType?: str
                 body: JSON.stringify(formData)
             });
             if (response.ok) {
-                alert('Thank you! Your meeting request has been received.');
                 localStorage.setItem('request_submitted', 'true');
-                setFormData({
-                    businessType: '',
-                    fullName: '',
-                    designation: '',
-                    whatsappNumber: '',
-                    address: '',
-                    menuType: ''
-                });
+                window.location.href = '/thank-you';
             } else {
                 alert('Failed to submit request. Please try again.');
             }
@@ -691,6 +710,7 @@ const MeetingFormSection = ({ initialBusinessType }: { initialBusinessType?: str
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleChange}
+                                    onFocus={onStartFilling}
                                     placeholder="e.g: Abdul Awal"
                                     className="form-control"
                                     required
@@ -703,6 +723,7 @@ const MeetingFormSection = ({ initialBusinessType }: { initialBusinessType?: str
                                     name="whatsappNumber"
                                     value={formData.whatsappNumber}
                                     onChange={handleChange}
+                                    onFocus={onStartFilling}
                                     placeholder="e.g: 01800000000"
                                     className="form-control"
                                     required
@@ -714,14 +735,14 @@ const MeetingFormSection = ({ initialBusinessType }: { initialBusinessType?: str
                                     <button
                                         type="button"
                                         className={`form-option ${formData.menuType === 'new' ? 'active' : ''}`}
-                                        onClick={() => handleOptionChange('menuType', 'new')}
+                                        onClick={() => { handleOptionChange('menuType', 'new'); onStartFilling?.(); }}
                                     >
                                         New Menu
                                     </button>
                                     <button
                                         type="button"
                                         className={`form-option ${formData.menuType === 'update' ? 'active' : ''}`}
-                                        onClick={() => handleOptionChange('menuType', 'update')}
+                                        onClick={() => { handleOptionChange('menuType', 'update'); onStartFilling?.(); }}
                                     >
                                         Update Menu
                                     </button>
@@ -849,6 +870,8 @@ export default function HomePage() {
     const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
     const [activeSheetCatId, setActiveSheetCatId] = useState<number | null>(null);
     const [meetingPopupOpen, setMeetingPopupOpen] = useState(false);
+    const [imagePopupOpen, setImagePopupOpen] = useState(false);
+    const [isFillingForm, setIsFillingForm] = useState(false);
 
     const currentPath = pathname || '/';
     const isBaseHome = currentPath === '/';
@@ -871,30 +894,58 @@ export default function HomePage() {
     }, [loading, hasMore]);
 
     useEffect(() => {
-        if (mobileSheetOpen || meetingPopupOpen) {
+        if (mobileSheetOpen || meetingPopupOpen || imagePopupOpen) {
             document.body.classList.add('no-scroll');
         } else {
             document.body.classList.remove('no-scroll');
         }
         return () => document.body.classList.remove('no-scroll');
-    }, [mobileSheetOpen, meetingPopupOpen]);
+    }, [mobileSheetOpen, meetingPopupOpen, imagePopupOpen]);
 
     useEffect(() => {
-        // Auto show meeting popup after delay if not on excluded pages
+        const hasSubmitted = localStorage.getItem('request_submitted');
+        if (hasSubmitted || isFillingForm) return;
+
         const excludedSlugs = ['restaurant', 'parlor', 'parlour'];
         const isExcludedPage = slug && excludedSlugs.includes(slug.toLowerCase());
-        const isRelevantPage = isBaseHome || !isExcludedPage;
+        const isRelevantPage = isBaseHome || (!isExcludedPage && slug !== 'all' && categories.some(c => c.slug === slug));
 
         if (isRelevantPage) {
-            const hasSubmitted = localStorage.getItem('request_submitted');
-            if (!hasSubmitted) {
-                const timer = setTimeout(() => {
+            const timer = setTimeout(() => {
+                if (!localStorage.getItem('request_submitted')) {
                     setMeetingPopupOpen(true);
-                }, 4000);
-                return () => clearTimeout(timer);
-            }
+                }
+            }, 4000);
+            return () => clearTimeout(timer);
+        } else if (isExcludedPage) {
+            const timer = setTimeout(() => {
+                if (!localStorage.getItem('request_submitted')) {
+                    setImagePopupOpen(true);
+                }
+            }, 2000);
+            return () => clearTimeout(timer);
         }
-    }, [slug]);
+    }, [slug, isBaseHome, categories.length, isFillingForm]);
+
+    const handlePopupClose = (type: 'meeting' | 'image') => {
+        if (type === 'meeting') setMeetingPopupOpen(false);
+        else setImagePopupOpen(false);
+
+        // Re-trigger after 10 seconds if not submitted and NOT being filled
+        setTimeout(() => {
+            const hasSubmitted = localStorage.getItem('request_submitted');
+            // We use the raw DOM check or focus check for more reliability in timeout
+            const isActuallyFilling = document.activeElement?.closest('#meeting-call');
+
+            if (!hasSubmitted && !isActuallyFilling) {
+                if (type === 'meeting') setMeetingPopupOpen(true);
+                else setImagePopupOpen(true);
+            } else if (isActuallyFilling) {
+                // If they are filling, wait another 10s
+                handlePopupClose(type);
+            }
+        }, 10000);
+    };
 
 
     // Mouse Wheel Horizontal Scroll Logic
@@ -1522,9 +1573,13 @@ export default function HomePage() {
                 </div>
             </div>
 
-            <MeetingRequestPopup isOpen={meetingPopupOpen} onClose={() => setMeetingPopupOpen(false)} />
+            <MeetingRequestPopup isOpen={meetingPopupOpen} onClose={() => handlePopupClose('meeting')} />
+            <ImagePopup isOpen={imagePopupOpen} onClose={() => handlePopupClose('image')} />
             {(slug?.toLowerCase() === 'restaurant' || slug?.toLowerCase() === 'parlor' || slug?.toLowerCase() === 'parlour') && (
-                <MeetingFormSection initialBusinessType={slug?.toLowerCase() === 'restaurant' ? 'restaurant' : 'parlor'} />
+                <MeetingFormSection
+                    initialBusinessType={slug?.toLowerCase() === 'restaurant' ? 'restaurant' : 'parlor'}
+                    onStartFilling={() => setIsFillingForm(true)}
+                />
             )}
             <Footer />
         </div>
