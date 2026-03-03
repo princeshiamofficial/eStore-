@@ -493,9 +493,44 @@ const MeetingRequestPopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: ()
                 </div>
 
                 <form onSubmit={handleSubmit} className="meeting-popup-form">
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="fullName"
+                            value={formData.fullName}
+                            onChange={handleChange}
+                            placeholder="Enter your full name"
+                            className="form-control"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <input
+                            type="tel"
+                            name="whatsappNumber"
+                            value={formData.whatsappNumber}
+                            onChange={handleChange}
+                            placeholder="Enter WhatsApp Number"
+                            className="form-control"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <textarea
+                            name="address"
+                            value={formData.address}
+                            onChange={handleChange}
+                            placeholder="Enter business address"
+                            className="form-control"
+                            rows={2}
+                            required
+                        />
+                    </div>
+
                     <div className="form-row">
                         <div className="form-group">
-                            <label>Business Type</label>
                             <ModernSelect
                                 name="businessType"
                                 value={formData.businessType}
@@ -508,47 +543,34 @@ const MeetingRequestPopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: ()
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label>Designation</label>
-                            <ModernSelect
-                                name="designation"
-                                value={formData.designation}
-                                placeholder={!formData.businessType ? "Select business type" : "Select designation"}
-                                disabled={!formData.businessType}
-                                options={
-                                    formData.businessType === 'parlor'
-                                        ? [
-                                            { label: 'Owner', value: 'Owner' },
-                                            { label: 'Staff', value: 'Staff' },
-                                            { label: 'Management', value: 'Management' },
-                                            { label: 'Official', value: 'Official' }
-                                        ]
-                                        : formData.businessType === 'restaurant'
+                        {formData.businessType && (
+                            <div className="form-group">
+                                <ModernSelect
+                                    name="designation"
+                                    value={formData.designation}
+                                    placeholder="Select designation"
+                                    options={
+                                        formData.businessType === 'parlor'
                                             ? [
                                                 { label: 'Owner', value: 'Owner' },
-                                                { label: 'Chef', value: 'Chef' },
-                                                { label: 'Manager', value: 'Manager' },
+                                                { label: 'Staff', value: 'Staff' },
                                                 { label: 'Management', value: 'Management' },
                                                 { label: 'Official', value: 'Official' }
                                             ]
-                                            : []
-                                }
-                                onChange={handleOptionChange}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Full Name</label>
-                        <input
-                            type="text"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleChange}
-                            placeholder="Enter your full name"
-                            className="form-control"
-                            required
-                        />
+                                            : formData.businessType === 'restaurant'
+                                                ? [
+                                                    { label: 'Owner', value: 'Owner' },
+                                                    { label: 'Chef', value: 'Chef' },
+                                                    { label: 'Manager', value: 'Manager' },
+                                                    { label: 'Management', value: 'Management' },
+                                                    { label: 'Official', value: 'Official' }
+                                                ]
+                                                : []
+                                    }
+                                    onChange={handleOptionChange}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className="form-group">
@@ -569,32 +591,6 @@ const MeetingRequestPopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: ()
                                 Update Menu
                             </button>
                         </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label>WhatsApp Number</label>
-                        <input
-                            type="tel"
-                            name="whatsappNumber"
-                            value={formData.whatsappNumber}
-                            onChange={handleChange}
-                            placeholder="+880..."
-                            className="form-control"
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Address</label>
-                        <textarea
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            placeholder="Enter business address"
-                            className="form-control"
-                            rows={2}
-                            required
-                        />
                     </div>
 
                     <button type="submit" className="meeting-popup-submit" disabled={isSubmitting || !formData.businessType}>
@@ -701,7 +697,6 @@ const MeetingFormSection = ({ initialBusinessType, onStartFilling }: { initialBu
                     <form onSubmit={handleSubmit} className="meeting-inline-form">
                         <div className="meeting-form-grid">
                             <div className="form-group">
-                                <label>Full Name</label>
                                 <input
                                     type="text"
                                     name="fullName"
@@ -714,14 +709,13 @@ const MeetingFormSection = ({ initialBusinessType, onStartFilling }: { initialBu
                                 />
                             </div>
                             <div className="form-group">
-                                <label>WhatsApp Number</label>
                                 <input
                                     type="tel"
                                     name="whatsappNumber"
                                     value={formData.whatsappNumber}
                                     onChange={handleChange}
                                     onFocus={onStartFilling}
-                                    placeholder="e.g: 01800000000"
+                                    placeholder="Enter WhatsApp Number"
                                     className="form-control"
                                     required
                                 />
