@@ -697,6 +697,7 @@ const MeetingFormSection = ({ initialBusinessType, onStartFilling }: { initialBu
                     <form onSubmit={handleSubmit} className="meeting-inline-form">
                         <div className="meeting-form-grid">
                             <div className="form-group">
+                                <label>Full Name</label>
                                 <input
                                     type="text"
                                     name="fullName"
@@ -709,6 +710,7 @@ const MeetingFormSection = ({ initialBusinessType, onStartFilling }: { initialBu
                                 />
                             </div>
                             <div className="form-group">
+                                <label>WhatsApp Number</label>
                                 <input
                                     type="tel"
                                     name="whatsappNumber"
@@ -894,6 +896,8 @@ export default function HomePage() {
         return () => document.body.classList.remove('no-scroll');
     }, [mobileSheetOpen, meetingPopupOpen, imagePopupOpen]);
 
+    const popupTimeoutRef = useRef(10000); // starts at 10s
+
     useEffect(() => {
         const hasSubmitted = localStorage.getItem('request_submitted');
         if (hasSubmitted || isFillingForm) return;
@@ -907,14 +911,14 @@ export default function HomePage() {
                 if (!localStorage.getItem('request_submitted')) {
                     setMeetingPopupOpen(true);
                 }
-            }, 4000);
+            }, popupTimeoutRef.current);
             return () => clearTimeout(timer);
         } else if (isExcludedPage) {
             const timer = setTimeout(() => {
                 if (!localStorage.getItem('request_submitted')) {
                     setImagePopupOpen(true);
                 }
-            }, 2000);
+            }, popupTimeoutRef.current);
             return () => clearTimeout(timer);
         }
     }, [slug, isBaseHome, categories.length, isFillingForm]);
@@ -923,7 +927,11 @@ export default function HomePage() {
         if (type === 'meeting') setMeetingPopupOpen(false);
         else setImagePopupOpen(false);
 
-        // Re-trigger after 10 seconds if not submitted and NOT being filled
+        const currentWaitTime = popupTimeoutRef.current;
+        // Increase wait time by 10s for the next time
+        popupTimeoutRef.current += 10000;
+
+        // Re-trigger after currentWaitTime if not submitted and NOT being filled
         setTimeout(() => {
             const hasSubmitted = localStorage.getItem('request_submitted');
             // We use the raw DOM check or focus check for more reliability in timeout
@@ -933,10 +941,10 @@ export default function HomePage() {
                 if (type === 'meeting') setMeetingPopupOpen(true);
                 else setImagePopupOpen(true);
             } else if (isActuallyFilling) {
-                // If they are filling, wait another 10s
+                // If they are filling, restart the wait cycle
                 handlePopupClose(type);
             }
-        }, 10000);
+        }, currentWaitTime);
     };
 
 
