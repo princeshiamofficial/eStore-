@@ -710,14 +710,6 @@ export default function ProductDetailPage() {
         }
     };
 
-    const watchVideo = () => {
-        const videoIdx = galleryItems.findIndex(item => item.type === 'video');
-        if (videoIdx !== -1) {
-            switchMedia(videoIdx);
-            window.scrollTo({ top: 150, behavior: 'smooth' });
-        }
-    };
-
     const nextMedia = () => {
         setCurrentMediaIndex((prev) => (prev + 1) % galleryItems.length);
     };
@@ -1743,17 +1735,6 @@ export default function ProductDetailPage() {
                                     <span>Place Order via WhatsApp</span>
                                     <svg className="w-5 h-5 group-hover/cta:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                 </button>
-
-                                {product.video_url && (
-                                    <button
-                                        onClick={watchVideo}
-                                        className="px-6 py-4.5 bg-orange-50 hover:bg-orange-100 text-orange-600 font-extrabold rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2.5 border border-orange-100/40"
-                                        title="Watch Review Video"
-                                    >
-                                        <PlayIcon />
-                                        <span className="hidden md:inline">Watch Video</span>
-                                    </button>
-                                )}
 
                                 <button
                                     onClick={shareProduct}
