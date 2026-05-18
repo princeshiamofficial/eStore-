@@ -2031,6 +2031,189 @@ app.get('/p/:slug', (req, res) => {
     });
 });
 
+// Crawler Open Graph Preview Interceptors for Social Sharing (WhatsApp, Facebook, Twitter, Discord, Telegram, etc.)
+const isCrawler = (userAgent) => {
+    if (!userAgent) return false;
+    const crawlers = [
+        'facebookexternalhit',
+        'twitterbot',
+        'linkedinbot',
+        'embedly',
+        'slackbot',
+        'telegrambot',
+        'discordbot',
+        'whatsapp',
+        'pinterest',
+        'googlebot',
+        'bingbot',
+        'yandex',
+        'baiduspider'
+    ];
+    const ua = userAgent.toLowerCase();
+    return crawlers.some(crawler => ua.includes(crawler));
+};
+
+app.get('/p/:id/:title', (req, res, next) => {
+    const id = req.params.id;
+    const userAgent = req.headers['user-agent'] || '';
+
+    if (isCrawler(userAgent)) {
+        db.query('SELECT name, description, image FROM products WHERE id = ? AND status = "Published" AND is_deleted = FALSE', [id], (err, results) => {
+            if (err || !results || results.length === 0) {
+                return next();
+            }
+            const product = results[0];
+            
+            let images = [];
+            try {
+                if (product.image && product.image.startsWith('[')) {
+                    images = JSON.parse(product.image);
+                } else if (product.image) {
+                    images = [product.image];
+                }
+            } catch (e) {
+                images = product.image ? [product.image] : [];
+            }
+            
+            let imgUrl = images[0] || '/logo.png';
+            if (imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
+                imgUrl = '/uploads/' + imgUrl;
+            }
+            if (imgUrl.includes('/uploads/')) {
+                imgUrl = imgUrl.replace('/uploads/', '/api/public/watermark/');
+            }
+            
+            const host = req.headers['x-forwarded-host'] || req.get('host');
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+            const absoluteImgUrl = imgUrl.startsWith('http') ? imgUrl : `${protocol}://${host}${imgUrl}`;
+            const absoluteUrl = `${protocol}://${host}${req.originalUrl}`;
+            
+            const cleanDescription = (product.description || '')
+                .replace(/[#*`_[\]()]/g, '')
+                .replace(/<[^>]*>/g, '')
+                .trim()
+                .substring(0, 200);
+            
+            const fallbackDesc = `Explore ${product.name} at Color Hut Studio - custom restaurant and parlor menu service in Bangladesh.`;
+            const description = cleanDescription.length > 10 ? cleanDescription : fallbackDesc;
+            
+            const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>${product.name} | Color Hut Studio</title>
+    <meta name="description" content="${description}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${absoluteUrl}">
+    <meta property="og:title" content="${product.name}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:image" content="${absoluteImgUrl}">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="${absoluteUrl}">
+    <meta name="twitter:title" content="${product.name}">
+    <meta name="twitter:description" content="${description}">
+    <meta name="twitter:image" content="${absoluteImgUrl}">
+</head>
+<body>
+    <h1>${product.name}</h1>
+    <p>${description}</p>
+    <img src="${absoluteImgUrl}" alt="${product.name}">
+</body>
+</html>`;
+            res.setHeader('Content-Type', 'text/html');
+            return res.send(html);
+        });
+    } else {
+        return next();
+    }
+});
+
+app.get('/:id/:categoryName', (req, res, next) => {
+    const id = req.params.id;
+    const userAgent = req.headers['user-agent'] || '';
+
+    if (isNaN(id)) {
+        return next();
+    }
+
+    if (isCrawler(userAgent)) {
+        db.query('SELECT name FROM categories WHERE id = ? AND is_deleted = FALSE', [id], (err, results) => {
+            if (err || !results || results.length === 0) {
+                return next();
+            }
+            const category = results[0];
+            
+            db.query('SELECT image FROM products WHERE FIND_IN_SET(?, category_id) AND status = "Published" AND is_deleted = FALSE LIMIT 1', [id], (err2, prodResults) => {
+                let imgUrl = '/logo.png';
+                if (!err2 && prodResults && prodResults.length > 0) {
+                    const product = prodResults[0];
+                    let images = [];
+                    try {
+                        if (product.image && product.image.startsWith('[')) {
+                            images = JSON.parse(product.image);
+                        } else if (product.image) {
+                            images = [product.image];
+                        }
+                    } catch (e) {
+                        images = product.image ? [product.image] : [];
+                    }
+                    if (images.length > 0) {
+                        imgUrl = images[0];
+                    }
+                }
+                
+                if (imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
+                    imgUrl = '/uploads/' + imgUrl;
+                }
+                if (imgUrl.includes('/uploads/')) {
+                    imgUrl = imgUrl.replace('/uploads/', '/api/public/watermark/');
+                }
+                
+                const host = req.headers['x-forwarded-host'] || req.get('host');
+                const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+                const absoluteImgUrl = imgUrl.startsWith('http') ? imgUrl : `${protocol}://${host}${imgUrl}`;
+                const absoluteUrl = `${protocol}://${host}${req.originalUrl}`;
+                const cleanDescription = `Explore our curated selection of ${category.name} designs and custom menus at Color Hut Studio.`;
+                
+                const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>${category.name} | Color Hut Studio</title>
+    <meta name="description" content="${cleanDescription}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${absoluteUrl}">
+    <meta property="og:title" content="${category.name}">
+    <meta property="og:description" content="${cleanDescription}">
+    <meta property="og:image" content="${absoluteImgUrl}">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="${absoluteUrl}">
+    <meta name="twitter:title" content="${category.name}">
+    <meta name="twitter:description" content="${cleanDescription}">
+    <meta name="twitter:image" content="${absoluteImgUrl}">
+</head>
+<body>
+    <h1>${category.name}</h1>
+    <p>${cleanDescription}</p>
+    <img src="${absoluteImgUrl}" alt="${category.name}">
+</body>
+</html>`;
+                res.setHeader('Content-Type', 'text/html');
+                return res.send(html);
+            });
+        });
+    } else {
+        return next();
+    }
+});
 
 // Admin: Save Campaign URL configuration
 app.post('/api/admin/campaign-urls', requireAuth, (req, res) => {
