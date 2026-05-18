@@ -102,6 +102,7 @@ interface Product {
     video_url?: string;
     category_id?: number | string;
     category_name?: string;
+    description?: string;
     rating?: string | number;
     is_pinned?: boolean | number;
 }
