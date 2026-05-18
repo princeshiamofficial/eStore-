@@ -2133,8 +2133,11 @@ app.get('/p/:id/:title', (req, res, next) => {
                 imgUrl = imgUrl + '.jpg';
             }
             
-            const host = req.headers['x-forwarded-host'] || req.get('host');
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+            let host = req.headers['x-forwarded-host'] || req.get('host') || 'store.colorhutbd.xyz';
+            if (host.includes('localhost') || host.includes('127.0.0.1')) {
+                host = 'store.colorhutbd.xyz';
+            }
+            const protocol = 'https';
             const absoluteImgUrl = imgUrl.startsWith('http') ? imgUrl : `${protocol}://${host}${imgUrl}`;
             const absoluteUrl = `${protocol}://${host}${req.originalUrl}`;
             
@@ -2160,6 +2163,9 @@ app.get('/p/:id/:title', (req, res, next) => {
     <meta property="og:title" content="${product.name}">
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${absoluteImgUrl}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
@@ -2197,7 +2203,7 @@ app.get('/:id/:categoryName', (req, res, next) => {
             }
             const category = results[0];
             
-            db.query('SELECT image FROM products WHERE FIND_IN_SET(?, category_id) AND status = "Published" AND is_deleted = FALSE LIMIT 1', [id], (err2, prodResults) => {
+            db.query('SELECT image FROM products WHERE (category_id = ? OR FIND_IN_SET(?, category_id)) AND status = "Published" AND is_deleted = FALSE LIMIT 1', [id, id], (err2, prodResults) => {
                 let imgUrl = '/logo.png';
                 if (!err2 && prodResults && prodResults.length > 0) {
                     const product = prodResults[0];
@@ -2226,8 +2232,11 @@ app.get('/:id/:categoryName', (req, res, next) => {
                     imgUrl = imgUrl + '.jpg';
                 }
                 
-                const host = req.headers['x-forwarded-host'] || req.get('host');
-                const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+                let host = req.headers['x-forwarded-host'] || req.get('host') || 'store.colorhutbd.xyz';
+                if (host.includes('localhost') || host.includes('127.0.0.1')) {
+                    host = 'store.colorhutbd.xyz';
+                }
+                const protocol = 'https';
                 const absoluteImgUrl = imgUrl.startsWith('http') ? imgUrl : `${protocol}://${host}${imgUrl}`;
                 const absoluteUrl = `${protocol}://${host}${req.originalUrl}`;
                 const cleanDescription = `Explore our curated selection of ${category.name} designs and custom menus at Color Hut Studio.`;
@@ -2245,6 +2254,9 @@ app.get('/:id/:categoryName', (req, res, next) => {
     <meta property="og:title" content="${category.name}">
     <meta property="og:description" content="${cleanDescription}">
     <meta property="og:image" content="${absoluteImgUrl}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
