@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
+import { usePathname } from 'next/navigation';
 
 export function TrackingHead() {
     const [config, setConfig] = useState<{
@@ -79,4 +80,37 @@ export function TrackingBody() {
 
         </>
     );
+}
+
+export function TrafficTracker() {
+    const pathname = usePathname();
+
+    useEffect(() => {
+        // Exclude all admin panel routes from client-side traffic tracking
+        if (!pathname || pathname.startsWith('/admin')) {
+            return;
+        }
+
+        const trackVisit = async () => {
+            try {
+                const fullPath = window.location.pathname + window.location.search;
+                await fetch('/api/public/track', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        source: document.referrer,
+                        path: fullPath
+                    })
+                });
+            } catch (err) {
+                console.error('Failed to log client-side page traffic:', err);
+            }
+        };
+
+        trackVisit();
+    }, [pathname]);
+
+    return null;
 }

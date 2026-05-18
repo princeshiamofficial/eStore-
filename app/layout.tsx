@@ -3,53 +3,130 @@ import './globals.css';
 import { Metadata, Viewport } from 'next';
 
 import ContactMotion from './ContactMotion';
-import { TrackingHead, TrackingBody } from './TrackingScripts';
+import { TrackingHead, TrackingBody, TrafficTracker } from './TrackingScripts';
 
-export const metadata: Metadata = {
-    metadataBase: new URL('https://store.colorhutbd.xyz'),
-    title: 'Color Hut - Your Trusted Partner for Branding & Creative Solutions',
-    description: 'Shop for unique gifts, restaurant packaging, and custom branding solutions. Color Hut is your dedicated partner for logo design, menu printing, and premium creative work in Bangladesh.',
-    keywords: 'Branding, Logo Design, Menu Printing, Packaging, Gift Shop, Bangladesh, Creative Studio',
-    alternates: {
-        canonical: '/',
-    },
-    robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-            index: true,
-            follow: true,
-            'max-video-preview': -1,
-            'max-image-preview': 'large',
-            'max-snippet': -1,
-        },
-    },
-    openGraph: {
-        title: 'Color Hut - Branding & Creative Solutions',
-        description: 'Premium creative agency in Bangladesh specializing in logo design and branding.',
-        url: '/',
-        siteName: 'Color Hut',
-        images: [
-            {
-                url: '/banner.jpg?v=1',
-                width: 1200,
-                height: 630,
-                alt: 'Color Hut Branding',
+import mysql from 'mysql2/promise';
+
+export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(): Promise<Metadata> {
+    try {
+        const connection = await mysql.createConnection({
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || process.env.DB_PASS || '',
+            database: process.env.DB_NAME || 'ecommerce_db'
+        });
+
+        const [rows]: any = await connection.query('SELECT * FROM site_settings');
+        await connection.end();
+
+        const settings: any = {};
+        if (Array.isArray(rows)) {
+            rows.forEach((row: any) => {
+                settings[row.setting_key] = row.setting_value;
+            });
+        }
+
+        const title = settings.home_title || 'Color Hut - Your Trusted Partner for Branding & Creative Solutions';
+        const description = settings.home_description || 'Shop for unique gifts, restaurant packaging, and custom branding solutions. Color Hut is your dedicated partner for logo design, menu printing, and premium creative work in Bangladesh.';
+        const keywords = settings.site_keywords || 'Branding, Logo Design, Menu Printing, Packaging, Gift Shop, Bangladesh, Creative Studio';
+
+        return {
+            metadataBase: new URL('https://store.colorhutbd.xyz'),
+            title: title,
+            description: description,
+            keywords: keywords,
+            alternates: {
+                canonical: '/',
             },
-        ],
-        locale: 'en_US',
-        type: 'website',
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Color Hut - Branding & Creative Solutions',
-        description: 'Premium creative agency in Bangladesh specializing in logo design and branding.',
-        images: ['/banner.jpg?v=1'],
-    },
-    other: {
-        'fb:app_id': '966242223397117',
-    },
-};
+            robots: {
+                index: true,
+                follow: true,
+                googleBot: {
+                    index: true,
+                    follow: true,
+                    'max-video-preview': -1,
+                    'max-image-preview': 'large',
+                    'max-snippet': -1,
+                },
+            },
+            openGraph: {
+                title: title,
+                description: description,
+                url: '/',
+                siteName: 'Color Hut',
+                images: [
+                    {
+                        url: '/banner.jpg?v=1',
+                        width: 1200,
+                        height: 630,
+                        alt: 'Color Hut Branding',
+                    },
+                ],
+                locale: 'en_US',
+                type: 'website',
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: title,
+                description: description,
+                images: ['/banner.jpg?v=1'],
+            },
+            other: {
+                'fb:app_id': '966242223397117',
+            },
+        };
+    } catch (err) {
+        console.error('Error generating metadata:', err);
+        return {
+            metadataBase: new URL('https://store.colorhutbd.xyz'),
+            title: 'Color Hut - Your Trusted Partner for Branding & Creative Solutions',
+            description: 'Shop for unique gifts, restaurant packaging, and custom branding solutions. Color Hut is your dedicated partner for logo design, menu printing, and premium creative work in Bangladesh.',
+            keywords: 'Branding, Logo Design, Menu Printing, Packaging, Gift Shop, Bangladesh, Creative Studio',
+            alternates: {
+                canonical: '/',
+            },
+            robots: {
+                index: true,
+                follow: true,
+                googleBot: {
+                    index: true,
+                    follow: true,
+                    'max-video-preview': -1,
+                    'max-image-preview': 'large',
+                    'max-snippet': -1,
+                },
+            },
+            openGraph: {
+                title: 'Color Hut - Branding & Creative Solutions',
+                description: 'Premium creative agency in Bangladesh specializing in logo design and branding.',
+                url: '/',
+                siteName: 'Color Hut',
+                images: [
+                    {
+                        url: '/banner.jpg?v=1',
+                        width: 1200,
+                        height: 630,
+                        alt: 'Color Hut Branding',
+                    },
+                ],
+                locale: 'en_US',
+                type: 'website',
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: 'Color Hut - Branding & Creative Solutions',
+                description: 'Premium creative agency in Bangladesh specializing in logo design and branding.',
+                images: ['/banner.jpg?v=1'],
+            },
+            other: {
+                'fb:app_id': '966242223397117',
+            },
+        };
+    }
+}
+
 
 export const viewport: Viewport = {
     width: 'device-width',
@@ -106,6 +183,7 @@ export default function RootLayout({
                     />
                 </noscript>
                 <TrackingBody />
+                <TrafficTracker />
                 {children}
                 <ContactMotion />
             </body>

@@ -1,12 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, MessageCircle, X, MessageSquare, PhoneCall } from 'lucide-react';
 
 const ContactMotion = () => {
+    const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
+
+    // Hide on all admin pages
+    if (pathname?.startsWith('/admin')) return null;
 
     const toggleOpen = () => setIsOpen(!isOpen);
 

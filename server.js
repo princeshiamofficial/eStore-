@@ -248,6 +248,32 @@ const db = mysql.createPool({
     charset: 'utf8mb4'
 });
 
+// Initialize Campaign URLs Table
+db.query(`
+    CREATE TABLE IF NOT EXISTS campaign_urls (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        utm VARCHAR(255) UNIQUE NOT NULL,
+        meeting VARCHAR(10) NOT NULL,
+        days INT NOT NULL,
+        alias VARCHAR(255) NULL,
+        icon VARCHAR(50) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+`, (err) => {
+    if (err) {
+        console.error('Error creating campaign_urls table:', err);
+    } else {
+        console.log('campaign_urls table initialized successfully');
+        // Ensure columns exist for older tables
+        db.query('ALTER TABLE campaign_urls ADD COLUMN alias VARCHAR(255) NULL', (err) => {
+            if (err && err.code !== 'ER_DUP_FIELDNAME') console.error('Error adding alias column:', err);
+        });
+        db.query('ALTER TABLE campaign_urls ADD COLUMN icon VARCHAR(50) NULL', (err) => {
+            if (err && err.code !== 'ER_DUP_FIELDNAME') console.error('Error adding icon column:', err);
+        });
+    }
+});
+
 // ===== ULTRA-FAST SHARED HOSTING CACHE SYSTEM =====
 const cache = {
     settings: null,
@@ -625,7 +651,7 @@ app.use((req, res, next) => {
 function updateMySitemapFile() {
     const baseUrl = 'https://store.colorhutbd.xyz';
     const catQuery = "SELECT slug FROM categories WHERE is_deleted = FALSE";
-    const prodQuery = "SELECT slug FROM products WHERE status = 'Published' AND is_deleted = FALSE";
+    const prodQuery = "SELECT id, slug FROM products WHERE status = 'Published' AND is_deleted = FALSE";
 
     db.query(catQuery, (err, categories) => {
         if (err) return console.error('Sitemap Error (Categories):', err);
@@ -645,7 +671,7 @@ function updateMySitemapFile() {
 
             if (products) {
                 products.forEach(prod => {
-                    if (prod.slug) xml += `  <url><loc>${baseUrl}/p/${prod.slug}/</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>\n`;
+                    if (prod.slug) xml += `  <url><loc>${baseUrl}/p/${prod.id}/${prod.slug}/</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>\n`;
                 });
             }
 
@@ -825,8 +851,9 @@ app.get('/api/admin/dashboard-stats', requireAuth, (req, res) => {
 
 // Logout endpoint
 app.get('/admin/logout', (req, res) => {
-    req.session.destroy();
-    res.sendFile(path.join(__dirname, 'admin', 'logout.html'));
+    req.session.destroy(() => {
+        res.redirect('/admin/login?logout=true');
+    });
 });
 
 // ===== PUBLIC API (for customer panel) =====
@@ -1672,39 +1699,39 @@ app.get('/admin', (req, res) => {
 });
 
 app.get('/admin/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin/index.html'));
+    return handle(req, res);
 });
 
 app.get('/admin/dashboard', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin/dashboard.html'));
+    return handle(req, res);
 });
 
 app.get('/admin/products', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin/products.html'));
+    return handle(req, res);
 });
 
 app.get('/admin/categories', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin/categories.html'));
+    return handle(req, res);
 });
 
 app.get('/admin/mobile-hero', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin/mobile-hero.html'));
+    return handle(req, res);
 });
 
 app.get('/admin/pixel-traffic', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin/pixel-traffic.html'));
+    return handle(req, res);
 });
 
 app.get('/admin/trash', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin/trash.html'));
+    return handle(req, res);
 });
 
 app.get('/admin/seo', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin/seo.html'));
+    return handle(req, res);
 });
 
 app.get('/admin/meeting-requests', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin/meeting-requests.html'));
+    return handle(req, res);
 });
 
 // Socket.io for real-time updates
@@ -1773,21 +1800,27 @@ app.get('/api/admin/traffic-stats', requireAuth, (req, res) => {
 
     const querySources = `
     SELECT 
+        t.source,
         CASE 
-            WHEN source IS NULL OR source = '' THEN 'Direct / None'
-            WHEN source LIKE '%google%' THEN 'Google / Organic'
-            WHEN source LIKE '%facebook%' THEN 'Facebook / Social'
-            WHEN source LIKE '%instagram%' THEN 'Instagram / Social'
-            WHEN source LIKE '%twitter%' OR source LIKE '%t.co%' THEN 'Twitter / Social'
-            ELSE 'Referral / Other'
+            WHEN c.alias IS NOT NULL AND c.alias != '' THEN c.alias
+            WHEN t.source IS NULL OR t.source = '' THEN 'Direct / None'
+            WHEN t.source LIKE '%google%' THEN 'Google / Organic'
+            WHEN t.source LIKE '%facebook%' THEN 'Facebook / Social'
+            WHEN t.source LIKE '%instagram%' THEN 'Instagram / Social'
+            WHEN t.source LIKE '%twitter%' OR t.source LIKE '%t.co%' THEN 'Twitter / Social'
+            WHEN t.source LIKE '%127.0.0.1%' OR t.source LIKE '%localhost%' OR t.source LIKE '%colorhutbd%' THEN 'Direct / Referral'
+            WHEN t.source LIKE 'http%' THEN 'Referral / Other'
+            ELSE CONCAT(UPPER(SUBSTRING(t.source, 1, 1)), SUBSTRING(t.source, 2))
         END as source_category,
-        path,
-        ip_address,
+        c.icon as source_icon,
+        t.path,
+        t.ip_address,
         COUNT(*) as sessions,
-        MAX(created_at) as last_visit
-    FROM traffic_logs 
-    WHERE ${dateFilter}
-    GROUP BY source_category, path, ip_address
+        MAX(t.created_at) as last_visit
+    FROM traffic_logs t
+    LEFT JOIN campaign_urls c ON t.source = c.utm
+    WHERE t.${dateFilter}
+    GROUP BY t.source, source_category, source_icon, t.path, t.ip_address
     ORDER BY last_visit DESC
     LIMIT 50
 `;
@@ -1817,8 +1850,8 @@ app.get('/api/admin/traffic-stats', requireAuth, (req, res) => {
 app.get('/mysitemap.xml', (req, res) => {
     const baseUrl = `https://${req.get('host')}`;
 
-    const catQuery = "SELECT slug FROM categories WHERE is_deleted = FALSE";
-    const prodQuery = "SELECT slug FROM products WHERE status = 'Published' AND is_deleted = FALSE";
+    const catQuery = "SELECT id, slug FROM categories WHERE is_deleted = FALSE";
+    const prodQuery = "SELECT id, slug FROM products WHERE status = 'Published' AND is_deleted = FALSE";
     Promise.all([
         new Promise((resolve, reject) => db.query(catQuery, (err, res) => err ? reject(err) : resolve(res))),
         new Promise((resolve, reject) => db.query(prodQuery, (err, res) => err ? reject(err) : resolve(res)))
@@ -1830,7 +1863,7 @@ app.get('/mysitemap.xml', (req, res) => {
         xml += `  <url><loc>${baseUrl}/all</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>\n`;
 
         categories.forEach(cat => {
-            xml += `  <url><loc>${baseUrl}/${cat.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>\n`;
+            xml += `  <url><loc>${baseUrl}/${cat.id}/${cat.slug}/</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>\n`;
         });
 
         products.forEach(prod => {
@@ -1968,126 +2001,99 @@ app.get('/:slug', async (req, res, next) => {
 });
 */
 
-// Product Clean URLs
-app.get('/p/:slug', async (req, res) => {
+// Category Clean URLs (Redirect old `/:slug` to `/:id/:slug/`)
+app.get('/:slug', (req, res, next) => {
     const slug = req.params.slug;
 
-    const query = `
-        SELECT p.*, (
-            SELECT GROUP_CONCAT(name SEPARATOR ', ') 
-            FROM categories 
-            WHERE FIND_IN_SET(id, p.category_id)
-        ) as category_name 
-        FROM products p 
-        WHERE p.slug = ? AND p.status = 'Published' AND p.is_deleted = FALSE
-    `;
-    db.query(query, [slug], async (err, results) => {
-        if (err || results.length === 0) {
-            return res.status(404).send('Product not found');
+    // Skip if it's a known route, dynamic assets, or has a file extension
+    if (slug.includes('.') || ['admin', 'p', 'api', 'uploads', 'all', 'favicon.ico'].includes(slug.split('/')[0])) {
+        return next();
+    }
+
+    db.query('SELECT id, slug FROM categories WHERE slug = ? AND is_deleted = FALSE', [slug], (err, results) => {
+        if (!err && results && results.length > 0) {
+            const category = results[0];
+            return res.redirect(301, `/${category.id}/${category.slug}/`);
         }
+        return next();
+    });
+});
 
-        const product = results[0];
-        try {
-            const [settings, data] = await Promise.all([
-                getCachedSettings(),
-                getCachedHtml('product.html')
-            ]);
-            if (!data) return res.status(500).send('Error loading page');
+// Product Clean URLs (Redirect old `/p/:slug` to `/p/:id/:slug`)
+app.get('/p/:slug', (req, res) => {
+    const slug = req.params.slug;
+    db.query('SELECT id, slug FROM products WHERE slug = ? AND is_deleted = FALSE', [slug], (err, results) => {
+        if (!err && results && results.length > 0) {
+            const product = results[0];
+            return res.redirect(301, `/p/${product.id}/${product.slug}/`);
+        }
+        return handle(req, res);
+    });
+});
 
-            // Image handling
-            let shareImage = 'https://store.colorhutbd.xyz/banner.jpg?v=1';
-            try {
-                if (product.image) {
-                    const images = product.image.startsWith('[') ? JSON.parse(product.image) : [product.image];
-                    if (images.length > 0) {
-                        let firstImage = images[0];
-                        if (!firstImage.startsWith('http')) {
-                            const cleanPath = firstImage.startsWith('/') ? firstImage : `/uploads/${firstImage}`;
-                            shareImage = `https://store.colorhutbd.xyz${cleanPath}`;
-                        } else {
-                            shareImage = firstImage;
-                        }
-                    }
-                }
-            } catch (e) { }
 
-            const shareUrl = `https://store.colorhutbd.xyz/p/${product.slug}`;
-            const cleanDescription = (product.description || '')
-                .replace(/[#*`_]/g, '')
-                .replace(/\s+/g, ' ')
-                .trim()
-                .substring(0, 160);
+// Admin: Save Campaign URL configuration
+app.post('/api/admin/campaign-urls', requireAuth, (req, res) => {
+    const { utm, meeting, days, alias, icon } = req.body;
+    if (!utm || !meeting || !days) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const sanitizedUtm = utm.trim().toLowerCase().replace(/\s+/g, '-');
+    
+    const query = `
+        INSERT INTO campaign_urls (utm, meeting, days, alias, icon) 
+        VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE meeting = VALUES(meeting), days = VALUES(days), alias = VALUES(alias), icon = VALUES(icon)
+    `;
+    db.query(query, [sanitizedUtm, meeting, parseInt(days, 10), alias || null, icon || null], (err) => {
+        if (err) {
+            console.error('Error saving campaign URL configuration:', err);
+            return res.status(500).json({ error: 'Failed to save configuration' });
+        }
+        res.json({ message: 'Campaign configuration saved successfully' });
+    });
+});
 
-            // Generate Product Schema
-            const productSchema = `
-                <script type="application/ld+json">
-                {
-                  "@context": "https://schema.org/",
-                  "@type": "Product",
-                  "name": "${product.name}",
-                  "image": "${shareImage}",
-                  "description": "${product.seo_description || cleanDescription}",
-                  "sku": "CH-${product.id}",
-                  "brand": {
-                    "@type": "Brand",
-                    "name": "Color Hut Studio"
-                  },
-                  "aggregateRating": {
-                    "@type": "AggregateRating",
-                    "ratingValue": "${product.rating || 5}",
-                    "reviewCount": "${Math.floor(Math.random() * 50) + 10}"
-                  },
-                  "offers": {
-                    "@type": "Offer",
-                    "url": "${shareUrl}",
-                    "priceCurrency": "BDT",
-                    "price": "${product.price || 0}",
-                    "availability": "https://schema.org/InStock"
-                  }
-                }
-                </script>
-                `;
+// Admin: Get all Campaign URL configurations
+app.get('/api/admin/campaign-urls', requireAuth, (req, res) => {
+    db.query('SELECT * FROM campaign_urls ORDER BY created_at DESC', (err, results) => {
+        if (err) {
+            console.error('Error fetching campaign URLs:', err);
+            return res.status(500).json({ error: 'Failed to fetch campaign URLs' });
+        }
+        res.json(results);
+    });
+});
 
-            // Generate Breadcrumb Schema
-            const breadcrumbSchema = `
-                <script type="application/ld+json">
-                {
-                  "@context": "https://schema.org",
-                  "@type": "BreadcrumbList",
-                  "itemListElement": [{
-                    "@type": "ListItem",
-                    "position": 1,
-                    "name": "Home",
-                    "item": "${req.protocol}://${req.get('host')}/"
-                  },{
-                    "@type": "ListItem",
-                    "position": 2,
-                    "name": "${product.category_name || 'All'}",
-                    "item": "${req.protocol}://${req.get('host')}/${product.category_name ? product.category_name.toLowerCase().replace(/ /g, '-') : 'all'}"
-                  },{
-                    "@type": "ListItem",
-                    "position": 3,
-                    "name": "${product.name}",
-                    "item": "${shareUrl}"
-                  }]
-                }
-                </script>
-                `;
+// Admin: Delete a Campaign URL configuration
+app.delete('/api/admin/campaign-urls/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    db.query('DELETE FROM campaign_urls WHERE id = ?', [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting campaign URL:', err);
+            return res.status(500).json({ error: 'Failed to delete campaign URL' });
+        }
+        res.json({ message: 'Campaign configuration deleted successfully' });
+    });
+});
 
-            const titleSuffix = settings.site_title_suffix || ' | Color Hut Studio';
-            let html = data
-                .replace(/{{OG_TITLE}}/g, (product.name || 'Product Details') + titleSuffix)
-                .replace(/{{OG_DESCRIPTION}}/g, product.seo_description || cleanDescription || 'Check out this design at Color Hut Studio')
-                .replace(/{{OG_IMAGE}}/g, shareImage)
-                .replace(/{{OG_URL}}/g, shareUrl)
-                .replace(/{{SEO_KEYWORDS}}/g, product.seo_keywords || '')
-                .replace(/{{{PRODUCT_SCHEMA}}}/g, productSchema)
-                .replace(/{{{BREADCRUMB_SCHEMA}}}/g, breadcrumbSchema);
-
-            html = injectTrackingScripts(html, settings);
-            res.setHeader('Content-Type', 'text/html');
-            res.send(html);
-        } catch (e) { res.status(500).send('Error'); }
+// Public: Load Campaign URL configuration for visitors
+app.get('/api/public/campaign-url', (req, res) => {
+    const { utm } = req.query;
+    if (!utm) {
+        return res.status(400).json({ error: 'utm is required' });
+    }
+    const sanitizedUtm = utm.trim().toLowerCase().replace(/\s+/g, '-');
+    
+    db.query('SELECT * FROM campaign_urls WHERE utm = ?', [sanitizedUtm], (err, results) => {
+        if (err) {
+            console.error('Error loading campaign URL:', err);
+            return res.status(500).json({ error: 'Failed to retrieve campaign details' });
+        }
+        if (results.length === 0) {
+            return res.json({ meeting: 'show', days: 1 }); // Default fallback
+        }
+        res.json(results[0]);
     });
 });
 

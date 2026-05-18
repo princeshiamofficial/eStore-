@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import HeroSlider from '../HeroSlider';
+import HeroSlider from '../../HeroSlider';
 
 // === ICONS ===
 const YouTubeIcon = () => (
@@ -60,22 +60,8 @@ const ArrowLeft = () => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
 );
 
-const CalendarIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-);
-
-const RestaurantIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 8V2M15 2h6M13 14h8V8h-8zM3 2v20a5 5 0 0 1 5-5h13a2 2 0 1 0 0-4H8a2 2 0 1 1 0-4h13a2 2 0 1 0 0-4H8a2 2 0 1 1 0-4h13" />
-    </svg>
-);
-
 const FolderIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-);
-
-const TagIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
 );
 
 const CloseIcon = () => (
@@ -95,17 +81,15 @@ const MailIcon = () => (
     </svg>
 );
 
-const CheckIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-);
-
 const PlaneIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <line x1="22" y1="2" x2="11" y2="13"></line>
         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
     </svg>
+);
+
+const GlobeIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
 );
 
 // === TYPES ===
@@ -159,19 +143,15 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
     const hasPlay = !!p.video_url;
     const hasMultipleImages = images.length > 1;
 
-    // Parse category_id to check for multiple categories
     const categoryIds = String(p.category_id || '').split(',').map(id => id.trim()).filter(Boolean);
     const hasMultipleCategories = categoryIds.length > 1;
 
-    // Determine what to display based on context
     let displayNames: string[] = [];
 
     if (currentCategory) {
-        // On a category page - show sub-category names
         categoryIds.forEach(catId => {
             const cat = categories.find(c => String(c.id) === catId);
             if (cat) {
-                // Only show if this category belongs to current category context
                 const parentIds = String(cat.parent_ids || '').split(',').map(id => id.trim());
                 if (String(cat.id) === String(currentCategory.id) || parentIds.includes(String(currentCategory.id))) {
                     displayNames.push(cat.name);
@@ -179,16 +159,13 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
             }
         });
     } else {
-        // On homepage - show main category names for multi-category products
         if (hasMultipleCategories && categories.length > 0) {
             categoryIds.forEach(catId => {
                 const cat = categories.find(c => String(c.id) === catId);
                 if (cat) {
-                    // Check if this is a main category (no parent_ids)
                     if (!cat.parent_ids) {
                         displayNames.push(cat.name);
                     } else {
-                        // If it's a sub-category, find its main parent
                         const parentIds = String(cat.parent_ids).split(',').map(id => id.trim());
                         const mainParent = categories.find(c => parentIds.includes(String(c.id)) && !c.parent_ids);
                         if (mainParent && !displayNames.includes(mainParent.name)) {
@@ -208,7 +185,7 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
         if (!hasPlay && hasMultipleImages && !hovered) {
             interval = setInterval(() => {
                 setImgIndex((prev) => (prev + 1) % images.length);
-            }, 2500); // Auto-slide every 2.5s
+            }, 2500);
         }
         return () => clearInterval(interval);
     }, [hasPlay, hasMultipleImages, images.length, hovered]);
@@ -262,7 +239,7 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
                         exit={{ opacity: 0, scale: 0.95, x: -20, filter: 'blur(2px)' }}
                         transition={{
                             duration: 0.7,
-                            ease: [0.16, 1, 0.3, 1] // Custom cubic-bezier for a snappy yet smooth finish
+                            ease: [0.16, 1, 0.3, 1]
                         }}
                         style={{
                             position: 'absolute',
@@ -332,6 +309,9 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
         </a>
     );
 });
+
+ProductCard.displayName = 'ProductCard';
+
 const ModernSelect = ({
     name,
     value,
@@ -400,9 +380,6 @@ const ModernSelect = ({
     );
 };
 
-ProductCard.displayName = 'ProductCard';
-
-
 const MeetingRequestPopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
     const [formData, setFormData] = useState({
         businessType: '',
@@ -417,7 +394,6 @@ const MeetingRequestPopup = ({ isOpen, onClose }: { isOpen: boolean, onClose: ()
 
     useEffect(() => {
         if (!isOpen) return;
-        // Check if user has already submitted successfully
         const hasSubmitted = localStorage.getItem('request_submitted');
         if (hasSubmitted) {
             onClose();
@@ -620,7 +596,6 @@ const ImagePopup = ({ isOpen, onClose, onAction }: { isOpen: boolean, onClose: (
                             onAction?.();
                         }}
                     />
-                    {/* Text content removed per user request */}
                 </div>
             </div>
         </div>
@@ -793,10 +768,18 @@ const Footer = () => {
                             <li><a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer">Studio Gallery</a></li>
                         </ul>
                         <div className="store-footer-socials" style={{ marginTop: '24px' }}>
-                            <a href="https://facebook.com/colorhutbd" target="_blank" rel="noopener noreferrer" className="store-social-btn"><FacebookIcon /></a>
-                            <a href="#" className="store-social-btn"><InstagramIcon /></a>
-                            <a href="#" className="store-social-btn"><PinterestIcon /></a>
-                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer" className="store-social-btn"><FooterYouTubeIcon /></a>
+                            <a href="https://facebook.com/colorhutbd" target="_blank" rel="noopener noreferrer" className="store-social-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                            </a>
+                            <a href="#" className="store-social-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                            </a>
+                            <a href="#" className="store-social-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.2 0 1.033.394 2.137.884 2.738.097.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.252 7.929-7.252 4.163 0 7.398 2.967 7.398 6.92 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592 0 11.985 0" /></svg>
+                            </a>
+                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer" className="store-social-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a2.78 2.78 0 0 0 1.94 2c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.89 23 12 23 12s0-3.89-.46-5.58z"></path><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon></svg>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -824,27 +807,7 @@ const Footer = () => {
     );
 };
 
-const InstagramIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-);
-
-const FacebookIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-);
-
-const FooterYouTubeIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a2.78 2.78 0 0 0 1.94 2c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.89 23 12 23 12s0-3.89-.46-5.58z"></path><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon></svg>
-);
-
-const PinterestIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.2 0 1.033.394 2.137.884 2.738.097.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.252 7.929-7.252 4.163 0 7.398 2.967 7.398 6.92 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592 0 11.985 0" /></svg>
-);
-
-const GlobeIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-);
-
-export default function HomePage() {
+export default function CategoryPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -854,6 +817,11 @@ export default function HomePage() {
     const [hasMore, setHasMore] = useState(true);
     const [fetchingLimit] = useState(12);
     const pathname = usePathname();
+    const params = useParams();
+    
+    const id = params.id as string;
+    const categoryName = params.categoryName as string;
+
     const [searchQuery, setSearchQuery] = useState('');
 
     // Load search query from URL on mount
@@ -867,10 +835,9 @@ export default function HomePage() {
         }
     }, []);
     const [suggestions, setSuggestions] = useState<any[]>([]);
-    const [isSearching, setIsSearching] = useState(false);
     const [expandedCatId, setExpandedCatId] = useState<number | null>(null);
     const [hoveredCatId, setHoveredCatId] = useState<number | null>(null);
-    const [allProducts, setAllProducts] = useState<any[]>([]); // For global search suggestions
+    const [allProducts, setAllProducts] = useState<any[]>([]);
     const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
     const [activeSheetCatId, setActiveSheetCatId] = useState<number | null>(null);
     const [meetingPopupOpen, setMeetingPopupOpen] = useState(false);
@@ -895,13 +862,10 @@ export default function HomePage() {
         }
     }, []);
 
-    const currentPath = pathname || '/';
-    const isBaseHome = currentPath === '/';
-    const slug = currentPath.split('/').filter(Boolean).pop();
+    const isBaseHome = false;
 
     const subNavRef = useRef<HTMLDivElement>(null);
     const pathwayRef = useRef<HTMLDivElement>(null);
-
 
     const observer = useRef<IntersectionObserver | null>(null);
     const lastProductElementRef = useCallback((node: HTMLElement | null) => {
@@ -924,15 +888,17 @@ export default function HomePage() {
         return () => document.body.classList.remove('no-scroll');
     }, [mobileSheetOpen, meetingPopupOpen, imagePopupOpen]);
 
-    const popupTimeoutRef = useRef(10000); // starts at 10s
+    const popupTimeoutRef = useRef(10000);
 
     useEffect(() => {
         const hasSubmitted = localStorage.getItem('request_submitted');
         if (hasSubmitted || isFillingForm || isMeetingHidden) return;
 
+        const currentCat = categories.find(c => String(c.id) === String(id));
+        const catSlug = currentCat?.slug || '';
         const excludedSlugs = ['restaurant', 'parlor', 'parlour'];
-        const isExcludedPage = slug && excludedSlugs.includes(slug.toLowerCase());
-        const isRelevantPage = isBaseHome || (!isExcludedPage && slug !== 'all' && categories.some(c => c.slug === slug));
+        const isExcludedPage = catSlug && excludedSlugs.includes(catSlug.toLowerCase());
+        const isRelevantPage = !isExcludedPage && catSlug !== 'all' && categories.some(c => c.slug === catSlug);
 
         if (isRelevantPage) {
             const timer = setTimeout(() => {
@@ -949,34 +915,29 @@ export default function HomePage() {
             }, popupTimeoutRef.current);
             return () => clearTimeout(timer);
         }
-    }, [slug, isBaseHome, categories.length, isFillingForm, isMeetingHidden]);
+    }, [id, categories.length, isFillingForm, isMeetingHidden]);
 
     const handlePopupClose = (type: 'meeting' | 'image') => {
         if (type === 'meeting') setMeetingPopupOpen(false);
         else setImagePopupOpen(false);
 
         const currentWaitTime = popupTimeoutRef.current;
-        // Increase wait time by 10s for the next time
         popupTimeoutRef.current += 10000;
 
-        // Re-trigger after currentWaitTime if not submitted and NOT being filled
         setTimeout(() => {
             const hasSubmitted = localStorage.getItem('request_submitted');
-            // We use the raw DOM check or focus check for more reliability in timeout
             const isActuallyFilling = document.activeElement?.closest('#meeting-call');
 
             if (!hasSubmitted && !isActuallyFilling) {
                 if (type === 'meeting') setMeetingPopupOpen(true);
                 else setImagePopupOpen(true);
             } else if (isActuallyFilling) {
-                // If they are filling, restart the wait cycle
                 handlePopupClose(type);
             }
         }, currentWaitTime);
     };
 
-
-    // Mouse Wheel Horizontal Scroll Logic
+    // Horizontal Mouse Scroll
     useEffect(() => {
         const handleWheel = (e: WheelEvent, ref: React.RefObject<HTMLElement>) => {
             if (ref.current && Math.abs(e.deltaY) > 0) {
@@ -1000,10 +961,24 @@ export default function HomePage() {
         };
     }, []);
 
-    // Robust category finding
-    const currentCategory = categories.find(c =>
-        c.slug?.toLowerCase().trim() === slug?.toLowerCase().trim()
-    );
+    // Category Finding directly by ID!
+    const currentCategory = categories.find(c => String(c.id) === String(id));
+    const slug = currentCategory?.slug || '';
+
+    // Mismatched URL correction: silent address bar correction
+    useEffect(() => {
+        if (categories.length > 0 && id) {
+            const currentCat = categories.find(c => String(c.id) === String(id));
+            if (currentCat) {
+                const targetSlug = currentCat.slug?.toLowerCase().trim();
+                const currentParamSlug = categoryName?.toLowerCase().trim();
+                if (targetSlug && currentParamSlug !== targetSlug) {
+                    const newPath = `/${id}/${currentCat.slug}/`;
+                    window.history.replaceState(null, '', newPath);
+                }
+            }
+        }
+    }, [categories, id, categoryName]);
 
     const subCategories = currentCategory
         ? categories.filter(cat => {
@@ -1039,11 +1014,9 @@ export default function HomePage() {
         loadCategories();
     }, []);
 
-    // Load all products for site-wide search suggestions
     useEffect(() => {
         async function loadAllProducts() {
             try {
-                // Fetch a large limit or a specific search-metadata endpoint if available
                 const res = await fetch('/api/public/products?limit=1000');
                 const data = await res.json();
                 if (Array.isArray(data)) {
@@ -1059,27 +1032,22 @@ export default function HomePage() {
     const navKey = `${slug || 'home'}-${currentCategory?.id || 'all'}`;
 
     useEffect(() => {
-        // Reset products when navigation key changes
         setProducts([]);
         setPage(1);
         setHasMore(true);
     }, [navKey]);
 
     useEffect(() => {
-        // Essential guard: wait for categories if we're on a sub-path
-        if (!isBaseHome && categories.length === 0) return;
+        if (categories.length === 0) return;
 
         async function loadProducts() {
             setLoading(true);
             try {
                 let url = `/api/public/products?page=${page}&limit=${fetchingLimit}`;
-                if (isBaseHome) url += `&pinned=true`;
 
                 if (currentCategory) {
                     url += `&categoryId=${currentCategory.id}`;
-                } else if (!isBaseHome && slug && slug !== 'all') {
-                    // This is not a category page but also not the home page.
-                    // If we strictly follow the user's request, we shouldn't show all products.
+                } else if (slug && slug !== 'all') {
                     setProducts([]);
                     setHasMore(false);
                     setLoading(false);
@@ -1091,9 +1059,6 @@ export default function HomePage() {
 
                 if (Array.isArray(data)) {
                     setProducts(prev => {
-                        // If it's page 1, we should probably just use the new data
-                        // but since we clear it in a separate effect, this is usually safe.
-                        // To be absolutely sure, let's filter the data if currentCategory exists.
                         const filteredData = currentCategory
                             ? data.filter((p: any) => {
                                 const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
@@ -1127,7 +1092,7 @@ export default function HomePage() {
             setLoading(false);
         }
         loadProducts();
-    }, [page, navKey, isBaseHome, categories.length]);
+    }, [page, navKey, categories.length]);
 
     function setFallback() {
         const dummy: Product[] = [
@@ -1142,7 +1107,7 @@ export default function HomePage() {
     }
 
     const getCategoryStyles = (name: string) => {
-        return { bg: '#F1F5F9', text: '#475569' }; // Neutral Slate/Grey
+        return { bg: '#F1F5F9', text: '#475569' };
     };
 
     const filteredProducts = products.filter(p => {
@@ -1151,8 +1116,8 @@ export default function HomePage() {
             const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
             const pCatNames = String(p.category_name || '').split(',').map(n => n.trim().toLowerCase());
             const targetName = String(currentCategory.name || '').toLowerCase().trim();
-            const isDirectMatch = pCatIds.includes(String(currentCategory.id)) || pCatNames.includes(targetName);
 
+            const isDirectMatch = pCatIds.includes(String(currentCategory.id)) || pCatNames.includes(targetName);
             const isSubMatch = subCategories.some(sub => {
                 const subName = String(sub.name || '').toLowerCase().trim();
                 return pCatIds.includes(String(sub.id)) || pCatNames.includes(subName);
@@ -1173,7 +1138,7 @@ export default function HomePage() {
         return true;
     });
 
-    // Search Suggestion Logic
+    // Search Suggestions
     useEffect(() => {
         if (!searchQuery.trim()) {
             setSuggestions([]);
@@ -1183,21 +1148,19 @@ export default function HomePage() {
         const query = searchQuery.toLowerCase().trim();
         const matches: any[] = [];
 
-        // Match categories (Global)
         categories.forEach(cat => {
             if (cat.name.toLowerCase().includes(query)) {
                 matches.push({ type: 'category', id: cat.id, name: cat.name, slug: cat.slug });
             }
         });
 
-        // Match products (Global - from allProducts)
         allProducts.forEach(p => {
             if (p.name.toLowerCase().includes(query)) {
                 matches.push({ type: 'product', id: p.id, name: p.name, slug: p.slug });
             }
         });
 
-        setSuggestions(matches.slice(0, 8)); // Limit to 8 suggestions
+        setSuggestions(matches.slice(0, 8));
     }, [searchQuery, categories, allProducts]);
 
     return (
@@ -1205,7 +1168,6 @@ export default function HomePage() {
             {/* --- HEADER --- */}
             <header className={`store-header ${searchFocused ? 'is-searching' : ''}`}>
                 <div className="store-header-top-row">
-                    {/* Mobile Menu Icon */}
                     <button className="store-icon-btn mobile-only" onClick={() => setMobileSheetOpen(true)}>
                         <MenuIcon />
                     </button>
@@ -1214,7 +1176,6 @@ export default function HomePage() {
                         <img src="/logo.png" alt="Color Hut" width={140} height={44} style={{ objectFit: 'contain' }} />
                     </a>
 
-                    {/* Desktop Categories */}
                     <div className="store-categories-container desktop-only" ref={catMenuRef}>
                         <button
                             className="store-categories-btn"
@@ -1226,7 +1187,6 @@ export default function HomePage() {
                         {catMenuOpen && (
                             <div className="store-cat-mega-wrapper">
                                 <div className="mega-menu-content">
-                                    {/* Left Column: Categories List */}
                                     <div className="mega-menu-list">
                                         {categories
                                             .filter(cat => !cat.parent_id && !cat.parent_ids)
@@ -1289,11 +1249,12 @@ export default function HomePage() {
                                             })}
                                     </div>
 
-                                    {/* Right Column: Sub-Categories Sidepane */}
                                     <div className="mega-menu-sidepane">
                                         <div className="mega-sidepane-header">
                                             <h3>{categories.find(c => c.id === (hoveredCatId || categories.filter(cat => !cat.parent_id && !cat.parent_ids)[0]?.id))?.name}</h3>
-                                            <a href={`/${hoveredCatId || categories.filter(cat => !cat.parent_id && !cat.parent_ids)[0]?.id}/${categories.find(c => c.id === (hoveredCatId || categories.filter(cat => !cat.parent_id && !cat.parent_ids)[0]?.id))?.slug}/`} className="see-all-link">See all</a>
+                                            {hoveredCatId && (
+                                                <a href={`/${hoveredCatId}/${categories.find(c => c.id === hoveredCatId)?.slug}/`} className="see-all-link">See all</a>
+                                            )}
                                         </div>
                                         <div className="mega-sidepane-grid">
                                             {categories
@@ -1329,7 +1290,6 @@ export default function HomePage() {
                         )}
                     </div>
 
-                    {/* Search */}
                     <div className="store-search-bar" ref={searchBarRef}>
                         <input
                             type="text"
@@ -1342,9 +1302,9 @@ export default function HomePage() {
                                 if (e.key === 'Enter') {
                                     const queryVal = searchQuery.trim();
                                     if (queryVal) {
-                                        window.history.pushState(null, '', `/?q=${encodeURIComponent(queryVal)}`);
+                                        window.history.pushState(null, '', `/${id}/${categoryName}/?q=${encodeURIComponent(queryVal)}`);
                                     } else {
-                                        window.history.pushState(null, '', '/');
+                                        window.history.pushState(null, '', `/${id}/${categoryName}/`);
                                     }
                                     setSearchFocused(false);
                                 }
@@ -1355,9 +1315,9 @@ export default function HomePage() {
                             onClick={() => {
                                 const queryVal = searchQuery.trim();
                                 if (queryVal) {
-                                    window.history.pushState(null, '', `/?q=${encodeURIComponent(queryVal)}`);
+                                    window.history.pushState(null, '', `/${id}/${categoryName}/?q=${encodeURIComponent(queryVal)}`);
                                 } else {
-                                    window.history.pushState(null, '', '/');
+                                    window.history.pushState(null, '', `/${id}/${categoryName}/`);
                                 }
                                 setSearchFocused(false);
                             }}
@@ -1367,13 +1327,12 @@ export default function HomePage() {
 
                         {searchFocused && suggestions.length > 0 && (
                             <div className="store-search-suggestions">
-                                {suggestions.map((item, idx) => (
+                                {suggestions.map((item) => (
                                     <a
                                         key={`${item.type}-${item.id}`}
                                         href={item.type === 'category' ? `/${item.id}/${item.slug}/` : `/p/${item.id}/${item.slug}/`}
                                         className="store-suggestion-item"
                                         onMouseDown={(e) => {
-                                            // onMouseDown fires before onBlur
                                             e.preventDefault();
                                             window.location.href = item.type === 'category' ? `/${item.id}/${item.slug}/` : `/p/${item.id}/${item.slug}/`;
                                         }}
@@ -1398,7 +1357,6 @@ export default function HomePage() {
                         </button>
                     </div>
 
-                    {/* Header Actions */}
                     <div className="store-header-nav">
                         <button className="store-icon-btn" title="Account">
                             <UserIcon />
@@ -1418,12 +1376,11 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                {/* --- SUBNAV --- */}
                 <nav className="store-subnav" ref={subNavRef as any}>
                     <a href="/all" className="store-subnav-item"><GridIcon /> All Products</a>
                     {categories
                         .filter(cat => !cat.parent_id && !cat.parent_ids)
-                        .map((cat, i) => (
+                        .map((cat) => (
                             <a key={cat.id} href={`/${cat.id}/${cat.slug}/`} className="store-subnav-item">
                                 {cat.name}
                             </a>
@@ -1431,30 +1388,15 @@ export default function HomePage() {
                 </nav>
             </header>
 
-            {/* SEO Critical H1 - Visually Hidden on Home */}
-            {isBaseHome && (
-                <h1 style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 }}>
-                    Color Hut - Branding & Creative Solutions in Bangladesh
-                </h1>
-            )}
-
             <div className="store-container">
-                {/* --- MOBILE HERO --- */}
-                {isBaseHome && (
-                    <HeroSlider />
-                )}
+                <div className="store-page-header">
+                    <h1 className="store-page-title serif">
+                        {currentCategory ? currentCategory.name : 'Color Hut'}
+                    </h1>
+                    {subCategories.length > 0 && <p className="store-page-subtitle">Picks you'll love</p>}
+                </div>
 
-                {/* --- PAGE TITLES --- */}
-                {!isBaseHome && (
-                    <div className="store-page-header">
-                        <h1 className="store-page-title serif">
-                            {currentCategory ? currentCategory.name : (slug === 'all' ? 'All Products' : 'Color Hut')}
-                        </h1>
-                        {subCategories.length > 0 && <p className="store-page-subtitle">Picks you'll love</p>}
-                    </div>
-                )}
-
-                {/* --- SUB-CATEGORIES (Etsy Style) --- */}
+                {/* Subcategories (Etsy style chips) */}
                 {subCategories.length > 0 && (
                     <div className="narrowing-pathways-container" ref={pathwayRef}>
                         {subCategories.map(sub => (
@@ -1473,8 +1415,7 @@ export default function HomePage() {
                     </div>
                 )}
 
-
-                {/* --- GRID --- */}
+                {/* Products Grid */}
                 <div className="store-grid">
                     {filteredProducts.map((p, idx) => {
                         const isLast = filteredProducts.length === idx + 1;
@@ -1494,56 +1435,7 @@ export default function HomePage() {
                 </div>
             </div>
 
-            {/* --- ABOUT SECTION --- */}
-            {isBaseHome && (
-                <section className="store-about-section" vocab="http://schema.org/" {...{ typeof: "Organization" }}>
-                    <div className="store-about-content">
-                        <div className="store-about-header">
-                            <a href="https://wa.me/8801989224436" target="_blank" rel="noopener noreferrer" className="store-about-whatsapp-btn">
-                                <WhatsAppIcon />
-                                Contact Us
-                            </a>
-                            <h2 className="serif" itemProp="name" property="name">What is Color Hut?</h2>
-                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer" className="store-about-story" style={{ color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                <YouTubeIcon />
-                                Watch our studio story on YouTube
-                                <YouTubeIcon />
-                            </a>
-                        </div>
-
-                        <div className="store-about-grid">
-                            <div className="store-about-col">
-                                <h3>Creative Branding Studio</h3>
-                                <p itemProp="description" property="description">
-                                    Color Hut is a leading branding agency based in Bangladesh, specializing in creating unforgettable visual identities.
-                                    We craft custom logos, color schemes, and typography that bring your brand's values to life and help you stand out.
-                                </p>
-                            </div>
-                            <div className="store-about-col">
-                                <h3>The Silent Salesman</h3>
-                                <p>
-                                    We believe a menu is the heart of a restaurant—a silent salesman that defines your brand.
-                                    Our premium menu design and printing services focus on unique, high-quality books that capture your culinary essence.
-                                </p>
-                            </div>
-                            <div className="store-about-col">
-                                <h3>Complete Design Solutions</h3>
-                                <p>
-                                    Our expertise extends beyond branding to complete design solutions.
-                                    From user-focused interior and exterior design to advanced digital marketing and ERP systems, we provide the tools businesses need to scale.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="store-about-footer">
-                            <h4>Trusted by brands like Dhaka Club, HASH & NOSH and Sea Shell.</h4>
-                            <a href="https://facebook.com/colorhutbd" target="_blank" rel="noopener noreferrer" className="store-help-btn">Connect on Facebook</a>
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            {/* --- MOBILE FULL PAGE SHEET (Drill-down Style) --- */}
+            {/* Mobile Sheet drawer */}
             <div className={`store-mobile-overlay ${mobileSheetOpen ? 'active' : ''}`} onClick={() => setMobileSheetOpen(false)}></div>
             <div className={`store-mobile-sheet ${mobileSheetOpen ? 'is-open' : ''} ${activeSheetCatId ? 'mobile-sheet-detail-view' : ''}`}>
                 <div className="mobile-sheet-header">
@@ -1568,7 +1460,6 @@ export default function HomePage() {
 
                 <div className="mobile-sheet-body">
                     {!activeSheetCatId ? (
-                        /* TOP LEVEL LIST */
                         <div className="mobile-sheet-list">
                             {categories
                                 .filter(cat => !cat.parent_id && !cat.parent_ids)
@@ -1598,10 +1489,9 @@ export default function HomePage() {
                             }
                         </div>
                     ) : (
-                        /* DETAIL LEVEL LIST */
                         <div className="mobile-sheet-detail">
                             <a
-                                                                href={`/${activeSheetCatId}/${categories.find(c => c.id === activeSheetCatId)?.slug}/`}
+                                href={`/${activeSheetCatId}/${categories.find(c => c.id === activeSheetCatId)?.slug}/`}
                                 className="mobile-sheet-view-all"
                                 onClick={() => setMobileSheetOpen(false)}
                             >
@@ -1640,7 +1530,6 @@ export default function HomePage() {
                     if (element) {
                         element.scrollIntoView({ behavior: 'smooth' });
                     }
-                    // Release the scroll lock after animation finishes
                     setTimeout(() => setIsAutoScrolling(false), 1500);
                 }}
             />
