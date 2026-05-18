@@ -138,8 +138,30 @@ app.get('/uploads/thumb-:filename', async (req, res, next) => {
 
 // Dynamic Watermark Generation (Freepik Style Grid)
 app.get('/api/public/watermark/:filename', async (req, res) => {
-    const filename = req.params.filename;
-    const originalPath = path.join(uploadDir, filename);
+    const requestedFilename = req.params.filename;
+    let filename = requestedFilename;
+    let originalPath = path.join(uploadDir, filename);
+
+    // Dynamic extension fallback for social crawler WebP compatibility
+    if (!fs.existsSync(originalPath)) {
+        if (filename.endsWith('.jpg') || filename.endsWith('.png') || filename.endsWith('.jpeg')) {
+            const baseName = filename.replace(/\.(jpg|jpeg|png)$/i, '');
+            const possiblePaths = [
+                path.join(uploadDir, baseName),
+                path.join(uploadDir, baseName.replace(/\.webp$/i, '') + '.webp'),
+                path.join(uploadDir, baseName.replace(/\.png$/i, '') + '.png'),
+                path.join(uploadDir, baseName.replace(/\.jpg$/i, '') + '.jpg'),
+                path.join(uploadDir, baseName.replace(/\.jpeg$/i, '') + '.jpeg')
+            ];
+            for (const p of possiblePaths) {
+                if (fs.existsSync(p)) {
+                    originalPath = p;
+                    filename = path.basename(p);
+                    break;
+                }
+            }
+        }
+    }
 
     if (!fs.existsSync(originalPath)) {
         return res.status(404).send('Image not found');
@@ -182,25 +204,27 @@ app.get('/api/public/watermark/:filename', async (req, res) => {
         </svg>
         `;
 
-        const format = metadata.format || 'jpeg';
+        const requestedExt = path.extname(requestedFilename).toLowerCase().replace('.', '');
+        const targetFormat = ['jpg', 'jpeg', 'png'].includes(requestedExt) ? (requestedExt === 'jpg' ? 'jpeg' : requestedExt) : (metadata.format || 'jpeg');
+
         let processedImage = image.composite([{
             input: Buffer.from(svgOverlay),
             top: 0,
             left: 0
         }]);
 
-        // Ensure high quality
-        if (format === 'jpeg' || format === 'jpg') {
-            processedImage = processedImage.jpeg({ quality: 100, chromaSubsampling: '4:4:4' });
-        } else if (format === 'webp') {
-            processedImage = processedImage.webp({ quality: 100, lossless: true });
-        } else if (format === 'png') {
-            processedImage = processedImage.png({ compressionLevel: 0 });
+        // Ensure high quality conversion
+        if (targetFormat === 'jpeg' || targetFormat === 'jpg') {
+            processedImage = processedImage.jpeg({ quality: 90, chromaSubsampling: '4:4:4' });
+        } else if (targetFormat === 'webp') {
+            processedImage = processedImage.webp({ quality: 90 });
+        } else if (targetFormat === 'png') {
+            processedImage = processedImage.png({ compressionLevel: 6 });
         }
 
         const bufferedImage = await processedImage.toBuffer();
 
-        res.setHeader('Content-Type', 'image/' + format);
+        res.setHeader('Content-Type', 'image/' + targetFormat);
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         return res.send(bufferedImage);
 
@@ -2082,6 +2106,9 @@ app.get('/p/:id/:title', (req, res, next) => {
             if (imgUrl.includes('/uploads/')) {
                 imgUrl = imgUrl.replace('/uploads/', '/api/public/watermark/');
             }
+            if (imgUrl.endsWith('.webp')) {
+                imgUrl = imgUrl + '.jpg';
+            }
             
             const host = req.headers['x-forwarded-host'] || req.get('host');
             const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
@@ -2171,6 +2198,9 @@ app.get('/:id/:categoryName', (req, res, next) => {
                 }
                 if (imgUrl.includes('/uploads/')) {
                     imgUrl = imgUrl.replace('/uploads/', '/api/public/watermark/');
+                }
+                if (imgUrl.endsWith('.webp')) {
+                    imgUrl = imgUrl + '.jpg';
                 }
                 
                 const host = req.headers['x-forwarded-host'] || req.get('host');
