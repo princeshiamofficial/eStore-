@@ -845,16 +845,21 @@ export default function CategoryPage() {
     // Check for active campaign meeting visibility override
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const override = localStorage.getItem('meeting_override');
-            const expires = localStorage.getItem('meeting_override_expires');
-            if (override && expires) {
-                if (expires !== '0' && Date.now() > Number(expires)) {
-                    localStorage.removeItem('meeting_override');
-                    localStorage.removeItem('meeting_override_expires');
-                } else if (override === 'hide') {
-                    setIsMeetingHidden(true);
+            const checkOverride = () => {
+                const override = localStorage.getItem('meeting_override');
+                const expires = localStorage.getItem('meeting_override_expires');
+                if (override && expires) {
+                    if (expires !== '0' && Date.now() > Number(expires)) {
+                        localStorage.removeItem('meeting_override');
+                        localStorage.removeItem('meeting_override_expires');
+                    } else if (override === 'hide') {
+                        setIsMeetingHidden(true);
+                    }
                 }
-            }
+            };
+            checkOverride();
+            window.addEventListener('meeting_override_updated', checkOverride);
+            return () => window.removeEventListener('meeting_override_updated', checkOverride);
         }
     }, []);
 

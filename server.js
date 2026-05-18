@@ -298,6 +298,29 @@ db.query(`
     }
 });
 
+// Initialize Disabled Meeting Dialog Client IPs Table (with UTM and Expiration support)
+db.query(`
+    CREATE TABLE IF NOT EXISTS disabled_meeting_dialog (
+        ip_address VARCHAR(45) PRIMARY KEY,
+        utm VARCHAR(255) NULL,
+        expires_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+`, (err) => {
+    if (err) {
+        console.error('Error creating disabled_meeting_dialog table:', err);
+    } else {
+        console.log('disabled_meeting_dialog table initialized successfully');
+        // Migrate columns if table already existed in earlier step
+        db.query('ALTER TABLE disabled_meeting_dialog ADD COLUMN utm VARCHAR(255) NULL', (err) => {
+            if (err && err.code !== 'ER_DUP_FIELDNAME') console.error('Error adding utm column to disabled_meeting_dialog:', err);
+        });
+        db.query('ALTER TABLE disabled_meeting_dialog ADD COLUMN expires_at TIMESTAMP NULL', (err) => {
+            if (err && err.code !== 'ER_DUP_FIELDNAME') console.error('Error adding expires_at column to disabled_meeting_dialog:', err);
+        });
+    }
+});
+
 // ===== ULTRA-FAST SHARED HOSTING CACHE SYSTEM =====
 const cache = {
     settings: null,
@@ -2290,23 +2313,62 @@ app.delete('/api/admin/campaign-urls/:id', requireAuth, (req, res) => {
     });
 });
 
-// Public: Load Campaign URL configuration for visitors
+// Public: Load Campaign URL configuration for visitors and track client IP for disabled meeting popups
 app.get('/api/public/campaign-url', (req, res) => {
     const { utm } = req.query;
-    if (!utm) {
-        return res.status(400).json({ error: 'utm is required' });
-    }
-    const sanitizedUtm = utm.trim().toLowerCase().replace(/\s+/g, '-');
-    
-    db.query('SELECT * FROM campaign_urls WHERE utm = ?', [sanitizedUtm], (err, results) => {
-        if (err) {
-            console.error('Error loading campaign URL:', err);
-            return res.status(500).json({ error: 'Failed to retrieve campaign details' });
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+    // Check if this IP is active in the disabled list (and not expired)
+    db.query('SELECT * FROM disabled_meeting_dialog WHERE ip_address = ? AND (expires_at IS NULL OR expires_at > NOW())', [ip], (err, ipResults) => {
+        const isIpDisabled = !err && ipResults && ipResults.length > 0;
+
+        if (!utm) {
+            return res.json({ 
+                meeting: isIpDisabled ? 'hide' : 'show', 
+                days: isIpDisabled ? 0 : 1 
+            });
         }
-        if (results.length === 0) {
-            return res.json({ meeting: 'show', days: 1 }); // Default fallback
-        }
-        res.json(results[0]);
+
+        const sanitizedUtm = utm.trim().toLowerCase().replace(/\s+/g, '-');
+        
+        db.query('SELECT * FROM campaign_urls WHERE utm = ?', [sanitizedUtm], (err2, results) => {
+            if (err2) {
+                console.error('Error loading campaign URL:', err2);
+                return res.status(500).json({ error: 'Failed to retrieve campaign details' });
+            }
+
+            if (results.length === 0) {
+                return res.json({ meeting: isIpDisabled ? 'hide' : 'show', days: 1 });
+            }
+
+            const campaign = results[0];
+
+            if (campaign.meeting === 'hide') {
+                const days = parseInt(campaign.days, 10) || 0;
+                
+                // Calculate expires_at
+                let expiresAt = null;
+                if (days > 0) {
+                    expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+                }
+
+                // Insert or update IP details in disabled table
+                db.query(
+                    'INSERT INTO disabled_meeting_dialog (ip_address, utm, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE utm = VALUES(utm), expires_at = VALUES(expires_at)',
+                    [ip, campaign.utm, expiresAt],
+                    (errDb) => {
+                        if (errDb) console.error('Error saving disabled meeting IP:', errDb);
+                    }
+                );
+
+                return res.json({ ...campaign, meeting: 'hide' });
+            }
+
+            return res.json({
+                ...campaign,
+                meeting: isIpDisabled ? 'hide' : campaign.meeting
+            });
+        });
     });
 });
 
