@@ -298,11 +298,6 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
                         <PlayIcon />
                     </div>
                 )}
-                {!!p.is_pinned && (
-                    <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-orange-600 p-1.5 rounded-lg shadow-sm z-10">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v11l-4 4-4-4V5z" /></svg>
-                    </div>
-                )}
             </div>
             <div className="store-card-info">
                 <div className="store-title-row">
