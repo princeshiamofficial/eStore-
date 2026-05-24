@@ -4,6 +4,7 @@ import { Metadata, Viewport } from 'next';
 
 import ContactMotion from './ContactMotion';
 import { TrackingHead, TrackingBody, TrafficTracker } from './TrackingScripts';
+import ApolloProviderWrapper from './ApolloProviderWrapper';
 
 import mysql from 'mysql2/promise';
 
@@ -184,7 +185,9 @@ export default function RootLayout({
                 </noscript>
                 <TrackingBody />
                 <TrafficTracker />
-                {children}
+                <ApolloProviderWrapper>
+                    {children}
+                </ApolloProviderWrapper>
                 <ContactMotion />
             </body>
         </html>

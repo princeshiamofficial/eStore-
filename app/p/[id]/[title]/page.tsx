@@ -3,6 +3,8 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 // === ICONS ===
 const YouTubeIcon = () => (
@@ -423,6 +425,26 @@ const ProductPageSkeleton = () => {
 };
 
 
+// === GRAPHQL QUERIES ===
+const GET_CATEGORIES = gql`
+    query GetCategories {
+        categories {
+            id
+            name
+            slug
+            parent_id
+            image
+            children {
+                id
+                name
+                slug
+                parent_id
+                image
+            }
+        }
+    }
+`;
+
 // === MAIN PRODUCT DETAIL PAGE COMPONENT ===
 export default function ProductDetailPage() {
     const params = useParams();
@@ -447,6 +469,7 @@ export default function ProductDetailPage() {
     const [hoveredCatId, setHoveredCatId] = useState<number | null>(null);
     const [expandedCatId, setExpandedCatId] = useState<number | null>(null);
     const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+    const [activeSheetCatId, setActiveSheetCatId] = useState<number | null>(null);
     const [showCopiedToast, setShowCopiedToast] = useState(false);
     const [storyExpanded, setStoryExpanded] = useState(false);
     const [isLongStory, setIsLongStory] = useState(false);
@@ -513,19 +536,25 @@ export default function ProductDetailPage() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-
-
-    // Load categories
+    // Prevent body scroll when mobile sheet or modal is open
     useEffect(() => {
-        async function loadCategories() {
-            try {
-                const res = await fetch('/api/public/categories');
-                const data = await res.json();
-                if (Array.isArray(data)) setCategories(data);
-            } catch (e) { }
+        if (mobileSheetOpen || descModalOpen) {
+            document.body.classList.add('no-scroll');
+        } else {
+            document.body.classList.remove('no-scroll');
         }
-        loadCategories();
-    }, []);
+        return () => document.body.classList.remove('no-scroll');
+    }, [mobileSheetOpen, descModalOpen]);
+
+
+
+    // Load categories via Apollo Client (GraphQL)
+    const { data: categoriesData } = useQuery<{ categories: any[] }>(GET_CATEGORIES);
+    useEffect(() => {
+        if (categoriesData?.categories && Array.isArray(categoriesData.categories)) {
+            setCategories(categoriesData.categories);
+        }
+    }, [categoriesData]);
 
     // Load all products for search suggestions
     useEffect(() => {
@@ -1196,11 +1225,11 @@ export default function ProductDetailPage() {
                 @keyframes attract-pulse {
                     0%, 100% {
                         transform: scale(1);
-                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                        box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1), 0 2px 4px -1px rgba(16, 185, 129, 0.06);
                     }
                     50% {
-                        transform: scale(1.03);
-                        box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.4), 0 10px 10px -5px rgba(249, 115, 22, 0.2);
+                        transform: scale(1.02);
+                        box-shadow: 0 16px 20px -5px rgba(16, 185, 129, 0.35), 0 8px 10px -5px rgba(16, 185, 129, 0.15);
                     }
                 }
 
@@ -1395,79 +1424,92 @@ export default function ProductDetailPage() {
                     </div>
                 </div>
             </header>
+            {/* --- MOBILE FULL PAGE SHEET (Drill-down Style) --- */}
+            <div className={`store-mobile-overlay ${mobileSheetOpen ? 'active' : ''}`} onClick={() => setMobileSheetOpen(false)}></div>
+            <div className={`store-mobile-sheet ${mobileSheetOpen ? 'is-open' : ''} ${activeSheetCatId ? 'mobile-sheet-detail-view' : ''}`}>
+                <div className="mobile-sheet-header">
+                    {activeSheetCatId ? (
+                        <button className="mobile-sheet-back" onClick={() => setActiveSheetCatId(null)}>
+                            <ArrowLeft />
+                        </button>
+                    ) : (
+                        <div className="mobile-sheet-spacer"></div>
+                    )}
 
-            {/* --- MOBILE DRAWER --- */}
-            {mobileSheetOpen && (
-                <div className="mobile-sheet-overlay" onClick={() => setMobileSheetOpen(false)}>
-                    <div className="mobile-sheet-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="mobile-sheet-header">
-                            <img src="/logo.png" alt="Color Hut" width={110} height={34} style={{ objectFit: 'contain' }} />
-                            <button className="mobile-sheet-close" onClick={() => setMobileSheetOpen(false)}>
-                                <CloseIcon />
-                            </button>
+                    <h3 className="mobile-sheet-title">
+                        {activeSheetCatId
+                            ? categories.find(c => c.id === activeSheetCatId)?.name
+                            : 'Browse Categories'}
+                    </h3>
+
+                    <button className="mobile-sheet-close" onClick={() => setMobileSheetOpen(false)}>
+                        <CloseIcon />
+                    </button>
+                </div>
+
+                <div className="mobile-sheet-body">
+                    {!activeSheetCatId ? (
+                        /* TOP LEVEL LIST */
+                        <div className="mobile-sheet-list">
+                            {categories
+                                .filter(cat => !cat.parent_id && !cat.parent_ids)
+                                .map(cat => {
+                                    const hasSub = categories.some(child => {
+                                        const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                        return childParents.includes(String(cat.id));
+                                    });
+                                    return (
+                                        <div
+                                            key={cat.id}
+                                            className="mobile-sheet-row"
+                                            onClick={() => {
+                                                if (hasSub) {
+                                                    setActiveSheetCatId(cat.id);
+                                                } else {
+                                                    setMobileSheetOpen(false);
+                                                    window.location.href = `/${cat.id}/${cat.slug}/`;
+                                                }
+                                            }}
+                                        >
+                                            <span>{cat.name}</span>
+                                            {hasSub && <ChevronRight className="row-chevron" />}
+                                        </div>
+                                    );
+                                })
+                            }
                         </div>
-                        <div className="mobile-sheet-body">
-                            <div className="mobile-nav-section">
-                                <h3 className="mobile-nav-title">Categories</h3>
-                                <div className="mobile-nav-list">
-                                    {categories
-                                        .filter(cat => !cat.parent_id && !cat.parent_ids)
-                                        .map(cat => {
-                                            const hasChildren = categories.some(child => {
-                                                const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
-                                                return childParents.includes(String(cat.id));
-                                            });
-                                            const isExpanded = expandedCatId === cat.id;
-
-                                            return (
-                                                <div key={cat.id} className="mobile-nav-item-group">
-                                                    <div className="mobile-nav-row">
-                                                        <a
-                                                            href={`/${cat.id}/${cat.slug}/`}
-                                                            className="mobile-nav-link"
-                                                            onClick={() => setMobileSheetOpen(false)}
-                                                        >
-                                                            {cat.name}
-                                                        </a>
-                                                        {hasChildren && (
-                                                            <button
-                                                                className={`mobile-nav-arrow-btn ${isExpanded ? 'is-active' : ''}`}
-                                                                onClick={() => setExpandedCatId(isExpanded ? null : cat.id)}
-                                                            >
-                                                                <ChevronDown />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                    {hasChildren && isExpanded && (
-                                                        <div className="mobile-nav-sublist">
-                                                            {categories
-                                                                .filter(child => {
-                                                                    const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
-                                                                    return childParents.includes(String(cat.id));
-                                                                })
-                                                                .map(sub => (
-                                                                    <a
-                                                                        key={sub.id}
-                                                                        href={`/${sub.id}/${sub.slug}/`}
-                                                                        className="mobile-nav-sublink"
-                                                                        onClick={() => setMobileSheetOpen(false)}
-                                                                    >
-                                                                        {sub.name}
-                                                                    </a>
-                                                                ))
-                                                            }
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })
-                                    }
-                                </div>
+                    ) : (
+                        /* DETAIL LEVEL LIST */
+                        <div className="mobile-sheet-detail">
+                            <a
+                                href={`/${activeSheetCatId}/${categories.find(c => c.id === activeSheetCatId)?.slug}/`}
+                                className="mobile-sheet-view-all"
+                                onClick={() => setMobileSheetOpen(false)}
+                            >
+                                View all
+                            </a>
+                            <div className="mobile-sheet-list">
+                                {categories
+                                    .filter(child => {
+                                        const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                        return childParents.includes(String(activeSheetCatId));
+                                    })
+                                    .map(sub => (
+                                        <a
+                                            key={sub.id}
+                                            href={`/${sub.id}/${sub.slug}/`}
+                                            className="mobile-sheet-row sub-row"
+                                            onClick={() => setMobileSheetOpen(false)}
+                                        >
+                                            {sub.name}
+                                        </a>
+                                    ))
+                                }
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* --- MAIN PAGE CONTENT --- */}
             <main className="max-w-[1400px] mx-auto px-6 md:px-10 pt-5 pb-8 md:pt-8 md:pb-12">
@@ -1726,23 +1768,27 @@ export default function ProductDetailPage() {
                             </AnimatePresence>
 
                             {/* Elevated CTA buttons */}
-                            <div className="pt-4 flex flex-col sm:flex-row gap-3">
+                            <div className="pt-4 flex flex-row gap-3 justify-center sm:justify-start">
                                 <button
                                     onClick={inquireWhatsApp}
-                                    className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4.5 rounded-2xl text-base font-extrabold hover:from-emerald-600 hover:to-teal-700 transition-all shadow-xl shadow-emerald-100 hover:shadow-emerald-200 active:scale-98 flex items-center justify-center gap-3 animate-attract group/cta"
+                                    className="w-full max-w-[230px] bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white px-3 sm:px-5 py-3.5 sm:py-4.5 rounded-2xl text-sm sm:text-base font-extrabold hover:from-emerald-600 hover:to-teal-700 hover:-translate-y-0.5 transition-all duration-300 shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/35 active:scale-98 flex items-center justify-center gap-1 sm:gap-1.5 animate-attract group/cta whitespace-nowrap"
                                 >
                                     <WhatsAppIcon />
-                                    <span>Place Order via WhatsApp</span>
+                                    <span>Order via WhatsApp</span>
                                     <svg className="w-5 h-5 group-hover/cta:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                 </button>
 
                                 <button
                                     onClick={shareProduct}
-                                    className="px-6 py-4.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2.5 border border-slate-200/20"
+                                    className="px-3 sm:px-4 py-3.5 sm:py-4.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 font-extrabold rounded-2xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-1.5 sm:gap-2"
                                     title="Share Creation"
                                 >
-                                    <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8.684 10.742l4.63-2.315m0 7.146l-4.63-2.315m1.316-2.514a3 3 0 11-6 0 3 3 0 016 0zm6-5a3 3 0 11-6 0 3 3 0 016 0zm0 10a3 3 0 11-6 0 3 3 0 016 0z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                                    <span className="hidden md:inline">Share</span>
+                                    <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                        <polyline points="16 6 12 2 8 6" />
+                                        <line x1="12" y1="2" x2="12" y2="15" />
+                                    </svg>
+                                    <span>Share</span>
                                 </button>
                             </div>
                         </div>

@@ -10,6 +10,7 @@
     "build": "next build"
   },
   "dependencies": {
+    "@apollo/client": "^4.2.0",
     "@apollo/server": "^5.5.1",
     "@as-integrations/express4": "^1.1.2",
     "bcryptjs": "^2.4.3",
