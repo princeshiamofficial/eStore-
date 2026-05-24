@@ -2384,13 +2384,187 @@ app.get('/api/public/campaign-url', (req, res) => {
     });
 });
 
-app.all('*', (req, res) => {
-    return handle(req, res);
-});
+const { ApolloServer } = require('@apollo/server');
+const { expressMiddleware } = require('@as-integrations/express4');
+
+const typeDefs = `#graphql
+  type Category {
+    id: ID!
+    parent_id: Int
+    name: String!
+    slug: String!
+    icon: String
+    position: Int
+  }
+
+  type Product {
+    id: ID!
+    name: String!
+    slug: String!
+    category_id: String
+    category_name: String
+    description: String
+    price: Float
+    image: String
+    video_url: String
+    status: String
+    is_pinned: Boolean
+    views: Int
+    rating: Float
+    seo_keywords: String
+    seo_description: String
+    position: Int
+    created_at: String
+  }
+
+  type Blog {
+    id: ID!
+    title: String!
+    slug: String!
+    content: String
+    excerpt: String
+    featured_image: String
+    status: String
+    author: String
+    seo_keywords: String
+    seo_description: String
+    views: Int
+    created_at: String
+  }
+
+  type Query {
+    categories: [Category!]!
+    products(limit: Int, offset: Int, categoryId: String, pinned: Boolean, search: String): [Product!]!
+    product(id: ID, slug: String): Product
+    blogs: [Blog!]!
+    blog(slug: String!): Blog
+  }
+`;
+
+const resolvers = {
+  Query: {
+    categories: async () => {
+      const categories = await getCachedCategories();
+      return categories || [];
+    },
+    products: async (_, { limit = 12, offset = 0, categoryId, pinned, search }) => {
+      return new Promise((resolve, reject) => {
+        let query = `
+          SELECT p.*, (
+              SELECT GROUP_CONCAT(name SEPARATOR ', ') 
+              FROM categories 
+              WHERE FIND_IN_SET(id, p.category_id)
+          ) as category_name
+          FROM products p
+          WHERE p.status = 'Published' AND p.is_deleted = FALSE
+        `;
+        const params = [];
+        if (categoryId) {
+          query += ` AND (FIND_IN_SET(?, p.category_id) OR EXISTS (
+              SELECT 1 FROM category_parents cp 
+              WHERE cp.parent_id = ? AND FIND_IN_SET(cp.category_id, p.category_id)
+          ))`;
+          params.push(categoryId, categoryId);
+        }
+        if (pinned) {
+          query += ` AND p.is_pinned = TRUE`;
+        }
+        if (search) {
+          query += ' AND (p.name LIKE ? OR p.description LIKE ?)';
+          params.push(`%${search}%`, `%${search}%`);
+        }
+        query += ` ORDER BY p.position ASC, p.created_at DESC LIMIT ? OFFSET ?`;
+        params.push(limit, offset);
+
+        db.query(query, params, (err, results) => {
+          if (err) reject(err);
+          else {
+            const mapped = (results || []).map(row => ({
+              ...row,
+              price: row.price ? parseFloat(row.price) : 0,
+              rating: row.rating ? parseFloat(row.rating) : 0.0,
+              is_pinned: !!row.is_pinned
+            }));
+            resolve(mapped);
+          }
+        });
+      });
+    },
+    product: async (_, { id, slug }) => {
+      return new Promise((resolve, reject) => {
+        if (!id && !slug) {
+          return resolve(null);
+        }
+        const queryField = id ? 'p.id = ?' : 'p.slug = ?';
+        const queryVal = id || slug;
+        
+        // Increment views
+        db.query(`UPDATE products SET views = views + 1 WHERE ${id ? 'id' : 'slug'} = ?`, [queryVal], (err) => {
+          if (err) console.error('Error incrementing view count:', err);
+
+          const query = `
+            SELECT p.*, (
+                SELECT GROUP_CONCAT(name SEPARATOR ', ') 
+                FROM categories 
+                WHERE FIND_IN_SET(id, p.category_id)
+            ) as category_name 
+            FROM products p 
+            WHERE ${queryField} AND p.status = 'Published' AND p.is_deleted = FALSE
+          `;
+          db.query(query, [queryVal], (err2, results) => {
+            if (err2) reject(err2);
+            else {
+              const row = results && results[0];
+              if (!row) return resolve(null);
+              resolve({
+                ...row,
+                price: row.price ? parseFloat(row.price) : 0,
+                rating: row.rating ? parseFloat(row.rating) : 0.0,
+                is_pinned: !!row.is_pinned
+              });
+            }
+          });
+        });
+      });
+    },
+    blogs: async () => {
+      return new Promise((resolve, reject) => {
+        db.query("SELECT * FROM blogs WHERE status = 'Published' AND is_deleted = FALSE ORDER BY created_at DESC", (err, results) => {
+          if (err) reject(err);
+          else resolve(results || []);
+        });
+      });
+    },
+    blog: async (_, { slug }) => {
+      return new Promise((resolve, reject) => {
+        db.query("UPDATE blogs SET views = views + 1 WHERE slug = ?", [slug]);
+        db.query("SELECT * FROM blogs WHERE slug = ? AND status = 'Published' AND is_deleted = FALSE", [slug], (err, results) => {
+          if (err) reject(err);
+          else resolve((results && results[0]) || null);
+        });
+      });
+    }
+  }
+};
 
 const PORT = process.env.PORT || 3000;
 
-nextApp.prepare().then(() => {
+nextApp.prepare().then(async () => {
+    // Start Apollo Server
+    const apolloServer = new ApolloServer({
+        typeDefs,
+        resolvers,
+    });
+    await apolloServer.start();
+
+    // GraphQL middleware applied before Next.js catch-all handler
+    app.use('/graphql', expressMiddleware(apolloServer));
+
+    // Next.js page routing handler
+    app.all('*', (req, res) => {
+        return handle(req, res);
+    });
+
     server.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
     });
