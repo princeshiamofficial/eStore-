@@ -803,6 +803,164 @@ const Footer = () => {
     );
 };
 
+const ProductCarousel = ({
+    products,
+    categories,
+    getCategoryStyles,
+    currentCategory
+}: {
+    products: Product[];
+    categories: Category[];
+    getCategoryStyles: any;
+    currentCategory?: Category | null;
+}) => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [showLeftBtn, setShowLeftBtn] = useState(false);
+    const [showRightBtn, setShowRightBtn] = useState(true);
+
+    const updateButtonVisibility = () => {
+        if (scrollRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+            setShowLeftBtn(scrollLeft > 5);
+            setShowRightBtn(scrollLeft + clientWidth < scrollWidth - 5);
+        }
+    };
+
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (el) {
+            el.addEventListener('scroll', updateButtonVisibility);
+            // Initial check
+            updateButtonVisibility();
+            // Handle window resize
+            window.addEventListener('resize', updateButtonVisibility);
+        }
+        return () => {
+            if (el) el.removeEventListener('scroll', updateButtonVisibility);
+            window.removeEventListener('resize', updateButtonVisibility);
+        };
+    }, [products]);
+
+    const scroll = (direction: 'left' | 'right') => {
+        if (scrollRef.current) {
+            const { scrollLeft, clientWidth } = scrollRef.current;
+            const scrollTo = direction === 'left'
+                ? scrollLeft - clientWidth * 0.85
+                : scrollLeft + clientWidth * 0.85;
+            scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+        }
+    };
+
+    return (
+        <div style={{ position: 'relative', width: '100%' }}>
+            {/* Scroll Left Button */}
+            {showLeftBtn && (
+                <button
+                    onClick={() => scroll('left')}
+                    className="carousel-control-btn"
+                    style={{
+                        position: 'absolute',
+                        left: '-22px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 10,
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '50%',
+                        width: '44px',
+                        height: '44px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)',
+                        cursor: 'pointer',
+                        color: '#1a1a1a',
+                        transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                        e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.1)';
+                    }}
+                    aria-label="Previous Products"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+            )}
+
+            {/* Carousel Container */}
+            <div
+                ref={scrollRef}
+                style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                }}
+                className="hide-scrollbar carousel-container"
+            >
+                {products.map((p, idx) => (
+                    <div
+                        key={p.id}
+                        className="carousel-item"
+                    >
+                        <ProductCard
+                            p={p}
+                            idx={idx}
+                            getCategoryStyles={getCategoryStyles}
+                            categories={categories}
+                            currentCategory={currentCategory}
+                        />
+                    </div>
+                ))}
+            </div>
+
+            {/* Scroll Right Button */}
+            {showRightBtn && (
+                <button
+                    onClick={() => scroll('right')}
+                    className="carousel-control-btn"
+                    style={{
+                        position: 'absolute',
+                        right: '-22px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 10,
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '50%',
+                        width: '44px',
+                        height: '44px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)',
+                        cursor: 'pointer',
+                        color: '#1a1a1a',
+                        transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                        e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.1)';
+                    }}
+                    aria-label="Next Products"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            )}
+        </div>
+    );
+};
+
 export default function CategoryPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
@@ -814,7 +972,7 @@ export default function CategoryPage() {
     const [fetchingLimit] = useState(12);
     const pathname = usePathname();
     const params = useParams();
-    
+
     const id = params.id as string;
     const categoryName = params.categoryName as string;
 
@@ -973,7 +1131,7 @@ export default function CategoryPage() {
             if (currentCat) {
                 const targetSlug = currentCat.slug?.toLowerCase().trim();
                 const currentParamSlug = categoryName?.toLowerCase().trim();
-                if (targetSlug && currentParamSlug !== targetSlug) {
+                if (targetSlug && currentParamSlug !== targetSlug && currentParamSlug !== 'mastercategory') {
                     const newPath = `/${id}/${currentCat.slug}/`;
                     window.history.replaceState(null, '', newPath);
                 }
@@ -987,6 +1145,10 @@ export default function CategoryPage() {
             return parents.includes(String(currentCategory.id));
         })
         : [];
+
+    const isMasterCategory = currentCategory 
+        ? (!currentCategory.parent_id && (!currentCategory.parent_ids || String(currentCategory.parent_ids).trim() === '') && subCategories.length > 0) 
+        : false;
 
     const catMenuRef = useRef<HTMLDivElement>(null);
     const searchBarRef = useRef<HTMLDivElement>(null);
@@ -1044,7 +1206,8 @@ export default function CategoryPage() {
         async function loadProducts() {
             setLoading(true);
             try {
-                let url = `/api/public/products?page=${page}&limit=${fetchingLimit}`;
+                const limit = isMasterCategory ? 1000 : fetchingLimit;
+                let url = `/api/public/products?page=${page}&limit=${limit}`;
 
                 if (currentCategory) {
                     url += `&categoryId=${currentCategory.id}`;
@@ -1093,7 +1256,7 @@ export default function CategoryPage() {
             setLoading(false);
         }
         loadProducts();
-    }, [page, navKey, categories.length]);
+    }, [page, navKey, categories.length, isMasterCategory]);
 
     function setFallback() {
         const dummy: Product[] = [
@@ -1166,6 +1329,41 @@ export default function CategoryPage() {
 
     return (
         <div suppressHydrationWarning>
+            <style>{`
+                .hide-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                .carousel-container {
+                    display: flex;
+                    overflow-x: auto;
+                    gap: 20px;
+                    padding: 8px 4px 16px 4px;
+                    scroll-behavior: smooth;
+                    width: 100%;
+                }
+                .carousel-item {
+                    flex: 0 0 280px;
+                    width: 280px;
+                    max-width: 280px;
+                    min-width: 280px;
+                }
+                @media (max-width: 900px) {
+                    .carousel-container {
+                        gap: 12px !important;
+                        padding-left: 12px !important;
+                        padding-right: 12px !important;
+                    }
+                    .carousel-item {
+                        flex: 0 0 calc((100% - 12px) / 2) !important;
+                        width: calc((100% - 12px) / 2) !important;
+                        max-width: calc((100% - 12px) / 2) !important;
+                        min-width: calc((100% - 12px) / 2) !important;
+                    }
+                    .carousel-control-btn {
+                        display: none !important;
+                    }
+                }
+            `}</style>
             {/* --- HEADER --- */}
             <header className={`store-header ${searchFocused ? 'is-searching' : ''}`}>
                 <div className="store-header-top-row">
@@ -1371,7 +1569,7 @@ export default function CategoryPage() {
                             <GridIcon />
                         </button>
 
-                        <button className="store-icon-btn" title="Cart">
+                        <button className="store-icon-btn desktop-only" title="Cart">
                             <CartIcon />
                         </button>
                     </div>
@@ -1397,43 +1595,207 @@ export default function CategoryPage() {
                     {subCategories.length > 0 && <p className="store-page-subtitle">Picks you'll love</p>}
                 </div>
 
-                {/* Subcategories (Etsy style chips) */}
+                {/* Subcategories (Shopify style category pills) */}
                 {subCategories.length > 0 && (
-                    <div className="narrowing-pathways-container" ref={pathwayRef}>
-                        {subCategories.map(sub => (
-                            <div key={sub.id} className="narrowing-pathway-item">
-                                <a href={`/${sub.id}/${sub.slug}/`} className="narrowing-pathway-chip">
-                                    <div className="pathway-icon">
-                                        <img
-                                            src={sub.icon || `https://ui-avatars.com/api/?name=${encodeURIComponent(sub.name)}&background=f0f0f0&color=333&size=200`}
-                                            alt={sub.name}
-                                        />
-                                    </div>
-                                    <span className="pathway-title">{sub.name}</span>
-                                </a>
-                            </div>
-                        ))}
+                    <div 
+                        className="narrowing-pathways-container category-pills-container" 
+                        ref={pathwayRef}
+                    >
+                        {subCategories.map(sub => {
+                            const catImg = sub.icon || `https://ui-avatars.com/api/?name=${encodeURIComponent(sub.name)}&background=f0f0f0&color=333&size=200`;
+                            return (
+                                <div key={sub.id} style={{ flexShrink: 0 }}>
+                                    <a 
+                                        href={`/${sub.id}/${sub.slug}/`} 
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            height: '44px',
+                                            borderRadius: '9999px',
+                                            border: '1px solid #e0e0e0',
+                                            backgroundColor: '#ffffff',
+                                            padding: '6px 16px 6px 6px',
+                                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                                            transition: 'all 0.2s ease-in-out',
+                                            textDecoration: 'none',
+                                            color: '#1a1a1a'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                            e.currentTarget.style.borderColor = '#d0d0d0';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#ffffff';
+                                            e.currentTarget.style.borderColor = '#e0e0e0';
+                                        }}
+                                        onMouseDown={(e) => {
+                                            e.currentTarget.style.transform = 'scale(0.98)';
+                                        }}
+                                        onMouseUp={(e) => {
+                                            e.currentTarget.style.transform = 'scale(1)';
+                                        }}
+                                    >
+                                        <div style={{
+                                            marginRight: '8px',
+                                            width: '32px',
+                                            height: '32px',
+                                            overflow: 'hidden',
+                                            borderRadius: '50%',
+                                            border: '1px solid #e0e0e0'
+                                        }}>
+                                            <img 
+                                                src={catImg} 
+                                                alt={sub.name}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover'
+                                                }}
+                                            />
+                                        </div>
+                                        <span style={{
+                                            fontSize: '13.5px',
+                                            fontWeight: 600,
+                                            whiteSpace: 'nowrap'
+                                        }}>
+                                            {sub.name}
+                                        </span>
+                                    </a>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
 
-                {/* Products Grid */}
-                <div className="store-grid">
-                    {filteredProducts.map((p, idx) => {
-                        const isLast = filteredProducts.length === idx + 1;
-                        return (
-                            <ProductCard
-                                key={p.id}
-                                ref={isLast ? lastProductElementRef : null}
-                                p={p}
-                                idx={idx}
-                                getCategoryStyles={getCategoryStyles}
-                                categories={categories}
-                                currentCategory={currentCategory}
-                            />
-                        );
-                    })}
-                    {loading && [1, 2, 3, 4, 5, 6, 7, 8].map(i => <ProductSkeleton key={`loading-${i}`} />)}
-                </div>
+                {isMasterCategory ? (
+                    <div className="master-category-sections" style={{ width: '100%', marginTop: '30px' }}>
+                        {subCategories.map(sub => {
+                            const subProducts = products.filter(p => {
+                                const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
+                                const pCatNames = String(p.category_name || '').split(',').map(n => n.trim().toLowerCase());
+                                const subName = String(sub.name || '').toLowerCase().trim();
+                                const matchesCat = pCatIds.includes(String(sub.id)) || pCatNames.includes(subName);
+                                if (!matchesCat) return false;
+
+                                if (searchQuery.trim()) {
+                                    const q = searchQuery.toLowerCase().trim();
+                                    const matchesName = String(p.name || '').toLowerCase().includes(q);
+                                    const matchesCategory = String(p.category_name || '').toLowerCase().includes(q);
+                                    const matchesDesc = String(p.description || '').toLowerCase().includes(q);
+                                    return matchesName || matchesCategory || matchesDesc;
+                                }
+
+                                return true;
+                            });
+
+                            if (subProducts.length === 0) return null;
+
+                            return (
+                                <div key={sub.id} className="sub-category-section" style={{ marginBottom: '20px', width: '100%' }}>
+                                    {/* Subcategory title link and chevron arrow */}
+                                    <a 
+                                        href={`/${sub.id}/${sub.slug}/`} 
+                                        style={{ 
+                                            display: 'inline-flex', 
+                                            alignItems: 'center', 
+                                            gap: '8px', 
+                                            textDecoration: 'none', 
+                                            color: '#1a1a1a', 
+                                            margin: '12px 0 8px 0'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            const circle = e.currentTarget.querySelector('.chevron-circle') as HTMLDivElement;
+                                            if (circle) circle.style.backgroundColor = '#e2e8f0';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            const circle = e.currentTarget.querySelector('.chevron-circle') as HTMLDivElement;
+                                            if (circle) circle.style.backgroundColor = '#f1f5f9';
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '16px', fontWeight: 700, textTransform: 'capitalize' }}>
+                                            {sub.name}
+                                        </span>
+                                        <div 
+                                            className="chevron-circle"
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: '22px',
+                                                height: '22px',
+                                                borderRadius: '50%',
+                                                backgroundColor: '#f1f5f9',
+                                                color: '#1a1a1a',
+                                                transition: 'background-color 0.2s ease'
+                                            }}
+                                        >
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="9 18 15 12 9 6"></polyline>
+                                            </svg>
+                                        </div>
+                                    </a>
+
+                                    {/* Products Carousel */}
+                                    <ProductCarousel
+                                        products={subProducts}
+                                        categories={categories}
+                                        getCategoryStyles={getCategoryStyles}
+                                        currentCategory={sub}
+                                    />
+                                </div>
+                            );
+                        })}
+                        {loading && (
+                            <div style={{ display: 'flex', gap: '20px', overflowX: 'hidden', padding: '20px 0' }}>
+                                {[1, 2, 3, 4].map(i => <ProductSkeleton key={`loading-carousel-${i}`} />)}
+                            </div>
+                        )}
+                        {!loading && subCategories.every(sub => {
+                            const subProducts = products.filter(p => {
+                                const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
+                                const pCatNames = String(p.category_name || '').split(',').map(n => n.trim().toLowerCase());
+                                const subName = String(sub.name || '').toLowerCase().trim();
+                                const matchesCat = pCatIds.includes(String(sub.id)) || pCatNames.includes(subName);
+                                if (!matchesCat) return false;
+
+                                if (searchQuery.trim()) {
+                                    const q = searchQuery.toLowerCase().trim();
+                                    const matchesName = String(p.name || '').toLowerCase().includes(q);
+                                    const matchesCategory = String(p.category_name || '').toLowerCase().includes(q);
+                                    const matchesDesc = String(p.description || '').toLowerCase().includes(q);
+                                    return matchesName || matchesCategory || matchesDesc;
+                                }
+
+                                return true;
+                            });
+                            return subProducts.length === 0;
+                        }) && (
+                                <div style={{ textAlign: 'center', padding: '60px 0', color: '#666' }}>
+                                    No products found.
+                                </div>
+                            )}
+                    </div>
+                ) : (
+                    /* Products Grid */
+                    <div className="store-grid">
+                        {filteredProducts.map((p, idx) => {
+                            const isLast = filteredProducts.length === idx + 1;
+                            return (
+                                <ProductCard
+                                    key={p.id}
+                                    ref={isLast ? lastProductElementRef : null}
+                                    p={p}
+                                    idx={idx}
+                                    getCategoryStyles={getCategoryStyles}
+                                    categories={categories}
+                                    currentCategory={currentCategory}
+                                />
+                            );
+                        })}
+                        {loading && [1, 2, 3, 4, 5, 6, 7, 8].map(i => <ProductSkeleton key={`loading-${i}`} />)}
+                    </div>
+                )}
             </div>
 
             {/* Mobile Sheet drawer */}

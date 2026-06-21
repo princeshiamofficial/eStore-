@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import HeroSlider from '../HeroSlider';
+import HomeNavbar from '../HomeNavbar';
 
 // === ICONS ===
 const YouTubeIcon = () => (
@@ -844,7 +845,7 @@ export default function HomePage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchFocused, setSearchFocused] = useState(false);
+    const [searchFocused, setSearchFocused] = useState(false); // kept for is-searching class on header
     const [catMenuOpen, setCatMenuOpen] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -901,7 +902,6 @@ export default function HomePage() {
     const slug = currentPath.split('/').filter(Boolean).pop();
 
     const subNavRef = useRef<HTMLDivElement>(null);
-    const pathwayRef = useRef<HTMLDivElement>(null);
 
 
     const observer = useRef<IntersectionObserver | null>(null);
@@ -977,29 +977,7 @@ export default function HomePage() {
     };
 
 
-    // Mouse Wheel Horizontal Scroll Logic
-    useEffect(() => {
-        const handleWheel = (e: WheelEvent, ref: React.RefObject<HTMLElement>) => {
-            if (ref.current && Math.abs(e.deltaY) > 0) {
-                e.preventDefault();
-                ref.current.scrollLeft += e.deltaY;
-            }
-        };
-
-        const sn = subNavRef.current;
-        const pw = pathwayRef.current;
-
-        const onWheelSN = (e: WheelEvent) => handleWheel(e, subNavRef);
-        const onWheelPW = (e: WheelEvent) => handleWheel(e, pathwayRef);
-
-        if (sn) sn.addEventListener('wheel', onWheelSN, { passive: false });
-        if (pw) pw.addEventListener('wheel', onWheelPW, { passive: false });
-
-        return () => {
-            if (sn) sn.removeEventListener('wheel', onWheelSN);
-            if (pw) pw.removeEventListener('wheel', onWheelPW);
-        };
-    }, []);
+    
 
     // Robust category finding
     const currentCategory = categories.find(c =>
@@ -1203,234 +1181,16 @@ export default function HomePage() {
 
     return (
         <div suppressHydrationWarning>
-            {/* --- HEADER --- */}
-            <header className={`store-header ${searchFocused ? 'is-searching' : ''}`}>
-                <div className="store-header-top-row">
-                    {/* Mobile Menu Icon */}
-                    <button className="store-icon-btn mobile-only" onClick={() => setMobileSheetOpen(true)}>
-                        <MenuIcon />
-                    </button>
-
-                    <a href="/" className="store-logo">
-                        <img src="/logo.png" alt="Color Hut" width={140} height={44} style={{ objectFit: 'contain' }} />
-                    </a>
-
-                    {/* Desktop Categories */}
-                    <div className="store-categories-container desktop-only" ref={catMenuRef}>
-                        <button
-                            className="store-categories-btn"
-                            onClick={() => setCatMenuOpen(!catMenuOpen)}
-                        >
-                            <MenuIcon />
-                            Categories
-                        </button>
-                        {catMenuOpen && (
-                            <div className="store-cat-mega-wrapper">
-                                <div className="mega-menu-content">
-                                    {/* Left Column: Categories List */}
-                                    <div className="mega-menu-list">
-                                        {categories
-                                            .filter(cat => !cat.parent_id && !cat.parent_ids)
-                                            .map(cat => {
-                                                const hasChildren = categories.some(child => {
-                                                    const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
-                                                    return childParents.includes(String(cat.id));
-                                                });
-                                                const isHovered = hoveredCatId === cat.id || (!hoveredCatId && categories.filter(c => !c.parent_id && !c.parent_ids)[0].id === cat.id);
-
-                                                return (
-                                                    <div key={cat.id} className="mega-menu-item-group">
-                                                        <a
-                                                            href={`/${cat.id}/${cat.slug}/`}
-                                                            className={`mega-menu-list-item ${isHovered ? 'is-active' : ''}`}
-                                                            onMouseEnter={() => setHoveredCatId(cat.id)}
-                                                            onClick={(e) => {
-                                                                if (window.innerWidth <= 900 && hasChildren) {
-                                                                    e.preventDefault();
-                                                                    setExpandedCatId(expandedCatId === cat.id ? null : cat.id);
-                                                                } else {
-                                                                    setCatMenuOpen(false);
-                                                                }
-                                                            }}
-                                                        >
-                                                            <div className="mega-item-label">
-                                                                <span className="mega-icon-box"><FolderIcon /></span>
-                                                                {cat.name}
-                                                            </div>
-                                                            <ChevronDown
-                                                                className="mega-chevron-right"
-                                                                style={{
-                                                                    transform: expandedCatId === cat.id ? 'rotate(0deg)' : 'rotate(-90deg)',
-                                                                    transition: 'transform 0.3s ease'
-                                                                }}
-                                                            />
-                                                        </a>
-                                                        {expandedCatId === cat.id && hasChildren && (
-                                                            <div className="mega-mobile-accordion shadow-sm">
-                                                                {categories
-                                                                    .filter(child => {
-                                                                        const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
-                                                                        return childParents.includes(String(cat.id));
-                                                                    })
-                                                                    .map(sub => (
-                                                                        <a
-                                                                            key={sub.id}
-                                                                            href={`/${sub.id}/${sub.slug}/`}
-                                                                            className="mega-mobile-sublink"
-                                                                            onClick={() => setCatMenuOpen(false)}
-                                                                        >
-                                                                            {sub.name}
-                                                                        </a>
-                                                                    ))
-                                                                }
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                    </div>
-
-                                    {/* Right Column: Sub-Categories Sidepane */}
-                                    <div className="mega-menu-sidepane">
-                                        <div className="mega-sidepane-header">
-                                            <h3>{categories.find(c => c.id === (hoveredCatId || categories.filter(cat => !cat.parent_id && !cat.parent_ids)[0]?.id))?.name}</h3>
-                                            <a href={`/${hoveredCatId || categories.filter(cat => !cat.parent_id && !cat.parent_ids)[0]?.id}/${categories.find(c => c.id === (hoveredCatId || categories.filter(cat => !cat.parent_id && !cat.parent_ids)[0]?.id))?.slug}/`} className="see-all-link">See all</a>
-                                        </div>
-                                        <div className="mega-sidepane-grid">
-                                            {categories
-                                                .filter(child => {
-                                                    const parentId = hoveredCatId || categories.filter(cat => !cat.parent_id && !cat.parent_ids)[0]?.id;
-                                                    const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
-                                                    return childParents.includes(String(parentId));
-                                                })
-                                                .map(sub => {
-                                                    const catImg = sub.icon || allProducts.find(p => Number(p.category_id) === Number(sub.id))?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(sub.name)}&background=f8f9fa&color=F1641E&size=200`;
-                                                    return (
-                                                        <a
-                                                            key={sub.id}
-                                                            href={`/${sub.id}/${sub.slug}/`}
-                                                            className="mega-grid-card"
-                                                            onClick={() => setCatMenuOpen(false)}
-                                                        >
-                                                            <div className="mega-card-image">
-                                                                <img
-                                                                    src={catImg}
-                                                                    alt={sub.name}
-                                                                />
-                                                            </div>
-                                                            <span className="mega-card-title">{sub.name}</span>
-                                                        </a>
-                                                    );
-                                                })
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Search */}
-                    <div className="store-search-bar" ref={searchBarRef}>
-                        <input
-                            type="text"
-                            className="store-search-input"
-                            placeholder="Search for anything"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onFocus={() => setSearchFocused(true)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    const queryVal = searchQuery.trim();
-                                    if (queryVal) {
-                                        window.history.pushState(null, '', `/?q=${encodeURIComponent(queryVal)}`);
-                                    } else {
-                                        window.history.pushState(null, '', '/');
-                                    }
-                                    setSearchFocused(false);
-                                }
-                            }}
-                        />
-                        <button
-                            className="store-search-submit"
-                            onClick={() => {
-                                const queryVal = searchQuery.trim();
-                                if (queryVal) {
-                                    window.history.pushState(null, '', `/?q=${encodeURIComponent(queryVal)}`);
-                                } else {
-                                    window.history.pushState(null, '', '/');
-                                }
-                                setSearchFocused(false);
-                            }}
-                        >
-                            <SearchIcon />
-                        </button>
-
-                        {searchFocused && suggestions.length > 0 && (
-                            <div className="store-search-suggestions">
-                                {suggestions.map((item, idx) => (
-                                    <a
-                                        key={`${item.type}-${item.id}`}
-                                        href={item.type === 'category' ? `/${item.id}/${item.slug}/` : `/p/${item.id}/${item.slug}/`}
-                                        className="store-suggestion-item"
-                                        onMouseDown={(e) => {
-                                            // onMouseDown fires before onBlur
-                                            e.preventDefault();
-                                            window.location.href = item.type === 'category' ? `/${item.id}/${item.slug}/` : `/p/${item.id}/${item.slug}/`;
-                                        }}
-                                    >
-                                        <div className="store-suggestion-icon">
-                                            {item.type === 'category' ? <MenuIcon /> : <SearchIcon />}
-                                        </div>
-                                        <div className="store-suggestion-text">{item.name}</div>
-                                        <div className="store-suggestion-type">{item.type}</div>
-                                    </a>
-                                ))}
-                            </div>
-                        )}
-                        <button
-                            className="store-search-cancel"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                setSearchFocused(false);
-                            }}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-
-                    {/* Header Actions */}
-                    <div className="store-header-nav">
-                        <button className="store-icon-btn" title="Account">
-                            <UserIcon />
-                        </button>
-
-                        <button className="store-icon-btn desktop-only" title="Favorites">
-                            <HeartIcon />
-                        </button>
-
-                        <button className="store-icon-btn mobile-only" title="All Categories" onClick={() => setMobileSheetOpen(true)}>
-                            <GridIcon />
-                        </button>
-
-                        <button className="store-icon-btn" title="Cart">
-                            <CartIcon />
-                        </button>
-                    </div>
-                </div>
-
-                {/* --- SUBNAV --- */}
-                <nav className="store-subnav" ref={subNavRef as any}>
-                    <a href="/all" className="store-subnav-item"><GridIcon /> All Products</a>
-                    {categories
-                        .filter(cat => !cat.parent_id && !cat.parent_ids)
-                        .map((cat, i) => (
-                            <a key={cat.id} href={`/${cat.id}/${cat.slug}/`} className="store-subnav-item">
-                                {cat.name}
-                            </a>
-                        ))}
-                </nav>
-            </header>
+            {/* --- NAVBAR --- */}
+            <HomeNavbar
+                categories={categories}
+                allProducts={allProducts}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                mobileSheetOpen={mobileSheetOpen}
+                onMobileSheetOpen={() => setMobileSheetOpen(true)}
+                onMobileSheetClose={() => setMobileSheetOpen(false)}
+            />
 
             {/* SEO Critical H1 - Visually Hidden on Home */}
             {isBaseHome && (
@@ -1457,7 +1217,7 @@ export default function HomePage() {
 
                 {/* --- SUB-CATEGORIES (Etsy Style) --- */}
                 {subCategories.length > 0 && (
-                    <div className="narrowing-pathways-container" ref={pathwayRef}>
+                    <div className="narrowing-pathways-container">
                         {subCategories.map(sub => (
                             <div key={sub.id} className="narrowing-pathway-item">
                                 <a href={`/${sub.id}/${sub.slug}/`} className="narrowing-pathway-chip">
