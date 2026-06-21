@@ -122,6 +122,7 @@ interface Product {
     description?: string;
     rating?: string | number;
     is_pinned?: boolean | number;
+    position?: number;
 }
 
 interface Category {
@@ -130,6 +131,7 @@ interface Category {
     slug: string;
     parent_ids?: string;
     parent_id?: string;
+    position?: number;
 }
 
 const ProductSkeleton = () => (
@@ -1464,6 +1466,41 @@ export default function HomePage() {
 
                             if (catProducts.length === 0) return null;
 
+                            // Sort products by subcategory position
+                            const catSubCategories = categories.filter(child => {
+                                const parentIds = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                return parentIds.includes(String(cat.id));
+                            });
+
+                            const sortedCatProducts = [...catProducts].sort((a, b) => {
+                                const getSubcategoryIndex = (p: Product) => {
+                                    const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
+                                    const pCatNames = String(p.category_name || '').split(',').map(n => n.trim().toLowerCase());
+                                    
+                                    const matchIdx = catSubCategories.findIndex(sub => {
+                                        const subName = String(sub.name || '').toLowerCase().trim();
+                                        return pCatIds.includes(String(sub.id)) || pCatNames.includes(subName);
+                                    });
+                                    
+                                    return matchIdx;
+                                };
+
+                                const idxA = getSubcategoryIndex(a);
+                                const idxB = getSubcategoryIndex(b);
+
+                                if (idxA !== idxB) {
+                                    return idxA - idxB;
+                                }
+
+                                const posA = a.position !== undefined ? a.position : 999999;
+                                const posB = b.position !== undefined ? b.position : 999999;
+                                if (posA !== posB) {
+                                    return posA - posB;
+                                }
+
+                                return b.id - a.id;
+                            });
+
                             return (
                                 <div key={cat.id} className="sub-category-section" style={{ marginBottom: '20px', width: '100%' }}>
                                     {/* Category title link and chevron arrow */}
@@ -1511,7 +1548,7 @@ export default function HomePage() {
 
                                     {/* Products Carousel */}
                                     <ProductCarousel
-                                        products={catProducts}
+                                        products={sortedCatProducts}
                                         categories={categories}
                                         getCategoryStyles={getCategoryStyles}
                                         currentCategory={cat}
@@ -1562,20 +1599,59 @@ export default function HomePage() {
                     </div>
                 ) : (
                     <div className="store-grid">
-                        {filteredProducts.map((p, idx) => {
-                            const isLast = filteredProducts.length === idx + 1;
-                            return (
-                                <ProductCard
-                                    key={p.id}
-                                    ref={isLast ? lastProductElementRef : null}
-                                    p={p}
-                                    idx={idx}
-                                    getCategoryStyles={getCategoryStyles}
-                                    categories={categories}
-                                    currentCategory={currentCategory}
-                                />
-                            );
-                        })}
+                        {(() => {
+                            let displayProducts = filteredProducts;
+                            if (currentCategory && !currentCategory.parent_id && (!currentCategory.parent_ids || String(currentCategory.parent_ids).trim() === '')) {
+                                const catSubCategories = categories.filter(child => {
+                                    const parentIds = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                    return parentIds.includes(String(currentCategory.id));
+                                });
+
+                                displayProducts = [...filteredProducts].sort((a, b) => {
+                                    const getSubcategoryIndex = (p: Product) => {
+                                        const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
+                                        const pCatNames = String(p.category_name || '').split(',').map(n => n.trim().toLowerCase());
+                                        
+                                        const matchIdx = catSubCategories.findIndex(sub => {
+                                            const subName = String(sub.name || '').toLowerCase().trim();
+                                            return pCatIds.includes(String(sub.id)) || pCatNames.includes(subName);
+                                        });
+                                        
+                                        return matchIdx;
+                                    };
+
+                                    const idxA = getSubcategoryIndex(a);
+                                    const idxB = getSubcategoryIndex(b);
+
+                                    if (idxA !== idxB) {
+                                        return idxA - idxB;
+                                    }
+
+                                    const posA = a.position !== undefined ? a.position : 999999;
+                                    const posB = b.position !== undefined ? b.position : 999999;
+                                    if (posA !== posB) {
+                                        return posA - posB;
+                                    }
+
+                                    return b.id - a.id;
+                                });
+                            }
+
+                            return displayProducts.map((p, idx) => {
+                                const isLast = displayProducts.length === idx + 1;
+                                return (
+                                    <ProductCard
+                                        key={p.id}
+                                        ref={isLast ? lastProductElementRef : null}
+                                        p={p}
+                                        idx={idx}
+                                        getCategoryStyles={getCategoryStyles}
+                                        categories={categories}
+                                        currentCategory={currentCategory}
+                                    />
+                                );
+                            });
+                        })()}
                         {loading && [1, 2, 3, 4, 5, 6, 7, 8].map(i => <ProductSkeleton key={`loading-${i}`} />)}
                     </div>
                 )}
