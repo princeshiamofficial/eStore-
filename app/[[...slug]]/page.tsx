@@ -329,6 +329,161 @@ const ProductCard = React.forwardRef<HTMLAnchorElement, { p: Product, idx: numbe
         </a>
     );
 });
+
+ProductCard.displayName = 'ProductCard';
+
+const ProductCarousel = ({
+    products,
+    categories,
+    getCategoryStyles,
+    currentCategory
+}: {
+    products: Product[];
+    categories: Category[];
+    getCategoryStyles: any;
+    currentCategory?: Category | null;
+}) => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [showLeftBtn, setShowLeftBtn] = useState(false);
+    const [showRightBtn, setShowRightBtn] = useState(true);
+
+    const updateButtonVisibility = () => {
+        if (scrollRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+            setShowLeftBtn(scrollLeft > 5);
+            setShowRightBtn(scrollLeft + clientWidth < scrollWidth - 5);
+        }
+    };
+
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (el) {
+            el.addEventListener('scroll', updateButtonVisibility);
+            updateButtonVisibility();
+            window.addEventListener('resize', updateButtonVisibility);
+        }
+        return () => {
+            if (el) el.removeEventListener('scroll', updateButtonVisibility);
+            window.removeEventListener('resize', updateButtonVisibility);
+        };
+    }, [products]);
+
+    const scroll = (direction: 'left' | 'right') => {
+        if (scrollRef.current) {
+            const { scrollLeft, clientWidth } = scrollRef.current;
+            const scrollTo = direction === 'left'
+                ? scrollLeft - clientWidth * 0.85
+                : scrollLeft + clientWidth * 0.85;
+            scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+        }
+    };
+
+    return (
+        <div style={{ position: 'relative', width: '100%' }}>
+            {showLeftBtn && (
+                <button
+                    onClick={() => scroll('left')}
+                    className="carousel-control-btn"
+                    style={{
+                        position: 'absolute',
+                        left: '-22px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 10,
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '50%',
+                        width: '44px',
+                        height: '44px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)',
+                        cursor: 'pointer',
+                        color: '#1a1a1a',
+                        transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                        e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.1)';
+                    }}
+                    aria-label="Previous Products"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+            )}
+
+            <div
+                ref={scrollRef}
+                style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                }}
+                className="hide-scrollbar carousel-container"
+            >
+                {products.map((p, idx) => (
+                    <div
+                        key={p.id}
+                        className="carousel-item"
+                    >
+                        <ProductCard
+                            p={p}
+                            idx={idx}
+                            getCategoryStyles={getCategoryStyles}
+                            categories={categories}
+                            currentCategory={currentCategory}
+                        />
+                    </div>
+                ))}
+            </div>
+
+            {showRightBtn && (
+                <button
+                    onClick={() => scroll('right')}
+                    className="carousel-control-btn"
+                    style={{
+                        position: 'absolute',
+                        right: '-22px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 10,
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '50%',
+                        width: '44px',
+                        height: '44px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)',
+                        cursor: 'pointer',
+                        color: '#1a1a1a',
+                        transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                        e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.1)';
+                    }}
+                    aria-label="Next Products"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            )}
+        </div>
+    );
+};
 const ModernSelect = ({
     name,
     value,
@@ -991,6 +1146,8 @@ export default function HomePage() {
         })
         : [];
 
+    const mainCategories = categories.filter(cat => !cat.parent_id && (!cat.parent_ids || String(cat.parent_ids).trim() === ''));
+
     const catMenuRef = useRef<HTMLDivElement>(null);
     const searchBarRef = useRef<HTMLDivElement>(null);
 
@@ -1051,7 +1208,8 @@ export default function HomePage() {
         async function loadProducts() {
             setLoading(true);
             try {
-                let url = `/api/public/products?page=${page}&limit=${fetchingLimit}`;
+                const limit = slug === 'all' ? 1000 : fetchingLimit;
+                let url = `/api/public/products?page=${page}&limit=${limit}`;
                 if (isBaseHome) url += `&pinned=true`;
 
                 if (currentCategory) {
@@ -1092,7 +1250,7 @@ export default function HomePage() {
                         const newProducts = [...prev, ...filteredData];
                         return Array.from(new Map(newProducts.map(item => [item.id, item])).values());
                     });
-                    if (data.length < fetchingLimit) {
+                    if (data.length < limit || slug === 'all') {
                         setHasMore(false);
                     }
                 } else {
@@ -1181,6 +1339,41 @@ export default function HomePage() {
 
     return (
         <div suppressHydrationWarning>
+            <style>{`
+                .hide-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                .carousel-container {
+                    display: flex;
+                    overflow-x: auto;
+                    gap: 20px;
+                    padding: 8px 4px 16px 4px;
+                    scroll-behavior: smooth;
+                    width: 100%;
+                }
+                .carousel-item {
+                    flex: 0 0 280px;
+                    width: 280px;
+                    max-width: 280px;
+                    min-width: 280px;
+                }
+                @media (max-width: 900px) {
+                    .carousel-container {
+                        gap: 12px !important;
+                        padding-left: 12px !important;
+                        padding-right: 12px !important;
+                    }
+                    .carousel-item {
+                        flex: 0 0 calc((100% - 12px) / 2) !important;
+                        width: calc((100% - 12px) / 2) !important;
+                        max-width: calc((100% - 12px) / 2) !important;
+                        min-width: calc((100% - 12px) / 2) !important;
+                    }
+                    .carousel-control-btn {
+                        display: none !important;
+                    }
+                }
+            `}</style>
             {/* --- NAVBAR --- */}
             <HomeNavbar
                 categories={categories}
@@ -1236,23 +1429,156 @@ export default function HomePage() {
 
 
                 {/* --- GRID --- */}
-                <div className="store-grid">
-                    {filteredProducts.map((p, idx) => {
-                        const isLast = filteredProducts.length === idx + 1;
-                        return (
-                            <ProductCard
-                                key={p.id}
-                                ref={isLast ? lastProductElementRef : null}
-                                p={p}
-                                idx={idx}
-                                getCategoryStyles={getCategoryStyles}
-                                categories={categories}
-                                currentCategory={currentCategory}
-                            />
-                        );
-                    })}
-                    {loading && [1, 2, 3, 4, 5, 6, 7, 8].map(i => <ProductSkeleton key={`loading-${i}`} />)}
-                </div>
+                {/* --- GRID OR CAROUSEL --- */}
+                {slug === 'all' ? (
+                    <div className="master-category-sections" style={{ width: '100%', marginTop: '30px' }}>
+                        {mainCategories.map(cat => {
+                            const catProducts = products.filter(p => {
+                                const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
+                                const pCatNames = String(p.category_name || '').split(',').map(n => n.trim().toLowerCase());
+                                const catName = String(cat.name || '').toLowerCase().trim();
+                                
+                                const isDirect = pCatIds.includes(String(cat.id)) || pCatNames.includes(catName);
+                                const isSub = categories.some(child => {
+                                    const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                    if (childParents.includes(String(cat.id))) {
+                                        const childName = String(child.name || '').toLowerCase().trim();
+                                        return pCatIds.includes(String(child.id)) || pCatNames.includes(childName);
+                                    }
+                                    return false;
+                                });
+                                
+                                const matchesCat = isDirect || isSub;
+                                if (!matchesCat) return false;
+
+                                if (searchQuery.trim()) {
+                                    const q = searchQuery.toLowerCase().trim();
+                                    const matchesName = String(p.name || '').toLowerCase().includes(q);
+                                    const matchesCategory = String(p.category_name || '').toLowerCase().includes(q);
+                                    const matchesDesc = String(p.description || '').toLowerCase().includes(q);
+                                    return matchesName || matchesCategory || matchesDesc;
+                                }
+
+                                return true;
+                            });
+
+                            if (catProducts.length === 0) return null;
+
+                            return (
+                                <div key={cat.id} className="sub-category-section" style={{ marginBottom: '20px', width: '100%' }}>
+                                    {/* Category title link and chevron arrow */}
+                                    <a 
+                                        href={`/${cat.id}/${cat.slug}/`} 
+                                        style={{ 
+                                            display: 'inline-flex', 
+                                            alignItems: 'center', 
+                                            gap: '8px', 
+                                            textDecoration: 'none', 
+                                            color: '#1a1a1a', 
+                                            margin: '12px 0 8px 0'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            const circle = e.currentTarget.querySelector('.chevron-circle') as HTMLDivElement;
+                                            if (circle) circle.style.backgroundColor = '#e2e8f0';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            const circle = e.currentTarget.querySelector('.chevron-circle') as HTMLDivElement;
+                                            if (circle) circle.style.backgroundColor = '#f1f5f9';
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '16px', fontWeight: 700, textTransform: 'capitalize' }}>
+                                            {cat.name}
+                                        </span>
+                                        <div 
+                                            className="chevron-circle"
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: '22px',
+                                                height: '22px',
+                                                borderRadius: '50%',
+                                                backgroundColor: '#f1f5f9',
+                                                color: '#1a1a1a',
+                                                transition: 'background-color 0.2s ease'
+                                            }}
+                                        >
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="9 18 15 12 9 6"></polyline>
+                                            </svg>
+                                        </div>
+                                    </a>
+
+                                    {/* Products Carousel */}
+                                    <ProductCarousel
+                                        products={catProducts}
+                                        categories={categories}
+                                        getCategoryStyles={getCategoryStyles}
+                                        currentCategory={cat}
+                                    />
+                                </div>
+                            );
+                        })}
+                        {loading && (
+                            <div style={{ display: 'flex', gap: '20px', overflowX: 'hidden', padding: '20px 0' }}>
+                                {[1, 2, 3, 4].map(i => <ProductSkeleton key={`loading-carousel-${i}`} />)}
+                            </div>
+                        )}
+                        {!loading && mainCategories.every(cat => {
+                            const catProducts = products.filter(p => {
+                                const pCatIds = String(p.category_id || '').split(',').map(id => id.trim());
+                                const pCatNames = String(p.category_name || '').split(',').map(n => n.trim().toLowerCase());
+                                const catName = String(cat.name || '').toLowerCase().trim();
+                                
+                                const isDirect = pCatIds.includes(String(cat.id)) || pCatNames.includes(catName);
+                                const isSub = categories.some(child => {
+                                    const childParents = String(child.parent_ids || child.parent_id || '').split(',').map(id => id.trim());
+                                    if (childParents.includes(String(cat.id))) {
+                                        const childName = String(child.name || '').toLowerCase().trim();
+                                        return pCatIds.includes(String(child.id)) || pCatNames.includes(childName);
+                                    }
+                                    return false;
+                                });
+                                
+                                const matchesCat = isDirect || isSub;
+                                if (!matchesCat) return false;
+
+                                if (searchQuery.trim()) {
+                                    const q = searchQuery.toLowerCase().trim();
+                                    const matchesName = String(p.name || '').toLowerCase().includes(q);
+                                    const matchesCategory = String(p.category_name || '').toLowerCase().includes(q);
+                                    const matchesDesc = String(p.description || '').toLowerCase().includes(q);
+                                    return matchesName || matchesCategory || matchesDesc;
+                                }
+
+                                return true;
+                            });
+                            return catProducts.length === 0;
+                        }) && (
+                            <div style={{ textAlign: 'center', padding: '60px 0', color: '#666' }}>
+                                No products found.
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="store-grid">
+                        {filteredProducts.map((p, idx) => {
+                            const isLast = filteredProducts.length === idx + 1;
+                            return (
+                                <ProductCard
+                                    key={p.id}
+                                    ref={isLast ? lastProductElementRef : null}
+                                    p={p}
+                                    idx={idx}
+                                    getCategoryStyles={getCategoryStyles}
+                                    categories={categories}
+                                    currentCategory={currentCategory}
+                                />
+                            );
+                        })}
+                        {loading && [1, 2, 3, 4, 5, 6, 7, 8].map(i => <ProductSkeleton key={`loading-${i}`} />)}
+                    </div>
+                )}
             </div>
 
             {/* --- ABOUT SECTION --- */}
