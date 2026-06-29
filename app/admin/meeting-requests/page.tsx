@@ -42,6 +42,8 @@ interface MeetingRequest {
 
 export default function MeetingRequestsPage() {
   const [requests, setRequests] = useState<MeetingRequest[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'restaurant' | 'parlor'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({
     type: null,
@@ -173,6 +175,27 @@ export default function MeetingRequestsPage() {
       { name: 'Trash', href: '/admin/trash', icon: Trash2 },
     ]
   };
+
+  const totalCount = requests.length;
+  const restaurantCount = requests.filter(r => r.business_type === 'restaurant').length;
+  const parlorCount = requests.filter(r => r.business_type === 'parlor').length;
+  const newMenuCount = requests.filter(r => r.menu_type === 'new').length;
+  const updateMenuCount = requests.filter(r => r.menu_type === 'update').length;
+
+  const filteredRequests = requests.filter((req) => {
+    if (filterType !== 'all' && req.business_type !== filterType) return false;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      return (
+        (req.full_name || '').toLowerCase().includes(term) ||
+        (req.business_name || '').toLowerCase().includes(term) ||
+        (req.whatsapp_number || '').toLowerCase().includes(term) ||
+        (req.designation || '').toLowerCase().includes(term) ||
+        (req.address || '').toLowerCase().includes(term)
+      );
+    }
+    return true;
+  });
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans antialiased text-slate-800">
@@ -321,7 +344,7 @@ export default function MeetingRequestsPage() {
 
         {/* Dynamic Status Toast Banner */}
         {saveStatus.message && (
-          <div className={`fixed top-4 right-4 z-50 flex items-center gap-2.5 px-6 py-4 rounded-2xl shadow-xl shadow-slate-900/10 border transition-all duration-300 transform translate-y-0
+          <div className={`fixed top-4 right-4 z-50 flex items-center gap-2.5 px-6 py-4 rounded-xl shadow-xl shadow-slate-900/10 border transition-all duration-300 transform translate-y-0
             ${saveStatus.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'}
           `}>
             {saveStatus.type === 'success' ? (
@@ -338,19 +361,115 @@ export default function MeetingRequestsPage() {
         )}
 
         {/* Scrollable Layout Context */}
-        <main className="flex-1 overflow-y-auto w-full">
-          <div className="p-6 md:p-10 max-w-7xl mx-auto w-full">
+        <main className="flex-1 overflow-y-auto w-full bg-slate-50/50">
+          <div className="p-6 md:p-10 w-full">
             
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Meeting Requests</h1>
-                <p className="text-slate-500 font-medium">Review and manage user-submitted meeting requests.</p>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1.5">Meeting Requests</h1>
+                <p className="text-slate-500 text-sm font-medium">Review and manage user-submitted meeting inquiries.</p>
+              </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/30 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shadow-inner">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Requests</div>
+                  <div className="text-2xl font-black text-slate-900 mt-0.5">{totalCount}</div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/30 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+                  <Store className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Restaurants</div>
+                  <div className="text-2xl font-black text-slate-900 mt-0.5">{restaurantCount}</div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/30 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shadow-inner">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Parlors</div>
+                  <div className="text-2xl font-black text-slate-900 mt-0.5">{parlorCount}</div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/30 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-inner">
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">New / Updates</div>
+                  <div className="text-lg font-black text-slate-900 mt-0.5">{newMenuCount} New / {updateMenuCount} Upd</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Search and Filters Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              {/* Filter Buttons */}
+              <div className="flex bg-slate-100 border border-slate-200/40 p-1.5 rounded-xl w-fit">
+                <button
+                  type="button"
+                  onClick={() => setFilterType('all')}
+                  className={`px-4.5 py-2 text-xs font-black rounded-lg transition-all ${
+                    filterType === 'all' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-700'
+                  }`}
+                >
+                  All ({totalCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterType('restaurant')}
+                  className={`px-4.5 py-2 text-xs font-black rounded-lg transition-all ${
+                    filterType === 'restaurant' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-700'
+                  }`}
+                >
+                  Restaurants ({restaurantCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterType('parlor')}
+                  className={`px-4.5 py-2 text-xs font-black rounded-lg transition-all ${
+                    filterType === 'parlor' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-400 hover:text-slate-700'
+                  }`}
+                >
+                  Parlors ({parlorCount})
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative w-full sm:w-80">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <Search className="w-4.5 h-4.5" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search inquiries..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-5 py-3.5 bg-white border border-slate-200/80 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 text-sm transition-all placeholder:text-slate-400"
+                />
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm('')} 
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 font-bold text-xs"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
             
             {isLoading ? (
-              <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 p-6 md:p-8 space-y-6 animate-pulse">
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 p-6 md:p-8 space-y-6 animate-pulse">
                 {/* Table Headers Skeleton */}
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <div className="h-4 bg-slate-200 rounded w-1/4" />
@@ -363,7 +482,7 @@ export default function MeetingRequestsPage() {
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center justify-between py-6 border-b border-slate-50 last:border-0">
                     <div className="flex items-center gap-4 w-1/4">
-                      <div className="w-10 h-10 bg-slate-100 rounded-xl" />
+                      <div className="w-10 h-10 bg-slate-100 rounded-lg" />
                       <div className="space-y-2 flex-1">
                         <div className="h-4 bg-slate-200 rounded w-2/3" />
                         <div className="h-3 bg-slate-100 rounded w-1/2" />
@@ -379,16 +498,16 @@ export default function MeetingRequestsPage() {
                   </div>
                 ))}
               </div>
-            ) : requests.length === 0 ? (
-              <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 p-12 md:p-20 text-center flex flex-col items-center justify-center">
-                <div className="w-20 h-20 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center mb-6">
+            ) : filteredRequests.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 p-12 md:p-20 text-center flex flex-col items-center justify-center">
+                <div className="w-20 h-20 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center mb-6">
                   <Users className="w-10 h-10 text-slate-300" />
                 </div>
-                <h3 className="text-xl font-extrabold text-slate-900 mb-2">No meeting requests</h3>
-                <p className="text-xs text-slate-400 font-medium">Requests submitted by clients will be listed here.</p>
+                <h3 className="text-xl font-extrabold text-slate-900 mb-2">No meeting requests found</h3>
+                <p className="text-xs text-slate-400 font-medium">Try modifying your search query or type filters.</p>
               </div>
             ) : (
-              <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -402,13 +521,13 @@ export default function MeetingRequestsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
-                      {requests.map((req) => {
+                      {filteredRequests.map((req) => {
                         const date = formatDate(req.created_at);
                         return (
                           <tr key={req.id} className="group hover:bg-slate-50/50 transition-colors">
                             <td className="py-5 pl-8">
                               <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-orange-50/70 border border-orange-100/40 flex items-center justify-center text-orange-500 font-bold">
+                                <div className="w-10 h-10 rounded-lg bg-orange-50/70 border border-orange-100/40 flex items-center justify-center text-orange-500 font-bold">
                                   {req.business_type === 'restaurant' ? (
                                     <Store className="w-5 h-5 text-orange-500" />
                                   ) : (
@@ -434,17 +553,17 @@ export default function MeetingRequestsPage() {
                                 href={`https://wa.me/${req.whatsapp_number.replace(/[^0-9]/g, '')}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 font-extrabold text-xs text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100/80 px-2.5 py-1 rounded-[1px] border border-emerald-100 transition-all"
+                                className="inline-flex items-center gap-1.5 font-extrabold text-xs text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100/80 px-3 py-1.5 rounded-md border border-emerald-100 transition-all shadow-sm"
                               >
                                 <MessageSquare className="w-3.5 h-3.5" />
                                 {req.whatsapp_number}
                               </a>
                             </td>
                             <td className="py-5">
-                              <span className={`inline-block px-2.5 py-1 rounded-[1px] text-[10px] font-black uppercase tracking-wider ${
+                              <span className={`inline-block px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
                                 req.menu_type === 'new' 
-                                  ? 'bg-blue-50 text-blue-600 border border-blue-100' 
-                                  : 'bg-purple-50 text-purple-600 border border-purple-100'
+                                  ? 'bg-blue-50 text-blue-600 border border-blue-100/60' 
+                                  : 'bg-purple-50 text-purple-600 border border-purple-100/60'
                               }`}>
                                 {req.menu_type === 'new' ? 'New Menu' : 'Update Existing'}
                               </span>
@@ -455,18 +574,20 @@ export default function MeetingRequestsPage() {
                             <td className="py-5 pr-8 text-right">
                               <div className="flex items-center justify-end gap-3">
                                 <button 
+                                  type="button"
                                   onClick={() => openDetailsModal(req)} 
-                                  className="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-[1px] border-[0.5px] border-transparent hover:border-orange-200/30 transition-all"
+                                  className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg border border-slate-200 hover:border-orange-200 transition-all shadow-sm"
                                   title="View Details"
                                 >
-                                  <Eye className="w-4 h-4" />
+                                  <Eye className="w-4.5 h-4.5" />
                                 </button>
                                 <button 
+                                  type="button"
                                   onClick={() => openDeleteModal(req.id)} 
-                                  className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-[1px] border-[0.5px] border-transparent hover:border-rose-200/30 transition-all"
+                                  className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg border border-slate-200 hover:border-rose-200 transition-all shadow-sm"
                                   title="Delete Request"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-4.5 h-4.5" />
                                 </button>
                               </div>
                             </td>
@@ -485,7 +606,7 @@ export default function MeetingRequestsPage() {
       {/* Details Modal */}
       {isDetailsOpen && selectedRequest && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-2xl rounded-3xl p-8 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white w-full max-w-2xl rounded-2xl p-8 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
             <button 
               onClick={closeDetailsModal}
               className="absolute right-8 top-8 text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-50 rounded-full"
@@ -494,7 +615,7 @@ export default function MeetingRequestsPage() {
             </button>
 
             <div className="flex items-center gap-3 pb-6 border-b border-slate-100 mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500">
+              <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
                 {selectedRequest.business_type === 'restaurant' ? (
                   <Store className="w-6 h-6" />
                 ) : (
@@ -512,7 +633,7 @@ export default function MeetingRequestsPage() {
             <div className="grid grid-cols-2 gap-6">
               {/* Business Name */}
               {selectedRequest.business_name && (
-                <div className="col-span-2 bg-slate-50/50 rounded-2xl p-4">
+                <div className="col-span-2 bg-slate-50/50 rounded-xl p-4">
                   <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-1">
                     <Building2 className="w-3.5 h-3.5" />
                     Business Name
@@ -522,7 +643,7 @@ export default function MeetingRequestsPage() {
               )}
 
               {/* Full Name */}
-              <div className="bg-slate-50/50 rounded-2xl p-4">
+              <div className="bg-slate-50/50 rounded-xl p-4">
                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
                   Full Name
                 </div>
@@ -530,15 +651,15 @@ export default function MeetingRequestsPage() {
               </div>
 
               {/* Designation */}
-              <div className="bg-slate-50/50 rounded-2xl p-4">
+              <div className="bg-slate-50/50 rounded-xl p-4">
                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
                   Designation
                 </div>
-                <div className="text-slate-900 font-extrabold text-sm">{selectedRequest.designation}</div>
+                <div className="text-slate-900 font-extrabold text-sm">{selectedRequest.full_name}</div>
               </div>
 
               {/* WhatsApp Number */}
-              <div className="bg-slate-50/50 rounded-2xl p-4">
+              <div className="bg-slate-50/50 rounded-xl p-4">
                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
                   WhatsApp Number
                 </div>
@@ -556,7 +677,7 @@ export default function MeetingRequestsPage() {
               </div>
 
               {/* Menu Type */}
-              <div className="bg-slate-50/50 rounded-2xl p-4">
+              <div className="bg-slate-50/50 rounded-xl p-4">
                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
                   Menu Type
                 </div>
@@ -572,7 +693,7 @@ export default function MeetingRequestsPage() {
               </div>
 
               {/* Address */}
-              <div className="col-span-2 bg-slate-50/50 rounded-2xl p-4">
+              <div className="col-span-2 bg-slate-50/50 rounded-xl p-4">
                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5" />
                   Address
@@ -581,7 +702,7 @@ export default function MeetingRequestsPage() {
               </div>
 
               {/* Submitted On */}
-              <div className="col-span-2 bg-slate-50/50 rounded-2xl p-4">
+              <div className="col-span-2 bg-slate-50/50 rounded-xl p-4">
                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" />
                   Submitted On
@@ -593,7 +714,7 @@ export default function MeetingRequestsPage() {
             <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
               <button 
                 onClick={closeDetailsModal}
-                className="bg-slate-900 hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95"
+                className="bg-slate-900 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg active:scale-95"
               >
                 Close
               </button>
@@ -605,7 +726,7 @@ export default function MeetingRequestsPage() {
       {/* Delete Confirmation Modal */}
       {isDeleteOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl p-8 text-left shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl p-8 text-left shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-black text-slate-900 mb-4">
               Delete Request?
             </h2>
@@ -615,13 +736,13 @@ export default function MeetingRequestsPage() {
             <div className="flex gap-3">
               <button 
                 onClick={closeDeleteModal}
-                className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-lg font-bold hover:bg-slate-200 transition-colors"
               >
                 Cancel
               </button>
               <button 
                 onClick={confirmDelete}
-                className="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition-colors"
+                className="flex-1 bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition-colors"
               >
                 Delete
               </button>

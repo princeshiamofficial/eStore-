@@ -452,6 +452,30 @@ export default function ProductDetailPage() {
     const title = params.title as string;
 
     const [product, setProduct] = useState<any>(null);
+    const [socialLinks, setSocialLinks] = useState({
+        facebook: 'https://facebook.com/colorhutbd',
+        instagram: 'https://www.instagram.com/colorhutbd',
+        youtube: 'https://www.youtube.com/@colorhut_official',
+        pinterest: '#'
+    });
+
+    useEffect(() => {
+        const fetchSocial = async () => {
+            try {
+                const res = await fetch('/api/public/config');
+                if (res.ok) {
+                    const data = await res.json();
+                    setSocialLinks({
+                        facebook: data.social_facebook || 'https://facebook.com/colorhutbd',
+                        instagram: data.social_instagram || 'https://www.instagram.com/colorhutbd',
+                        youtube: data.social_youtube || 'https://www.youtube.com/@colorhut_official',
+                        pinterest: data.social_pinterest || '#'
+                    });
+                }
+            } catch (e) {}
+        };
+        fetchSocial();
+    }, []);
     const [categories, setCategories] = useState<any[]>([]);
     const [related, setRelated] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -1516,7 +1540,8 @@ export default function ProductDetailPage() {
                 {/* Breadcrumbs */}
                 <nav id="breadcrumb-nav"
                     className="flex items-center gap-2 text-xs md:text-sm font-bold uppercase tracking-widest text-slate-400 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
-                    <a href="javascript:history.back()"
+                    <a href="#"
+                        onClick={(e) => { e.preventDefault(); if (typeof window !== 'undefined') window.history.back(); }}
                         className="mr-2 p-1 -ml-1 text-slate-400 hover:text-orange-500 transition-colors" title="Go Back">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path d="M10 19l-7-7m0 0l7-7m-7 7h18" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1846,13 +1871,13 @@ export default function ProductDetailPage() {
                             <ul className="store-footer-links">
                                 <li><a href="#">Help Center</a></li>
                                 <li><a href="#">Privacy settings</a></li>
-                                <li><a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer">Studio Gallery</a></li>
+                                <li><a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer">Studio Gallery</a></li>
                             </ul>
                             <div className="store-footer-socials" style={{ marginTop: '24px' }}>
-                                <a href="https://facebook.com/colorhutbd" target="_blank" rel="noopener noreferrer" className="store-social-btn"><FacebookIcon /></a>
-                                <a href="#" className="store-social-btn"><InstagramIcon /></a>
-                                <a href="#" className="store-social-btn"><PinterestIcon /></a>
-                                <a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer" className="store-social-btn"><FooterYouTubeIcon /></a>
+                                <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="store-social-btn"><FacebookIcon /></a>
+                                <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="store-social-btn"><InstagramIcon /></a>
+                                <a href={socialLinks.pinterest} target="_blank" rel="noopener noreferrer" className="store-social-btn"><PinterestIcon /></a>
+                                <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="store-social-btn"><FooterYouTubeIcon /></a>
                             </div>
                         </div>
                     </div>

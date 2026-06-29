@@ -726,7 +726,7 @@ const MeetingFormSection = ({ initialBusinessType, onStartFilling }: { initialBu
     );
 };
 
-const Footer = () => {
+const Footer = ({ socialLinks }: { socialLinks: { facebook: string; instagram: string; youtube: string; pinterest: string } }) => {
     return (
         <footer className="store-footer">
             <div className="store-footer-content">
@@ -763,19 +763,19 @@ const Footer = () => {
                         <ul className="store-footer-links">
                             <li><a href="#">Help Center</a></li>
                             <li><a href="#">Privacy settings</a></li>
-                            <li><a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer">Studio Gallery</a></li>
+                            <li><a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer">Studio Gallery</a></li>
                         </ul>
                         <div className="store-footer-socials" style={{ marginTop: '24px' }}>
-                            <a href="https://facebook.com/colorhutbd" target="_blank" rel="noopener noreferrer" className="store-social-btn">
+                            <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="store-social-btn">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
                             </a>
-                            <a href="#" className="store-social-btn">
+                            <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="store-social-btn">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                             </a>
-                            <a href="#" className="store-social-btn">
+                            <a href={socialLinks.pinterest} target="_blank" rel="noopener noreferrer" className="store-social-btn">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.2 0 1.033.394 2.137.884 2.738.097.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.252 7.929-7.252 4.163 0 7.398 2.967 7.398 6.92 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592 0 11.985 0" /></svg>
                             </a>
-                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer" className="store-social-btn">
+                            <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="store-social-btn">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a2.78 2.78 0 0 0 1.94 2c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.89 23 12 23 12s0-3.89-.46-5.58z"></path><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon></svg>
                             </a>
                         </div>
@@ -965,6 +965,30 @@ const ProductCarousel = ({
 
 export default function CategoryPage() {
     const [products, setProducts] = useState<Product[]>([]);
+    const [socialLinks, setSocialLinks] = useState({
+        facebook: 'https://facebook.com/colorhutbd',
+        instagram: 'https://www.instagram.com/colorhutbd',
+        youtube: 'https://www.youtube.com/@colorhut_official',
+        pinterest: '#'
+    });
+
+    useEffect(() => {
+        const fetchSocial = async () => {
+            try {
+                const res = await fetch('/api/public/config');
+                if (res.ok) {
+                    const data = await res.json();
+                    setSocialLinks({
+                        facebook: data.social_facebook || 'https://facebook.com/colorhutbd',
+                        instagram: data.social_instagram || 'https://www.instagram.com/colorhutbd',
+                        youtube: data.social_youtube || 'https://www.youtube.com/@colorhut_official',
+                        pinterest: data.social_pinterest || '#'
+                    });
+                }
+            } catch (e) {}
+        };
+        fetchSocial();
+    }, []);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchFocused, setSearchFocused] = useState(false);
@@ -1943,7 +1967,7 @@ export default function CategoryPage() {
                     onStartFilling={() => setIsFillingForm(true)}
                 />
             )}
-            <Footer />
+            <Footer socialLinks={socialLinks} />
         </div>
     );
 }

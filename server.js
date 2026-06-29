@@ -1746,6 +1746,9 @@ app.get('/admin', (req, res) => {
 });
 
 app.get('/admin/login', (req, res) => {
+    if (req.session && req.session.user && req.session.user.role === 'admin' && req.query.logout !== 'true') {
+        return res.redirect('/admin/dashboard');
+    }
     return handle(req, res);
 });
 
@@ -1934,7 +1937,11 @@ app.get('/api/public/config', async (req, res) => {
             pixel_id: config.meta_pixel_id || '',
             pixel_enabled: config.meta_pixel_enabled === 'true',
             gtm_id: config.gtm_container_id || '',
-            gtm_enabled: config.gtm_enabled === 'true'
+            gtm_enabled: config.gtm_enabled === 'true',
+            social_facebook: config.social_facebook || '',
+            social_instagram: config.social_instagram || '',
+            social_youtube: config.social_youtube || '',
+            social_pinterest: config.social_pinterest || ''
         });
     } catch (err) {
         res.status(500).json({});

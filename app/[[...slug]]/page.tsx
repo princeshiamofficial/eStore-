@@ -907,7 +907,7 @@ const MeetingFormSection = ({ initialBusinessType, onStartFilling }: { initialBu
     );
 };
 
-const Footer = () => {
+const Footer = ({ socialLinks }: { socialLinks: { facebook: string; instagram: string; youtube: string; pinterest: string } }) => {
     return (
         <footer className="store-footer">
             <div className="store-footer-content">
@@ -944,13 +944,13 @@ const Footer = () => {
                         <ul className="store-footer-links">
                             <li><a href="#">Help Center</a></li>
                             <li><a href="#">Privacy settings</a></li>
-                            <li><a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer">Studio Gallery</a></li>
+                            <li><a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer">Studio Gallery</a></li>
                         </ul>
                         <div className="store-footer-socials" style={{ marginTop: '24px' }}>
-                            <a href="https://facebook.com/colorhutbd" target="_blank" rel="noopener noreferrer" className="store-social-btn"><FacebookIcon /></a>
-                            <a href="#" className="store-social-btn"><InstagramIcon /></a>
-                            <a href="#" className="store-social-btn"><PinterestIcon /></a>
-                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer" className="store-social-btn"><FooterYouTubeIcon /></a>
+                            <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="store-social-btn"><FacebookIcon /></a>
+                            <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="store-social-btn"><InstagramIcon /></a>
+                            <a href={socialLinks.pinterest} target="_blank" rel="noopener noreferrer" className="store-social-btn"><PinterestIcon /></a>
+                            <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="store-social-btn"><FooterYouTubeIcon /></a>
                         </div>
                     </div>
                 </div>
@@ -1000,6 +1000,30 @@ const GlobeIcon = () => (
 
 export default function HomePage() {
     const [products, setProducts] = useState<Product[]>([]);
+    const [socialLinks, setSocialLinks] = useState({
+        facebook: 'https://facebook.com/colorhutbd',
+        instagram: 'https://www.instagram.com/colorhutbd',
+        youtube: 'https://www.youtube.com/@colorhut_official',
+        pinterest: '#'
+    });
+
+    useEffect(() => {
+        const fetchSocial = async () => {
+            try {
+                const res = await fetch('/api/public/config');
+                if (res.ok) {
+                    const data = await res.json();
+                    setSocialLinks({
+                        facebook: data.social_facebook || 'https://facebook.com/colorhutbd',
+                        instagram: data.social_instagram || 'https://www.instagram.com/colorhutbd',
+                        youtube: data.social_youtube || 'https://www.youtube.com/@colorhut_official',
+                        pinterest: data.social_pinterest || '#'
+                    });
+                }
+            } catch (e) {}
+        };
+        fetchSocial();
+    }, []);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchFocused, setSearchFocused] = useState(false); // kept for is-searching class on header
@@ -1667,7 +1691,7 @@ export default function HomePage() {
                                 Contact Us
                             </a>
                             <h2 className="serif" itemProp="name" property="name">What is Color Hut?</h2>
-                            <a href="https://www.youtube.com/@colorhut_official" target="_blank" rel="noopener noreferrer" className="store-about-story" style={{ color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="store-about-story" style={{ color: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                 <YouTubeIcon />
                                 Watch our studio story on YouTube
                                 <YouTubeIcon />
@@ -1700,7 +1724,7 @@ export default function HomePage() {
 
                         <div className="store-about-footer">
                             <h4>Trusted by brands like Dhaka Club, HASH & NOSH and Sea Shell.</h4>
-                            <a href="https://facebook.com/colorhutbd" target="_blank" rel="noopener noreferrer" className="store-help-btn">Connect on Facebook</a>
+                            <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="store-help-btn">Connect on Facebook</a>
                         </div>
                     </div>
                 </section>
@@ -1813,7 +1837,7 @@ export default function HomePage() {
                     onStartFilling={() => setIsFillingForm(true)}
                 />
             )}
-            <Footer />
+            <Footer socialLinks={socialLinks} />
         </div>
     );
 }

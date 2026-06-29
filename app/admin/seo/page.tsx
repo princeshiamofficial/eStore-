@@ -22,16 +22,26 @@ import {
   Sparkles,
   Menu,
   X,
-  Save
+  Save,
+  Share2,
+  Facebook,
+  Instagram,
+  Youtube
 } from 'lucide-react';
 
 export default function SeoSettingsPage() {
+  const [activeTab, setActiveTab] = useState<'seo' | 'social' | 'robots'>('seo');
+
   // Settings Form State
   const [formData, setFormData] = useState({
     home_title: '',
     site_title_suffix: '',
     home_description: '',
-    site_keywords: ''
+    site_keywords: '',
+    social_facebook: '',
+    social_instagram: '',
+    social_youtube: '',
+    social_pinterest: ''
   });
   const [robotsContent, setRobotsContent] = useState('');
   
@@ -77,7 +87,11 @@ export default function SeoSettingsPage() {
             home_title: settings.home_title || '',
             site_title_suffix: settings.site_title_suffix || '',
             home_description: settings.home_description || '',
-            site_keywords: settings.site_keywords || ''
+            site_keywords: settings.site_keywords || '',
+            social_facebook: settings.social_facebook || '',
+            social_instagram: settings.social_instagram || '',
+            social_youtube: settings.social_youtube || '',
+            social_pinterest: settings.social_pinterest || ''
           });
           setRobotsContent(robots.content || '');
         } else {
@@ -321,248 +335,373 @@ export default function SeoSettingsPage() {
         )}
 
         {/* Scrollable Layout Context */}
-        <main className="flex-1 overflow-y-auto w-full">
-          <div className="p-6 md:p-10 max-w-7xl mx-auto w-full">
-
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
-              <div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Search Engine Optimization</h1>
-                <p className="text-slate-500 font-medium">Manage global search metadata, page indexing configurations, and sitemaps.</p>
-              </div>
-            </div>
-
-          {isLoading ? (
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 p-8 space-y-10 animate-pulse">
-              {/* Global Metadata Section Skeleton */}
+        <main className="flex-1 overflow-y-auto w-full bg-slate-50/50">
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; transform: translateY(4px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-fadeIn {
+              animation: fadeIn 0.2s ease-out forwards;
+            }
+          `}</style>
+          <div className="p-6 md:p-10 w-full">
+            {isLoading ? (
               <div className="space-y-6">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-2xl bg-slate-100 flex-shrink-0" />
-                  <div className="space-y-2 flex-1">
-                    <div className="h-5 bg-slate-200 rounded-md w-1/4" />
-                    <div className="h-3 bg-slate-100 rounded-md w-1/3" />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                  <div className="space-y-2.5">
-                    <div className="h-3.5 bg-slate-100 rounded-md w-1/3" />
-                    <div className="h-14 bg-slate-50 border border-slate-100 rounded-2xl w-full" />
-                  </div>
-                  <div className="space-y-2.5">
-                    <div className="h-3.5 bg-slate-100 rounded-md w-1/3" />
-                    <div className="h-14 bg-slate-50 border border-slate-100 rounded-2xl w-full" />
-                  </div>
-                  <div className="md:col-span-2 space-y-2.5">
-                    <div className="h-3.5 bg-slate-100 rounded-md w-1/4" />
-                    <div className="h-28 bg-slate-50 border border-slate-100 rounded-2xl w-full" />
-                  </div>
-                  <div className="md:col-span-2 space-y-2.5">
-                    <div className="h-3.5 bg-slate-100 rounded-md w-1/4" />
-                    <div className="h-14 bg-slate-50 border border-slate-100 rounded-2xl w-full" />
-                  </div>
+                <div className="h-10 w-1/3 bg-slate-200 animate-pulse rounded-md"></div>
+                <div className="h-6 w-1/2 bg-slate-100 animate-pulse rounded-md"></div>
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 p-8 space-y-6">
+                  <div className="h-12 bg-slate-100 animate-pulse rounded-2xl w-full"></div>
+                  <div className="h-32 bg-slate-50 animate-pulse rounded-2xl w-full"></div>
+                  <div className="h-12 bg-slate-100 animate-pulse rounded-2xl w-full"></div>
                 </div>
               </div>
-
-              {/* Section Divider */}
-              <div className="border-t-[0.5px] border-slate-200/30" />
-
-              {/* Indexing & Crawling Section Skeleton */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-2xl bg-slate-100 flex-shrink-0" />
-                  <div className="space-y-2 flex-1">
-                    <div className="h-5 bg-slate-200 rounded-md w-1/4" />
-                    <div className="h-3 bg-slate-100 rounded-md w-1/3" />
-                  </div>
-                </div>
-
-                <div className="space-y-6 pt-2">
-                  <div className="h-20 bg-slate-50 border border-slate-100 rounded-2xl w-full" />
-                  <div className="space-y-2.5">
-                    <div className="h-3.5 bg-slate-100 rounded-md w-1/4" />
-                    <div className="h-48 bg-slate-900/5 border border-slate-100 rounded-2xl w-full" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 p-8 space-y-10">
-              {/* Site-wide Metadata Section */}
-              <div className="space-y-8">
-                <div className="flex items-center gap-3.5">
-                  <span className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shadow-inner">
-                    <Globe className="w-5 h-5" />
-                  </span>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
                   <div>
-                    <h3 className="text-xl font-extrabold text-slate-900">Global Metadata</h3>
-                    <p className="text-xs text-slate-400 font-medium">Define metadata details for the homepage search result listing.</p>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1.5">Search Engine Optimization</h1>
+                    <p className="text-slate-500 text-sm font-medium">Manage global search metadata, page indexing configurations, sitemaps, and social links.</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Home Title Template */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                      Home Title Template
-                      <span title="The primary title shown for the home page" className="cursor-help inline-flex items-center">
-                        <Info className="w-3.5 h-3.5 text-slate-300" />
-                      </span>
-                    </label>
-                    <input 
-                      type="text" 
-                      name="home_title"
-                      value={formData.home_title}
-                      onChange={handleInputChange}
-                      placeholder="Color Hut Studio | Premium Digital Assets"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all"
-                      required
-                    />
-                  </div>
-
-                  {/* Global Title Suffix */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                      Global Title Suffix
-                      <span title="Suffix automatically appended to individual product titles" className="cursor-help inline-flex items-center">
-                        <Info className="w-3.5 h-3.5 text-slate-300" />
-                      </span>
-                    </label>
-                    <input 
-                      type="text" 
-                      name="site_title_suffix"
-                      value={formData.site_title_suffix}
-                      onChange={handleInputChange}
-                      placeholder="| Color Hut Studio"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all"
-                      required
-                    />
-                  </div>
-
-                  {/* Home Meta Description */}
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">
-                      Home Meta Description
-                    </label>
-                    <textarea 
-                      name="home_description"
-                      value={formData.home_description}
-                      onChange={handleInputChange}
-                      rows={3}
-                      placeholder="Color Hut Studio offers premium digital assets, branding stationery, and luxury corporate identity solutions in Bangladesh."
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all resize-none"
-                      required
-                    />
-                  </div>
-
-                  {/* Default Meta Keywords */}
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">
-                      Default Meta Keywords (Comma separated)
-                    </label>
-                    <input 
-                      type="text" 
-                      name="site_keywords"
-                      value={formData.site_keywords}
-                      onChange={handleInputChange}
-                      placeholder="Branding, Stationery, Digital Assets, Luxury Corporate Gifts"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-end pt-4">
+                {/* Tab Navigation */}
+                <div className="flex border-b border-slate-200 gap-6 mt-4">
                   <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-slate-900 hover:bg-orange-600 text-white rounded-xl font-bold transition-all disabled:bg-slate-400 disabled:scale-100 disabled:cursor-not-allowed shadow-lg w-full sm:w-auto text-center"
+                    type="button"
+                    onClick={() => setActiveTab('seo')}
+                    className={`pb-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+                      activeTab === 'seo' ? 'border-orange-600 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'
+                    }`}
                   >
-                    {isSaving ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4" />
-                    )}
-                    Save Metadata
+                    <Globe className="w-4.5 h-4.5" />
+                    Global Metadata
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('social')}
+                    className={`pb-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+                      activeTab === 'social' ? 'border-orange-600 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <Share2 className="w-4.5 h-4.5" />
+                    Social Profiles
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('robots')}
+                    className={`pb-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+                      activeTab === 'robots' ? 'border-orange-600 text-orange-600' : 'border-transparent text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <Search className="w-4.5 h-4.5" />
+                    Sitemap & robots.txt
                   </button>
                 </div>
-              </div>
 
-              {/* Section Divider */}
-              <div className="border-t border-slate-100" />
-
-              {/* Indexing & Crawling Section */}
-              <div className="space-y-8">
-                <div className="flex items-center gap-3.5">
-                  <span className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shadow-inner">
-                    <Search className="w-5 h-5" />
-                  </span>
-                  <div>
-                    <h3 className="text-xl font-extrabold text-slate-900">Indexing & Crawling</h3>
-                    <p className="text-xs text-slate-400 font-medium">Control sitemap and direct bot accessibility instructions.</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Active Sitemap Helper */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-50 border border-slate-200 rounded-2xl">
-                    <div className="flex items-center gap-3.5">
-                      <span className="w-8 h-8 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400">
-                        <FileText className="w-4 h-4" />
-                      </span>
+                {/* Tab Contents */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 p-8">
+                  {activeTab === 'seo' && (
+                    <div className="space-y-8 animate-fadeIn">
+                      {/* Section Info */}
                       <div>
-                        <h4 className="font-extrabold text-slate-900 text-sm">Active Sitemap</h4>
-                        <p className="text-xs text-slate-500 font-medium">Dynamic catalog map automatically refreshed.</p>
+                        <h3 className="text-lg font-extrabold text-slate-900 mb-1">Global Metadata Settings</h3>
+                        <p className="text-xs text-slate-400 font-medium">Define metadata details for the homepage search result listing.</p>
+                      </div>
+
+                      {/* Google Search Snippet Preview Card */}
+                      <div className="bg-slate-50/80 rounded-xl border border-slate-200/60 p-6 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Live Search Engine Preview</span>
+                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">Mobile & Desktop Friendly</span>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs select-none">
+                              C
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-xs text-slate-800 font-semibold leading-none">Color Hut</span>
+                              <span className="text-[10px] text-slate-400 leading-none">https://store.colorhutbd.xyz</span>
+                            </div>
+                          </div>
+                          <h3 className="text-base md:text-lg text-[#1a0dab] hover:underline cursor-pointer font-medium leading-tight select-none">
+                            {formData.home_title || 'Color Hut - Your Trusted Partner for Branding'} {formData.site_title_suffix}
+                          </h3>
+                          <p className="text-xs md:text-sm text-[#4d5156] leading-relaxed break-all select-none">
+                            {formData.home_description || 'Shop for unique gifts, restaurant packaging, and custom branding solutions. Color Hut is your dedicated partner for logo design, menu printing, and premium creative work in Bangladesh.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Inputs Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Home Title Template */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                            Home Title Template
+                            <span title="The primary title shown for the home page" className="cursor-help inline-flex items-center">
+                              <Info className="w-3.5 h-3.5 text-slate-300" />
+                            </span>
+                          </label>
+                          <input 
+                            type="text" 
+                            name="home_title"
+                            value={formData.home_title}
+                            onChange={handleInputChange}
+                            placeholder="Color Hut Studio | Premium Digital Assets"
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                            required
+                          />
+                        </div>
+
+                        {/* Global Title Suffix */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                            Global Title Suffix
+                            <span title="Suffix automatically appended to individual product titles" className="cursor-help inline-flex items-center">
+                              <Info className="w-3.5 h-3.5 text-slate-300" />
+                            </span>
+                          </label>
+                          <input 
+                            type="text" 
+                            name="site_title_suffix"
+                            value={formData.site_title_suffix}
+                            onChange={handleInputChange}
+                            placeholder="| Color Hut Studio"
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                            required
+                          />
+                        </div>
+
+                        {/* Home Meta Description */}
+                        <div className="md:col-span-2 space-y-2">
+                          <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                            Home Meta Description
+                          </label>
+                          <textarea 
+                            name="home_description"
+                            value={formData.home_description}
+                            onChange={handleInputChange}
+                            rows={4}
+                            placeholder="Color Hut Studio offers premium digital assets, branding stationery, and luxury corporate identity solutions in Bangladesh."
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all resize-none placeholder:text-slate-400"
+                            required
+                          />
+                        </div>
+
+                        {/* Default Meta Keywords */}
+                        <div className="md:col-span-2 space-y-2">
+                          <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                            Default Meta Keywords (Comma separated)
+                          </label>
+                          <input 
+                            type="text" 
+                            name="site_keywords"
+                            value={formData.site_keywords}
+                            onChange={handleInputChange}
+                            placeholder="Branding, Stationery, Digital Assets, Luxury Corporate Gifts"
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                            required
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Save Button */}
+                      <div className="flex justify-end pt-6 border-t border-slate-100">
+                        <button
+                          type="submit"
+                          disabled={isSaving}
+                          className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-orange-600 text-white rounded-lg font-bold transition-all duration-200 disabled:bg-slate-400 disabled:scale-100 disabled:cursor-not-allowed shadow-lg hover:shadow-orange-500/10 active:scale-[0.98] text-sm w-full sm:w-auto text-center"
+                        >
+                          {isSaving ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4" />
+                          )}
+                          Save Metadata
+                        </button>
                       </div>
                     </div>
-                    <a 
-                      href="/mysitemap.xml" 
-                      target="_blank"
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl text-xs font-black text-slate-600 transition-all hover:text-orange-500 shadow-sm w-full sm:w-auto text-center"
-                    >
-                      /mysitemap.xml
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
+                  )}
 
-                  {/* Robots.txt Content Editor */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                      Robots.txt Content
-                      <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md italic lowercase select-none">
-                        * Edit with caution
-                      </span>
-                    </label>
-                    <textarea 
-                      value={robotsContent}
-                      onChange={(e) => setRobotsContent(e.target.value)}
-                      rows={8}
-                      placeholder="User-agent: *&#10;Allow: /"
-                      className="w-full px-5 py-4 bg-slate-950 border border-slate-800/40 rounded-2xl focus:ring-2 focus:ring-white/5 focus:outline-none outline-none font-mono text-sm text-slate-300 transition-all resize-none shadow-inner"
-                      required
-                    />
-                  </div>
-                </div>
+                  {activeTab === 'social' && (
+                    <div className="space-y-8 animate-fadeIn">
+                      {/* Section Info */}
+                      <div>
+                        <h3 className="text-lg font-extrabold text-slate-900 mb-1">Social Media Profiles</h3>
+                        <p className="text-xs text-slate-400 font-medium">Define the social media profile links for the store footer and contacts.</p>
+                      </div>
 
-                {/* Save Button */}
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-slate-900 hover:bg-orange-600 text-white rounded-xl font-bold transition-all disabled:bg-slate-400 disabled:scale-100 disabled:cursor-not-allowed shadow-lg w-full sm:w-auto text-center"
-                  >
-                    {isSaving ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4" />
-                    )}
-                    Save Robots Config
-                  </button>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Facebook Page URL */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                            Facebook Page URL
+                          </label>
+                          <div className="relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 pointer-events-none">
+                              <Facebook className="w-5 h-5" />
+                            </div>
+                            <input 
+                              type="url" 
+                              name="social_facebook"
+                              value={formData.social_facebook}
+                              onChange={handleInputChange}
+                              placeholder="https://facebook.com/yourpage"
+                              className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Instagram Profile URL */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                            Instagram Profile URL
+                          </label>
+                          <div className="relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-600 pointer-events-none">
+                              <Instagram className="w-5 h-5" />
+                            </div>
+                            <input 
+                              type="url" 
+                              name="social_instagram"
+                              value={formData.social_instagram}
+                              onChange={handleInputChange}
+                              placeholder="https://instagram.com/yourprofile"
+                              className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                            />
+                          </div>
+                        </div>
+
+                        {/* YouTube Channel URL */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                            YouTube Channel URL
+                          </label>
+                          <div className="relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-600 pointer-events-none">
+                              <Youtube className="w-5 h-5" />
+                            </div>
+                            <input 
+                              type="url" 
+                              name="social_youtube"
+                              value={formData.social_youtube}
+                              onChange={handleInputChange}
+                              placeholder="https://youtube.com/@yourchannel"
+                              className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Pinterest Profile URL */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                            Pinterest Profile URL
+                          </label>
+                          <div className="relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-red-600 pointer-events-none">
+                              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.2 0 1.033.394 2.137.884 2.738.097.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.252 7.929-7.252 4.163 0 7.398 2.967 7.398 6.92 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592 0 11.985 0" />
+                              </svg>
+                            </div>
+                            <input 
+                              type="url" 
+                              name="social_pinterest"
+                              value={formData.social_pinterest}
+                              onChange={handleInputChange}
+                              placeholder="https://pinterest.com/yourprofile"
+                              className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Save Button */}
+                      <div className="flex justify-end pt-6 border-t border-slate-100">
+                        <button
+                          type="submit"
+                          disabled={isSaving}
+                          className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-orange-600 text-white rounded-lg font-bold transition-all duration-200 disabled:bg-slate-400 disabled:scale-100 disabled:cursor-not-allowed shadow-lg hover:shadow-orange-500/10 active:scale-[0.98] text-sm w-full sm:w-auto text-center"
+                        >
+                          {isSaving ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4" />
+                          )}
+                          Save Social Links
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'robots' && (
+                    <div className="space-y-8 animate-fadeIn">
+                      {/* Section Info */}
+                      <div>
+                        <h3 className="text-lg font-extrabold text-slate-900 mb-1">Indexing & Crawling Configurations</h3>
+                        <p className="text-xs text-slate-400 font-medium">Control sitemap and direct bot accessibility instructions.</p>
+                      </div>
+
+                      {/* Active Sitemap Helper */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-50 border border-slate-200/60 rounded-xl">
+                        <div className="flex items-center gap-3.5">
+                          <span className="w-9 h-9 bg-white border border-slate-200/80 rounded-lg flex items-center justify-center text-slate-500">
+                            <FileText className="w-5 h-5" />
+                          </span>
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-sm">Active Sitemap</h4>
+                            <p className="text-xs text-slate-500 font-medium">Dynamic catalog map automatically refreshed.</p>
+                          </div>
+                        </div>
+                        <a 
+                          href="/mysitemap.xml" 
+                          target="_blank"
+                          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 rounded-lg text-xs font-black text-slate-600 transition-all hover:text-orange-500 shadow-sm w-full sm:w-auto text-center"
+                        >
+                          /mysitemap.xml
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+
+                      {/* Robots.txt Content Editor */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                          Robots.txt Content
+                          <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md italic lowercase select-none">
+                            * Edit with caution
+                          </span>
+                        </label>
+                        <textarea 
+                          value={robotsContent}
+                          onChange={(e) => setRobotsContent(e.target.value)}
+                          rows={8}
+                          placeholder="User-agent: *&#10;Allow: /"
+                          className="w-full px-5 py-4 bg-slate-950 border border-slate-800/40 rounded-xl focus:ring-2 focus:ring-white/5 focus:outline-none outline-none font-mono text-sm text-slate-300 transition-all resize-none shadow-inner"
+                          required
+                        />
+                      </div>
+                      {/* Save Button */}
+                      <div className="flex justify-end pt-6 border-t border-slate-100">
+                        <button
+                          type="submit"
+                          disabled={isSaving}
+                          className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-orange-600 text-white rounded-lg font-bold transition-all duration-200 disabled:bg-slate-400 disabled:scale-100 disabled:cursor-not-allowed shadow-lg hover:shadow-orange-500/10 active:scale-[0.98] text-sm w-full sm:w-auto text-center"
+                        >
+                          {isSaving ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4" />
+                          )}
+                          Save Robots Config
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </form>
-          )}
+              </form>
+            )}
           </div>
         </main>
       </div>
