@@ -215,6 +215,7 @@ export default function ProductsPage() {
 
   // Image Drag/Drop State variables
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isDragActive, setIsDragActive] = useState(false);
 
   // Tree Popup selection visibility
   const [isCatPopupOpen, setIsCatPopupOpen] = useState(false);
@@ -617,10 +618,6 @@ export default function ProductsPage() {
     setDraggedIndex(index);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
   const handleDrop = (index: number) => {
     if (draggedIndex === null) return;
     const reordered = [...uploadedImages];
@@ -628,6 +625,45 @@ export default function ProductsPage() {
     reordered.splice(index, 0, movedItem);
     setUploadedImages(reordered);
     setDraggedIndex(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedIndex === null && e.dataTransfer.types.includes('Files')) {
+      setIsDragActive(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragActive(false);
+  };
+
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragActive(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleFileUpload(files);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (items) {
+      const files: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            files.push(file);
+          }
+        }
+      }
+      if (files.length > 0) {
+        handleFileUpload(files as any);
+      }
+    }
   };
 
   // Convert HTML back to Markdown using browser-native DOM tree-walking (100% robust)
@@ -1738,7 +1774,11 @@ export default function ProductsPage() {
               </h2>
             </div>
             
-            <form onSubmit={(e) => handleSaveProductSubmit(e, false)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            <form 
+              onSubmit={(e) => handleSaveProductSubmit(e, false)} 
+              onPaste={handlePaste}
+              className="flex flex-col flex-1 overflow-hidden min-h-0"
+            >
               
               {/* Scrollable Form Content */}
               <div className="flex-1 overflow-y-auto p-8 pt-6 scrollbar-hide">
@@ -2484,7 +2524,13 @@ export default function ProductsPage() {
                       triggerImageUpload();
                     }}
                     onDragOver={handleDragOver}
-                    className="relative border-2 border-dashed border-slate-200 rounded-[1.5rem] p-8 flex flex-col items-center justify-center gap-4 hover:border-orange-500 hover:bg-orange-50/30 transition-all cursor-pointer group"
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleFileDrop}
+                    className={`relative border-2 border-dashed rounded-[1.5rem] p-8 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group ${
+                      isDragActive 
+                        ? 'border-orange-500 bg-orange-50/50 scale-[1.01] shadow-md ring-4 ring-orange-500/10' 
+                        : 'border-slate-200 hover:border-orange-500 hover:bg-orange-50/30'
+                    }`}
                   >
                     {uploadedImages.length === 0 ? (
                       <div className="flex flex-col items-center text-center">
@@ -2531,6 +2577,20 @@ export default function ProductsPage() {
                             </div>
                           </div>
                         ))}
+                        
+                        {/* Plus button / Upload card to add more images */}
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            triggerImageUpload();
+                          }}
+                          className="aspect-square rounded-xl border-2 border-dashed border-slate-200 hover:border-orange-500 hover:bg-orange-50/30 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all group/upload"
+                        >
+                          <Plus className="w-5 h-5 text-slate-450 group-hover/upload:text-orange-500 group-hover/upload:scale-110 transition-all" />
+                          <span className="text-[10px] font-bold text-slate-450 group-hover/upload:text-orange-600 uppercase tracking-wider">
+                            Upload
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
