@@ -174,7 +174,7 @@ const SideRelatedCard = ({ item }: { item: any }) => {
     return (
         <a
             href={`/p/${item.id}/${item.slug}`}
-            className="group relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200/60 shadow-sm hover:shadow-md transition-all shimmer-sweep"
+            className="group relative w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200/60 shadow-sm hover:shadow-md transition-all shimmer-sweep"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
@@ -369,12 +369,12 @@ const ProductPageSkeleton = () => {
 
                 <div className="flex flex-col lg:flex-row gap-16 md:gap-24 mb-10">
                     {/* Gallery Section Skeleton */}
-                    <div className="w-full lg:w-[720px] flex-shrink-0 flex flex-col gap-10">
+                    <div className="w-full lg:w-[720px] shrink-0 flex flex-col gap-10">
                         <div className="flex gap-4 md:gap-6 flex-col-reverse lg:flex-row h-auto lg:h-[600px]">
                             {/* Thumbnails */}
-                            <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto w-full lg:w-24 flex-shrink-0 py-2 lg:py-0">
+                            <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto w-full lg:w-24 shrink-0 py-2 lg:py-0">
                                 {[1, 2, 3, 4].map((i) => (
-                                    <div key={i} className="w-20 h-20 lg:w-full lg:h-24 rounded-2xl bg-slate-200/60 animate-pulse flex-shrink-0"></div>
+                                    <div key={i} className="w-20 h-20 lg:w-full lg:h-24 rounded-2xl bg-slate-200/60 animate-pulse shrink-0"></div>
                                 ))}
                             </div>
 
@@ -833,11 +833,37 @@ export default function ProductDetailPage() {
         return <ProductPageSkeleton />;
     }
 
+    const productJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": product.name,
+        "image": fullSeoImageUrl,
+        "description": product.description || product.seo_description || `Buy ${product.name} at Color Hut Studio.`,
+        "sku": `PROD-${product.id}`,
+        "offers": {
+            "@type": "Offer",
+            "url": fullProductUrl,
+            "priceCurrency": "BDT",
+            "price": product.price || 0,
+            "priceValidUntil": "2028-12-31",
+            "itemCondition": "https://schema.org/NewCondition",
+            "availability": "https://schema.org/InStock",
+            "seller": {
+                "@type": "Organization",
+                "name": "Color Hut"
+            }
+        }
+    };
+
     return (
         <div suppressHydrationWarning className="bg-slate-50 min-h-screen">
             {/* Dynamic SEO, Open Graph & Twitter Card head tags (Natively Hoisted by React 19) */}
             <title>{product.name} | Color Hut Studio</title>
             <meta name="description" content={product.seo_description || `Buy ${product.name} at Color Hut Studio. High quality designs and premium catalog assets.`} />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+            />
 
             {/* Open Graph / Facebook / WhatsApp */}
             <meta property="og:title" content={product.name} />
@@ -1561,10 +1587,10 @@ export default function ProductDetailPage() {
 
                 <div className="flex flex-col lg:flex-row gap-16 md:gap-24 mb-10">
                     {/* Gallery Section */}
-                    <div className="w-full lg:w-[720px] flex-shrink-0 flex flex-col gap-10">
+                    <div className="w-full lg:w-[720px] shrink-0 flex flex-col gap-10">
                         <div className="flex gap-4 md:gap-6 flex-col-reverse lg:flex-row h-auto lg:h-[600px]">
                             {/* Thumbnails Row */}
-                            <div className="flex lg:flex-col gap-3 md:gap-4 overflow-x-auto lg:overflow-y-auto scrollbar-hide py-2 lg:py-0 w-full lg:w-24 flex-shrink-0">
+                            <div className="flex lg:flex-col gap-3 md:gap-4 overflow-x-auto lg:overflow-y-auto scrollbar-hide py-2 lg:py-0 w-full lg:w-24 shrink-0">
                                 {galleryItems.map((item, idx) => {
                                     const isActive = idx === currentMediaIndex;
                                     const activeClass = isActive
@@ -1576,7 +1602,7 @@ export default function ProductDetailPage() {
                                             <button
                                                 key={idx}
                                                 onClick={() => switchMedia(idx)}
-                                                className={`relative w-20 h-20 lg:w-full lg:h-24 rounded-2xl overflow-hidden transition-all duration-300 flex-shrink-0 border-2 bg-slate-950 ${activeClass}`}
+                                                className={`relative w-20 h-20 lg:w-full lg:h-24 rounded-2xl overflow-hidden transition-all duration-300 shrink-0 border-2 bg-slate-950 ${activeClass}`}
                                             >
                                                 <div className="w-full h-full flex items-center justify-center">
                                                     <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -1593,7 +1619,7 @@ export default function ProductDetailPage() {
                                         <button
                                             key={idx}
                                             onClick={() => switchMedia(idx)}
-                                            className={`relative w-20 h-20 lg:w-full lg:h-24 rounded-2xl overflow-hidden transition-all duration-300 flex-shrink-0 border-2 bg-white ${activeClass} shimmer-sweep`}
+                                            className={`relative w-20 h-20 lg:w-full lg:h-24 rounded-2xl overflow-hidden transition-all duration-300 shrink-0 border-2 bg-white ${activeClass} shimmer-sweep`}
                                         >
                                             <img src={getThumb(item.src)} className="w-full h-full object-contain p-1" alt={`Thumbnail ${idx + 1}`} />
                                         </button>
@@ -1622,7 +1648,7 @@ export default function ProductDetailPage() {
                                         <path d="M9 5l7 7-7 7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                 </button>
-                                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-900/5 to-transparent" />
+                                <div className="absolute inset-0 pointer-events-none bg-linear-to-t from-slate-900/5 to-transparent" />
                             </div>
                         </div>
 
@@ -1698,7 +1724,7 @@ export default function ProductDetailPage() {
                         <div className="space-y-6">
                             {/* Premium Editorial Story Container */}
                             <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-xl shadow-slate-100/40 relative overflow-hidden group/story">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 via-amber-500 to-orange-500"></div>
+                                <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-orange-400 via-amber-500 to-orange-500"></div>
                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6 flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-orange-500"></span>
                                     Description
@@ -1722,7 +1748,7 @@ export default function ProductDetailPage() {
                                     {isLongStory && (
                                         <button
                                             onClick={() => setDescModalOpen(true)}
-                                            className="absolute bottom-0 right-0 bg-gradient-to-l from-white via-white/95 via-white/80 to-transparent pl-12 pr-1 py-1 text-[13px] md:text-sm font-black text-orange-500 hover:text-orange-600 cursor-pointer z-20 flex items-center gap-0.5 leading-none transition-colors"
+                                            className="absolute bottom-0 right-0 bg-linear-to-l from-white via-white/95 via-white/80 to-transparent pl-12 pr-1 py-1 text-[13px] md:text-sm font-black text-orange-500 hover:text-orange-600 cursor-pointer z-20 flex items-center gap-0.5 leading-none transition-colors"
                                         >
                                             <span className="text-slate-400 font-normal">...</span> See More
                                         </button>
@@ -1752,7 +1778,7 @@ export default function ProductDetailPage() {
                                             className="bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl relative border border-slate-100 flex flex-col max-h-[80vh] z-10"
                                         >
                                             {/* Accent Line */}
-                                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 via-amber-500 to-orange-500 z-20"></div>
+                                            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-orange-400 via-amber-500 to-orange-500 z-20"></div>
 
                                             {/* Modal Header */}
                                             <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -1796,7 +1822,7 @@ export default function ProductDetailPage() {
                             <div className="pt-4 flex flex-row gap-3 justify-center sm:justify-start">
                                 <button
                                     onClick={inquireWhatsApp}
-                                    className="w-full max-w-[230px] bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white px-3 sm:px-5 py-3.5 sm:py-4.5 rounded-2xl text-sm sm:text-base font-extrabold hover:from-emerald-600 hover:to-teal-700 hover:-translate-y-0.5 transition-all duration-300 shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/35 active:scale-98 flex items-center justify-center gap-1 sm:gap-1.5 animate-attract group/cta whitespace-nowrap"
+                                    className="w-full max-w-[230px] bg-linear-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white px-3 sm:px-5 py-3.5 sm:py-4.5 rounded-2xl text-sm sm:text-base font-extrabold hover:from-emerald-600 hover:to-teal-700 hover:-translate-y-0.5 transition-all duration-300 shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/35 active:scale-98 flex items-center justify-center gap-1 sm:gap-1.5 animate-attract group/cta whitespace-nowrap"
                                 >
                                     <WhatsAppIcon />
                                     <span>Order via WhatsApp</span>

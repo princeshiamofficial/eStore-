@@ -24,7 +24,7 @@ function Toast({ message, type, onDismiss }: ToastProps) {
     <div
       className={`fixed bottom-8 left-1/2 -translate-x-1/2 ${bgColor} text-white px-6 py-4 rounded-2xl shadow-2xl z-[9999] flex items-center gap-3 border font-medium text-sm min-w-[320px]`}
     >
-      <div className={`w-6 h-6 ${iconBg} rounded-full flex items-center justify-center flex-shrink-0`}>
+      <div className={`w-6 h-6 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
         <i className={`bi ${type === 'success' ? 'bi-check-lg' : 'bi-x-lg'} text-xs`} />
       </div>
       <span>{message}</span>
@@ -244,7 +244,7 @@ export default function AdminLoginPage() {
                 onClick={() => setRememberMe((prev) => !prev)}
               >
                 <div
-                  className={`h-5 w-5 border-2 rounded-md transition-all flex items-center justify-center flex-shrink-0
+                  className={`h-5 w-5 border-2 rounded-md transition-all flex items-center justify-center shrink-0
                     ${rememberMe ? 'bg-black border-black' : 'bg-white border-slate-200'}
                   `}
                 >

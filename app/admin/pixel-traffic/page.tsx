@@ -25,7 +25,8 @@ import {
   ChevronRight,
   User,
   Activity,
-  ArrowRight
+  ArrowRight,
+  Video
 } from 'lucide-react';
 
 interface TrafficSource {
@@ -318,14 +319,14 @@ export default function PixelTrafficPage() {
     const lower = (customIcon || category || '').toLowerCase();
     if (lower.startsWith('/uploads/') || lower.includes('/uploads/')) {
       return (
-        <div className="w-8 h-8 rounded-full border border-slate-200/60 overflow-hidden flex-shrink-0 flex items-center justify-center bg-slate-50 animate-in fade-in duration-300" title="Custom Brand Logo">
+        <div className="w-8 h-8 rounded-full border border-slate-200/60 overflow-hidden shrink-0 flex items-center justify-center bg-slate-50 animate-in fade-in duration-300" title="Custom Brand Logo">
           <img src={customIcon} alt="Custom Brand Logo" className="w-full h-full object-cover" />
         </div>
       );
     }
     if (lower.includes('google')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 flex-shrink-0" title="Google">
+        <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 shrink-0" title="Google">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .533 5.333.533 12S5.867 24 12.48 24c3.44 0 6.013-1.133 8.053-3.24 2.08-2.08 2.72-5.013 2.72-7.427 0-.733-.053-1.44-.147-2.133h-10.63z" />
           </svg>
@@ -334,7 +335,7 @@ export default function PixelTrafficPage() {
     }
     if (lower.includes('facebook')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 flex-shrink-0" title="Facebook">
+        <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 shrink-0" title="Facebook">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.791-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
           </svg>
@@ -343,7 +344,7 @@ export default function PixelTrafficPage() {
     }
     if (lower.includes('instagram')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-500 flex-shrink-0" title="Instagram">
+        <div className="w-8 h-8 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-500 shrink-0" title="Instagram">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204 0 3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
           </svg>
@@ -352,7 +353,7 @@ export default function PixelTrafficPage() {
     }
     if (lower.includes('twitter') || lower.includes('t.co')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-500 flex-shrink-0" title="Twitter">
+        <div className="w-8 h-8 rounded-full bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-500 shrink-0" title="Twitter">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
           </svg>
@@ -361,7 +362,7 @@ export default function PixelTrafficPage() {
     }
     if (lower.includes('youtube')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 flex-shrink-0" title="YouTube">
+        <div className="w-8 h-8 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0" title="YouTube">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M23.498 6.163a3.003 3.003 0 00-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.517 0-9.388.508a3.003 3.003 0 00-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 002.11 2.11c1.871.508 9.388.508 9.388.508s7.517 0 9.388-.508a3.003 3.003 0 002.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
           </svg>
@@ -370,7 +371,7 @@ export default function PixelTrafficPage() {
     }
     if (lower.includes('whatsapp')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 flex-shrink-0" title="WhatsApp">
+        <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 shrink-0" title="WhatsApp">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.731-1.456L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.859-4.407 9.862-9.843.002-2.634-1.02-5.11-2.881-6.974A9.782 9.782 0 0012.008 1.84c-5.442 0-9.863 4.41-9.866 9.852-.001 1.762.478 3.477 1.391 5.011l-.997 3.637 3.737-.978.022.013z" />
           </svg>
@@ -379,7 +380,7 @@ export default function PixelTrafficPage() {
     }
     if (lower.includes('pinterest')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 flex-shrink-0" title="Pinterest">
+        <div className="w-8 h-8 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 shrink-0" title="Pinterest">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.965 1.406-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.27 1.043-1.002 2.35-1.492 3.146 1.124.347 2.317.535 3.554.535 6.621 0 11.988-5.366 11.988-11.987C24.005 5.368 18.638 0 12.017 0z" />
           </svg>
@@ -388,7 +389,7 @@ export default function PixelTrafficPage() {
     }
     if (lower.includes('linkedin')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 flex-shrink-0" title="LinkedIn">
+        <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 shrink-0" title="LinkedIn">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
           </svg>
@@ -397,7 +398,7 @@ export default function PixelTrafficPage() {
     }
     if (lower.includes('tiktok')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-white flex-shrink-0" title="TikTok">
+        <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-white shrink-0" title="TikTok">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.28-3.08 1.7-6.07 4.75-6.79.7-.17 1.42-.21 2.14-.14v4.09c-.6-.1-1.22-.05-1.78.19-.88.36-1.56 1.09-1.78 2.03-.4 1.55.57 3.32 2.13 3.63.78.17 1.61-.01 2.25-.51.72-.54 1.14-1.39 1.17-2.3.02-3.83 0-7.65.01-11.48z" />
           </svg>
@@ -406,7 +407,7 @@ export default function PixelTrafficPage() {
     }
     if (lower.includes('qr')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0" title="QR Code">
+        <div className="w-8 h-8 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0" title="QR Code">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1v1M18 8h1M6 8h1M9 16H8v-1M16 16h-1v-1M12 12h.01M16 8h.01M8 8h.01M16 12h.01M8 12h.01M12 16h.01M12 8h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
@@ -415,7 +416,7 @@ export default function PixelTrafficPage() {
     }
     if (lower.includes('mail') || lower.includes('email')) {
       return (
-        <div className="w-8 h-8 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0" title="Mail / Email">
+        <div className="w-8 h-8 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0" title="Mail / Email">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
@@ -424,7 +425,7 @@ export default function PixelTrafficPage() {
     }
     // Default/Direct Source Icon
     return (
-      <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200/50 flex items-center justify-center text-slate-500 flex-shrink-0" title="Direct / Link">
+      <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200/50 flex items-center justify-center text-slate-500 shrink-0" title="Direct / Link">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg>
@@ -696,6 +697,7 @@ export default function PixelTrafficPage() {
       { name: 'Products', href: '/admin/products', icon: Package },
       { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
       { name: 'Mobile Hero', href: '/admin/mobile-hero', icon: ImageIcon },
+      { name: 'Demo Video', href: '/admin/demo', icon: Video },
     ],
     management: [
       { name: 'Pixel & Traffic', href: '/admin/pixel-traffic', icon: BarChart3, active: true },
@@ -724,7 +726,7 @@ export default function PixelTrafficPage() {
 
       {/* Sidebar */}
       <aside 
-        className={`bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-50 transition-all duration-300 ease-in-out
+        className={`bg-white border-r border-slate-200 flex flex-col shrink-0 z-50 transition-all duration-300 ease-in-out
           ${isMobileOpen ? 'fixed inset-y-0 left-0 w-64' : 'hidden md:flex'}
           ${isSidebarCollapsed ? 'md:w-20' : 'md:w-64'}
         `}
@@ -773,12 +775,12 @@ export default function PixelTrafficPage() {
                   isSidebarCollapsed ? 'justify-center px-0' : 'px-8'
                 } ${
                   link.active 
-                    ? 'text-orange-600 bg-gradient-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
+                    ? 'text-orange-600 bg-linear-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600 hover:pl-10'
                 }`}
                 title={link.name}
               >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 <span className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isSidebarCollapsed ? 'md:hidden' : 'block'}`}>
                   {link.name}
                 </span>
@@ -799,12 +801,12 @@ export default function PixelTrafficPage() {
                   isSidebarCollapsed ? 'justify-center px-0' : 'px-8'
                 } ${
                   link.active 
-                    ? 'text-orange-600 bg-gradient-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
+                    ? 'text-orange-600 bg-linear-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600 hover:pl-10'
                 }`}
                 title={link.name}
               >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 <span className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isSidebarCollapsed ? 'md:hidden' : 'block'}`}>
                   {link.name}
                 </span>
@@ -818,7 +820,7 @@ export default function PixelTrafficPage() {
           <div className={`flex items-center mb-3 rounded-xl transition-colors hover:bg-slate-50 ${isSidebarCollapsed ? 'md:justify-center md:p-2' : 'px-3 py-2 gap-3'}`}>
             <img 
               src="https://ui-avatars.com/api/?name=Admin+User&background=f97316&color=fff"
-              className="w-8 h-8 rounded-full flex-shrink-0" 
+              className="w-8 h-8 rounded-full shrink-0" 
               alt="Admin"
             />
             {!isSidebarCollapsed && (
@@ -835,7 +837,7 @@ export default function PixelTrafficPage() {
             }`}
             title="Logout"
           >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <LogOut className="w-4 h-4 shrink-0" />
             <span className={`${isSidebarCollapsed ? 'md:hidden' : 'block'} whitespace-nowrap`}>Logout</span>
           </a>
         </div>
@@ -863,11 +865,11 @@ export default function PixelTrafficPage() {
             ${saveStatus.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'}
           `}>
             {saveStatus.type === 'success' ? (
-              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
                 <Check className="w-3.5 h-3.5" />
               </div>
             ) : (
-              <div className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center flex-shrink-0 font-bold text-xs">
+              <div className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 font-bold text-xs">
                 !
               </div>
             )}
@@ -899,7 +901,7 @@ export default function PixelTrafficPage() {
                 
                 <div className="relative z-10">
                   <div className="flex items-center gap-5 mb-8">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F1641E] to-[#f43f5e] shadow-lg shadow-orange-500/20 flex items-center justify-center text-white">
+                    <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-[#F1641E] to-[#f43f5e] shadow-lg shadow-orange-500/20 flex items-center justify-center text-white">
                       <Globe className="w-7 h-7 text-white" />
                     </div>
                     <div>
@@ -932,7 +934,7 @@ export default function PixelTrafficPage() {
                           onChange={(e) => setPixelEnabled(e.target.checked)}
                           className="sr-only peer" 
                         />
-                        <div className="w-11 h-6 bg-slate-250 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-br peer-checked:from-[#F1641E] peer-checked:to-[#f43f5e] shadow-inner transition-colors" />
+                        <div className="w-11 h-6 bg-slate-250 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-br peer-checked:from-[#F1641E] peer-checked:to-[#f43f5e] shadow-inner transition-colors" />
                       </label>
                     </div>
 
@@ -959,7 +961,7 @@ export default function PixelTrafficPage() {
                           onChange={(e) => setGtmEnabled(e.target.checked)}
                           className="sr-only peer" 
                         />
-                        <div className="w-11 h-6 bg-slate-250 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-br peer-checked:from-[#F1641E] peer-checked:to-[#f43f5e] shadow-inner transition-colors" />
+                        <div className="w-11 h-6 bg-slate-250 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-br peer-checked:from-[#F1641E] peer-checked:to-[#f43f5e] shadow-inner transition-colors" />
                       </label>
                     </div>
 
@@ -996,15 +998,15 @@ export default function PixelTrafficPage() {
                     </h4>
                     <ul className="space-y-2.5 text-xs font-bold text-slate-500 leading-relaxed pl-1">
                       <li className="flex gap-2">
-                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] flex-shrink-0">1</span>
+                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] shrink-0">1</span>
                         <span>Log in to Facebook Business Manager; go to <strong className="text-slate-800">Events Manager</strong>.</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] flex-shrink-0">2</span>
+                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] shrink-0">2</span>
                         <span>Create or select your Meta Pixel Data Source; open <strong className="text-slate-800">Settings</strong>.</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] flex-shrink-0">3</span>
+                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] shrink-0">3</span>
                         <span>Copy and insert the numeric <strong className="text-slate-800">Pixel ID</strong> (e.g. 1234567890).</span>
                       </li>
                     </ul>
@@ -1017,15 +1019,15 @@ export default function PixelTrafficPage() {
                     </h4>
                     <ul className="space-y-2.5 text-xs font-bold text-slate-500 leading-relaxed pl-1">
                       <li className="flex gap-2">
-                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] flex-shrink-0">1</span>
+                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] shrink-0">1</span>
                         <span>Log in to Google Tag Manager at <strong className="text-slate-800 font-bold">tagmanager.google.com</strong>.</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] flex-shrink-0">2</span>
+                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] shrink-0">2</span>
                         <span>Select your Web Container.</span>
                       </li>
                       <li className="flex gap-2">
-                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] flex-shrink-0">3</span>
+                        <span className="bg-orange-50 text-[#F1641E] border border-orange-100 font-extrabold w-5 h-5 flex items-center justify-center rounded-full text-[10px] shrink-0">3</span>
                         <span>Copy and insert the <strong className="text-slate-800">Container ID</strong> (e.g. GTM-XXXXXX).</span>
                       </li>
                     </ul>
@@ -1040,7 +1042,7 @@ export default function PixelTrafficPage() {
               
               <div className="relative z-10">
                 <div className="flex items-center gap-5 mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F1641E] to-[#f43f5e] shadow-lg shadow-orange-500/20 flex items-center justify-center text-white">
+                  <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-[#F1641E] to-[#f43f5e] shadow-lg shadow-orange-500/20 flex items-center justify-center text-white">
                     <Activity className="w-7 h-7 text-white" />
                   </div>
                   <div>
@@ -1147,8 +1149,8 @@ export default function PixelTrafficPage() {
                         </label>
 
                         {customUploadedLogoUrl && (
-                          <div className="flex items-center gap-3.5 bg-white border border-slate-200 rounded-2xl p-3 pr-5 flex-shrink-0 animate-in zoom-in-95 duration-250">
-                            <div className="w-12 h-12 rounded-full border border-slate-100 overflow-hidden flex-shrink-0 bg-slate-50 flex items-center justify-center p-0.5 shadow-inner">
+                          <div className="flex items-center gap-3.5 bg-white border border-slate-200 rounded-2xl p-3 pr-5 shrink-0 animate-in zoom-in-95 duration-250">
+                            <div className="w-12 h-12 rounded-full border border-slate-100 overflow-hidden shrink-0 bg-slate-50 flex items-center justify-center p-0.5 shadow-inner">
                               <img src={customUploadedLogoUrl} alt="Logo Preview" className="w-full h-full object-cover rounded-full" />
                             </div>
                             <div>

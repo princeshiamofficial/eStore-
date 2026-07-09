@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Sortable from 'sortablejs';
@@ -48,7 +48,8 @@ import {
   Redo,
   Eraser,
   Palette,
-  Highlighter
+  Highlighter,
+  Video
 } from 'lucide-react';
 
 interface Product {
@@ -128,13 +129,13 @@ function ModernDropdown({
         <span className="text-sm font-bold text-slate-800 pointer-events-none truncate flex-1 mr-3 tracking-tight">
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-        <div className="text-slate-300 group-hover:text-orange-500 transition-all duration-300 pointer-events-none flex-shrink-0">
+        <div className="text-slate-300 group-hover:text-orange-500 transition-all duration-300 pointer-events-none shrink-0">
           <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
         </div>
       </div>
 
       {isOpen && (
-        <div className="modern-dropdown-menu absolute top-[calc(100%+8px)] left-0 min-w-full w-max max-w-[400px] bg-white border border-slate-200 rounded-2xl shadow-2xl z-[100] flex flex-col max-h-[320px] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="modern-dropdown-menu absolute top-[calc(100%+8px)] left-0 min-w-full w-max max-w-[400px] bg-white border border-slate-200 rounded-2xl shadow-2xl z-100 flex flex-col max-h-[320px] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           <div className="p-3 border-b border-slate-100 bg-slate-50/50">
             <input 
               type="text" 
@@ -1393,6 +1394,7 @@ export default function ProductsPage() {
       { name: 'Products', href: '/admin/products', icon: Package, active: true },
       { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
       { name: 'Mobile Hero', href: '/admin/mobile-hero', icon: ImageIcon },
+      { name: 'Demo Video', href: '/admin/demo', icon: Video },
     ],
     management: [
       { name: 'Pixel & Traffic', href: '/admin/pixel-traffic', icon: BarChart3 },
@@ -1415,7 +1417,7 @@ export default function ProductsPage() {
 
       {/* Sidebar Navigation */}
       <aside 
-        className={`bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-50 transition-all duration-300 ease-in-out
+        className={`bg-white border-r border-slate-200 flex flex-col shrink-0 z-50 transition-all duration-300 ease-in-out
           ${isMobileOpen ? 'fixed inset-y-0 left-0 w-64' : 'hidden md:flex'}
           ${isSidebarCollapsed ? 'md:w-20' : 'md:w-64'}
         `}
@@ -1464,12 +1466,12 @@ export default function ProductsPage() {
                   isSidebarCollapsed ? 'justify-center px-0' : 'px-8'
                 } ${
                   link.active 
-                    ? 'text-orange-600 bg-gradient-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
+                    ? 'text-orange-600 bg-linear-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600 hover:pl-10'
                 }`}
                 title={link.name}
               >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 <span className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isSidebarCollapsed ? 'md:hidden' : 'block'}`}>
                   {link.name}
                 </span>
@@ -1490,12 +1492,12 @@ export default function ProductsPage() {
                   isSidebarCollapsed ? 'justify-center px-0' : 'px-8'
                 } ${
                   link.active 
-                    ? 'text-orange-600 bg-gradient-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
+                    ? 'text-orange-600 bg-linear-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600 hover:pl-10'
                 }`}
                 title={link.name}
               >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 <span className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isSidebarCollapsed ? 'md:hidden' : 'block'}`}>
                   {link.name}
                 </span>
@@ -1509,7 +1511,7 @@ export default function ProductsPage() {
           <div className={`flex items-center mb-3 rounded-xl transition-colors hover:bg-slate-50 ${isSidebarCollapsed ? 'md:justify-center md:p-2' : 'px-3 py-2 gap-3'}`}>
             <img 
               src="https://ui-avatars.com/api/?name=Admin+User&background=f97316&color=fff"
-              className="w-8 h-8 rounded-full flex-shrink-0" 
+              className="w-8 h-8 rounded-full shrink-0" 
               alt="Admin"
             />
             {!isSidebarCollapsed && (
@@ -1526,7 +1528,7 @@ export default function ProductsPage() {
             }`}
             title="Logout"
           >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <LogOut className="w-4 h-4 shrink-0" />
             <span className={`${isSidebarCollapsed ? 'md:hidden' : 'block'} whitespace-nowrap`}>Logout</span>
           </a>
         </div>
@@ -1551,15 +1553,15 @@ export default function ProductsPage() {
 
         {/* Global Toast Alert */}
         {toast.message && (
-          <div className={`fixed top-4 right-4 z-[99] flex items-center gap-2.5 px-6 py-4 rounded-2xl shadow-xl shadow-slate-900/10 border transition-all duration-300 transform translate-y-0
+          <div className={`fixed top-4 right-4 z-99 flex items-center gap-2.5 px-6 py-4 rounded-2xl shadow-xl shadow-slate-900/10 border transition-all duration-300 transform translate-y-0
             ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'}
           `}>
             {toast.type === 'success' ? (
-              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 animate-bounce">
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 animate-bounce">
                 <Check className="w-3.5 h-3.5" />
               </div>
             ) : (
-              <div className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center flex-shrink-0 font-bold text-xs">
+              <div className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 font-bold text-xs">
                 !
               </div>
             )}
@@ -1765,7 +1767,7 @@ export default function ProductsPage() {
       {/* Product Creation & Editing Modal Dialog */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] max-w-2xl w-full flex flex-col overflow-hidden max-h-[90vh] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-4xl max-w-2xl w-full flex flex-col overflow-hidden max-h-[90vh] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             
             {/* Sticky Header */}
             <div className="px-8 pt-8 pb-4 border-b border-slate-100 bg-white flex justify-between items-center shrink-0">
@@ -1819,7 +1821,7 @@ export default function ProductsPage() {
 
                   {/* Popup Tree Dialog container */}
                   {isCatPopupOpen && (
-                    <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-[2rem] p-6 shadow-2xl z-[110] animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-4xl p-6 shadow-2xl z-110 animate-in fade-in slide-in-from-top-2 duration-200">
                       
                       {/* Search box inside Tree */}
                       <div className="relative group mb-4">
@@ -1963,7 +1965,7 @@ export default function ProductsPage() {
 
                 {/* Premium Document Editor Story */}
                 <div className="md:col-span-2">
-                  <div className="bg-slate-100/50 rounded-[2rem] p-4 border border-slate-200">
+                  <div className="bg-slate-100/50 rounded-4xl p-4 border border-slate-200">
                     
                     {/* Google Docs Toolbar formatting */}
                     <div className="flex flex-wrap items-center gap-1.5 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm mb-4 sticky top-0 z-20">
@@ -2526,7 +2528,7 @@ export default function ProductsPage() {
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleFileDrop}
-                    className={`relative border-2 border-dashed rounded-[1.5rem] p-8 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group ${
+                    className={`relative border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group ${
                       isDragActive 
                         ? 'border-orange-500 bg-orange-50/50 scale-[1.01] shadow-md ring-4 ring-orange-500/10' 
                         : 'border-slate-200 hover:border-orange-500 hover:bg-orange-50/30'
@@ -2652,7 +2654,7 @@ export default function ProductsPage() {
       {/* Delete Confirmation Modal Dialog */}
       {deleteModal.isOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] max-w-md w-full p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-4xl max-w-md w-full p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-black text-slate-900 mb-4">Delete Product?</h2>
             <p className="text-slate-600 mb-6 font-medium">
               This action cannot be undone. This product will be permanently removed from your catalog.

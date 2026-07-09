@@ -1,2 +1,8 @@
 User-agent: *
+Allow: /
 Disallow: /admin
+Disallow: /api
+Disallow: /thank-you
+Disallow: /traffic
+
+Sitemap: https://store.colorhutbd.xyz/sitemap.xml

@@ -651,6 +651,11 @@ body {
     transition: color 0.2s ease;
 }
 
+.store-subnav-item svg {
+    width: 16px;
+    height: 16px;
+}
+
 .store-subnav-item:hover {
     color: #222;
     text-decoration: underline;
@@ -2399,4 +2404,21 @@ body {
     font-weight: 500;
     pointer-events: none;
     display: block; /* For Firefox */
+}
+
+/* Video protection styles */
+video {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+video::-webkit-media-controls-download-button {
+    display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+    overflow: hidden !important;
 }

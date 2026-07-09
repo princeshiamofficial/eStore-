@@ -25,7 +25,8 @@ import {
   MapPin,
   Clock,
   Sparkles,
-  ArrowUpRight
+  ArrowUpRight,
+  Video
 } from 'lucide-react';
 
 interface MeetingRequest {
@@ -167,6 +168,7 @@ export default function MeetingRequestsPage() {
       { name: 'Products', href: '/admin/products', icon: Package },
       { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
       { name: 'Mobile Hero', href: '/admin/mobile-hero', icon: ImageIcon },
+      { name: 'Demo Video', href: '/admin/demo', icon: Video },
     ],
     management: [
       { name: 'Pixel & Traffic', href: '/admin/pixel-traffic', icon: BarChart3 },
@@ -209,7 +211,7 @@ export default function MeetingRequestsPage() {
 
       {/* Sidebar */}
       <aside 
-        className={`bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-50 transition-all duration-300 ease-in-out
+        className={`bg-white border-r border-slate-200 flex flex-col shrink-0 z-50 transition-all duration-300 ease-in-out
           ${isMobileOpen ? 'fixed inset-y-0 left-0 w-64' : 'hidden md:flex'}
           ${isSidebarCollapsed ? 'md:w-20' : 'md:w-64'}
         `}
@@ -258,12 +260,12 @@ export default function MeetingRequestsPage() {
                   isSidebarCollapsed ? 'justify-center px-0' : 'px-8'
                 } ${
                   link.active 
-                    ? 'text-orange-600 bg-gradient-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
+                    ? 'text-orange-600 bg-linear-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600 hover:pl-10'
                 }`}
                 title={link.name}
               >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 <span className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isSidebarCollapsed ? 'md:hidden' : 'block'}`}>
                   {link.name}
                 </span>
@@ -284,12 +286,12 @@ export default function MeetingRequestsPage() {
                   isSidebarCollapsed ? 'justify-center px-0' : 'px-8'
                 } ${
                   link.active 
-                    ? 'text-orange-600 bg-gradient-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
+                    ? 'text-orange-600 bg-linear-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600 hover:pl-10'
                 }`}
                 title={link.name}
               >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 <span className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isSidebarCollapsed ? 'md:hidden' : 'block'}`}>
                   {link.name}
                 </span>
@@ -303,7 +305,7 @@ export default function MeetingRequestsPage() {
           <div className={`flex items-center mb-3 rounded-xl transition-colors hover:bg-slate-50 ${isSidebarCollapsed ? 'md:justify-center md:p-2' : 'px-3 py-2 gap-3'}`}>
             <img 
               src="https://ui-avatars.com/api/?name=Admin+User&background=f97316&color=fff"
-              className="w-8 h-8 rounded-full flex-shrink-0" 
+              className="w-8 h-8 rounded-full shrink-0" 
               alt="Admin"
             />
             {!isSidebarCollapsed && (
@@ -320,7 +322,7 @@ export default function MeetingRequestsPage() {
             }`}
             title="Logout"
           >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <LogOut className="w-4 h-4 shrink-0" />
             <span className={`${isSidebarCollapsed ? 'md:hidden' : 'block'} whitespace-nowrap`}>Logout</span>
           </a>
         </div>
@@ -348,11 +350,11 @@ export default function MeetingRequestsPage() {
             ${saveStatus.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'}
           `}>
             {saveStatus.type === 'success' ? (
-              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
                 <Check className="w-3.5 h-3.5" />
               </div>
             ) : (
-              <div className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center flex-shrink-0 font-bold text-xs">
+              <div className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 font-bold text-xs">
                 !
               </div>
             )}

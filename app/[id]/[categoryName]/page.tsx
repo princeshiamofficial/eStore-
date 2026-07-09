@@ -44,6 +44,13 @@ const GridIcon = () => (
     </svg>
 );
 
+const VideoIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+    </svg>
+);
+
 const PlayIcon = () => (
     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: '2px' }}><path d="M5 3l14 9-14 9V3z" /></svg>
 );
@@ -1353,8 +1360,34 @@ export default function CategoryPage() {
         setSuggestions(matches.slice(0, 8));
     }, [searchQuery, categories, allProducts]);
 
+    const categoryJsonLd = currentCategory ? {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": currentCategory.name,
+        "description": `Browse our selection of premium ${currentCategory.name} products at Color Hut.`,
+        "url": `https://store.colorhutbd.xyz/${currentCategory.id}/${currentCategory.slug}/`,
+        "numberOfItems": products.length,
+        "itemListElement": products.map((p, idx) => ({
+            "@type": "ListItem",
+            "position": idx + 1,
+            "url": `https://store.colorhutbd.xyz/p/${p.id}/${p.slug}`
+        }))
+    } : null;
+
     return (
         <div suppressHydrationWarning>
+            {currentCategory && (
+                <>
+                    <title>{currentCategory.name} | Color Hut Studio</title>
+                    <meta name="description" content={`Browse our selection of premium ${currentCategory.name} products at Color Hut.`} />
+                </>
+            )}
+            {categoryJsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(categoryJsonLd) }}
+                />
+            )}
             <style>{`
                 .hide-scrollbar::-webkit-scrollbar {
                     display: none;
@@ -1610,6 +1643,7 @@ export default function CategoryPage() {
                                 {cat.name}
                             </a>
                         ))}
+                    <a href="/demo" className="store-subnav-item"><VideoIcon /> Demo</a>
                 </nav>
             </header>
 

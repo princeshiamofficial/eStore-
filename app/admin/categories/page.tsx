@@ -24,7 +24,8 @@ import {
   FileImage,
   Edit2,
   Search,
-  Grid
+  Grid,
+  Video
 } from 'lucide-react';
 
 interface Category {
@@ -329,6 +330,7 @@ export default function CategoriesPage() {
       { name: 'Products', href: '/admin/products', icon: Package },
       { name: 'Categories', href: '/admin/categories', icon: FolderOpen, active: true },
       { name: 'Mobile Hero', href: '/admin/mobile-hero', icon: ImageIcon },
+      { name: 'Demo Video', href: '/admin/demo', icon: Video },
     ],
     management: [
       { name: 'Pixel & Traffic', href: '/admin/pixel-traffic', icon: BarChart3 },
@@ -415,7 +417,7 @@ export default function CategoriesPage() {
 
       {/* Sidebar Navigation */}
       <aside 
-        className={`bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-50 transition-all duration-300 ease-in-out
+        className={`bg-white border-r border-slate-200 flex flex-col shrink-0 z-50 transition-all duration-300 ease-in-out
           ${isMobileOpen ? 'fixed inset-y-0 left-0 w-64' : 'hidden md:flex'}
           ${isSidebarCollapsed ? 'md:w-20' : 'md:w-64'}
         `}
@@ -464,12 +466,12 @@ export default function CategoriesPage() {
                   isSidebarCollapsed ? 'justify-center px-0' : 'px-8'
                 } ${
                   link.active 
-                    ? 'text-orange-600 bg-gradient-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
+                    ? 'text-orange-600 bg-linear-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600 hover:pl-10'
                 }`}
                 title={link.name}
               >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 <span className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isSidebarCollapsed ? 'md:hidden' : 'block'}`}>
                   {link.name}
                 </span>
@@ -490,12 +492,12 @@ export default function CategoriesPage() {
                   isSidebarCollapsed ? 'justify-center px-0' : 'px-8'
                 } ${
                   link.active 
-                    ? 'text-orange-600 bg-gradient-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
+                    ? 'text-orange-600 bg-linear-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600 hover:pl-10'
                 }`}
                 title={link.name}
               >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 <span className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isSidebarCollapsed ? 'md:hidden' : 'block'}`}>
                   {link.name}
                 </span>
@@ -509,7 +511,7 @@ export default function CategoriesPage() {
           <div className={`flex items-center mb-3 rounded-xl transition-colors hover:bg-slate-50 ${isSidebarCollapsed ? 'md:justify-center md:p-2' : 'px-3 py-2 gap-3'}`}>
             <img 
               src="https://ui-avatars.com/api/?name=Admin+User&background=f97316&color=fff"
-              className="w-8 h-8 rounded-full flex-shrink-0" 
+              className="w-8 h-8 rounded-full shrink-0" 
               alt="Admin"
             />
             {!isSidebarCollapsed && (
@@ -526,7 +528,7 @@ export default function CategoriesPage() {
             }`}
             title="Logout"
           >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <LogOut className="w-4 h-4 shrink-0" />
             <span className={`${isSidebarCollapsed ? 'md:hidden' : 'block'} whitespace-nowrap`}>Logout</span>
           </a>
         </div>
@@ -555,11 +557,11 @@ export default function CategoriesPage() {
             ${saveStatus.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'}
           `}>
             {saveStatus.type === 'success' ? (
-              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 animate-bounce">
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 animate-bounce">
                 <Check className="w-3.5 h-3.5" />
               </div>
             ) : (
-              <div className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center flex-shrink-0 font-bold text-xs">
+              <div className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 font-bold text-xs">
                 !
               </div>
             )}
@@ -590,7 +592,7 @@ export default function CategoriesPage() {
             <div className="mb-8">
               <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide items-center" id="mainCategoryTabs">
                 {/* All Categories Trigger */}
-                <div className="relative flex items-center flex-shrink-0" data-id="null">
+                <div className="relative flex items-center shrink-0" data-id="null">
                   <button
                     onClick={() => {
                       setSelectedMainCategoryId(null);
@@ -598,7 +600,7 @@ export default function CategoriesPage() {
                     }}
                     className={`px-6 py-3.5 rounded-2xl font-bold text-sm whitespace-nowrap flex items-center gap-1.5 transition-all shadow-sm hover:-translate-y-0.5
                       ${selectedMainCategoryId === null 
-                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-transparent shadow-orange-500/20' 
+                        ? 'bg-linear-to-r from-orange-500 to-orange-600 text-white border-transparent shadow-orange-500/20' 
                         : 'bg-white text-slate-700 hover:bg-orange-50/50 hover:text-orange-600 border-slate-100'
                       }
                     `}
@@ -622,7 +624,7 @@ export default function CategoriesPage() {
                   mainCategories.map((cat, idx) => {
                     const isActive = selectedMainCategoryId === cat.id;
                     return (
-                      <div key={cat.id} data-id={cat.id} className="relative flex items-center group flex-shrink-0 category-action-area">
+                      <div key={cat.id} data-id={cat.id} className="relative flex items-center group shrink-0 category-action-area">
                         <div
                           onClick={() => {
                             setSelectedMainCategoryId(cat.id);
@@ -643,7 +645,7 @@ export default function CategoriesPage() {
                           }}
                           className={`category-tab px-6 py-3.5 rounded-2xl font-bold text-sm whitespace-nowrap transition-all border shadow-sm flex items-center gap-2 hover:-translate-y-0.5 cursor-grab select-none outline-none
                             ${isActive 
-                              ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-transparent shadow-orange-500/20' 
+                              ? 'bg-linear-to-r from-orange-500 to-orange-600 text-white border-transparent shadow-orange-500/20' 
                               : 'bg-white text-slate-700 hover:bg-orange-50/50 hover:text-orange-600 border-slate-100'
                             }
                           `}
@@ -708,7 +710,7 @@ export default function CategoriesPage() {
             {isLoading ? (
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {[1, 2, 3, 4, 5].map(i => (
-                  <div key={i} className="animate-pulse bg-slate-100 h-11 w-32 rounded-full flex-shrink-0" />
+                  <div key={i} className="animate-pulse bg-slate-100 h-11 w-32 rounded-full shrink-0" />
                 ))}
               </div>
             ) : filteredSubCategoriesList.length === 0 ? null : (
@@ -734,7 +736,7 @@ export default function CategoriesPage() {
                       `}
                     >
                       {/* Circular icon */}
-                      <div className="w-8 h-8 rounded-full border border-black/10 overflow-hidden flex-shrink-0 bg-slate-50">
+                      <div className="w-8 h-8 rounded-full border border-black/10 overflow-hidden shrink-0 bg-slate-50">
                         {cat.icon ? (
                           <img src={cat.icon} className="w-full h-full object-cover object-center" alt={cat.name} />
                         ) : (

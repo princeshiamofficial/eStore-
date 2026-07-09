@@ -1492,6 +1492,15 @@ app.post('/api/upload', requireAuth, upload.array('images', 10), async (req, res
     }
 });
 
+// Video Upload endpoint for demo/products
+app.post('/api/admin/upload-video', requireAuth, upload.single('video'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No video file uploaded' });
+    }
+    const videoUrl = `/uploads/${req.file.filename}`;
+    res.json({ videoUrl });
+});
+
 // Create product
 app.post('/api/products', requireAuth, (req, res) => {
     const { name, category_id, description, image, video_url, status, is_pinned, rating, seo_keywords, seo_description, position } = req.body;
@@ -1784,6 +1793,10 @@ app.get('/admin/meeting-requests', requireAuth, (req, res) => {
     return handle(req, res);
 });
 
+app.get('/admin/demo', requireAuth, (req, res) => {
+    return handle(req, res);
+});
+
 // Socket.io for real-time updates
 // ===== SETTINGS & TRAFFIC API =====
 
@@ -1941,7 +1954,9 @@ app.get('/api/public/config', async (req, res) => {
             social_facebook: config.social_facebook || '',
             social_instagram: config.social_instagram || '',
             social_youtube: config.social_youtube || '',
-            social_pinterest: config.social_pinterest || ''
+            social_pinterest: config.social_pinterest || '',
+            demo_video_url: config.demo_video_url || '',
+            demo_videos: config.demo_videos || '[]'
         });
     } catch (err) {
         res.status(500).json({});

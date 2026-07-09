@@ -19,13 +19,23 @@ export async function generateMetadata(): Promise<Metadata> {
             database: process.env.DB_NAME || 'ecommerce_db'
         });
 
-        const [rows]: any = await connection.query('SELECT * FROM site_settings');
+        interface SiteSetting {
+            setting_key: string;
+            setting_value: string;
+        }
+
+        const [rows] = await connection.query('SELECT * FROM site_settings');
         await connection.end();
 
-        const settings: any = {};
-        if (Array.isArray(rows)) {
-            rows.forEach((row: any) => {
-                settings[row.setting_key] = row.setting_value;
+        const settings: Record<string, string> = {};
+        const rowsTyped = rows as SiteSetting[];
+        if (Array.isArray(rowsTyped)) {
+            rowsTyped.forEach((row) => {
+                const key = row.setting_key;
+                const value = row.setting_value;
+                if (key) {
+                    settings[key] = value || '';
+                }
             });
         }
 
@@ -152,6 +162,18 @@ export default function RootLayout({
         ]
     };
 
+    const websiteJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Color Hut",
+        "url": "https://store.colorhutbd.xyz/",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://store.colorhutbd.xyz/all?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    };
+
     return (
         <html lang="en" prefix="og: http://ogp.me/ns# website: http://ogp.me/ns/website#" suppressHydrationWarning>
             <head>
@@ -170,6 +192,10 @@ export default function RootLayout({
                 <script
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                />
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
                 />
                 <TrackingHead />
             </head>

@@ -23,7 +23,8 @@ import {
   AlertCircle,
   BookOpen,
   ArrowRight,
-  Download
+  Download,
+  Video
 } from 'lucide-react';
 
 interface RecentProduct {
@@ -116,6 +117,7 @@ export default function DashboardPage() {
       { name: 'Products', href: '/admin/products', icon: Package },
       { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
       { name: 'Mobile Hero', href: '/admin/mobile-hero', icon: ImageIcon },
+      { name: 'Demo Video', href: '/admin/demo', icon: Video },
     ],
     management: [
       { name: 'Pixel & Traffic', href: '/admin/pixel-traffic', icon: BarChart3 },
@@ -140,7 +142,7 @@ export default function DashboardPage() {
 
       {/* Sidebar Navigation */}
       <aside 
-        className={`bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-50 transition-all duration-300 ease-in-out
+        className={`bg-white border-r border-slate-200 flex flex-col shrink-0 z-50 transition-all duration-300 ease-in-out
           ${isMobileOpen ? 'fixed inset-y-0 left-0 w-64' : 'hidden md:flex'}
           ${isSidebarCollapsed ? 'md:w-20' : 'md:w-64'}
         `}
@@ -189,12 +191,12 @@ export default function DashboardPage() {
                   isSidebarCollapsed ? 'justify-center px-0' : 'px-8'
                 } ${
                   link.active 
-                    ? 'text-orange-600 bg-gradient-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
+                    ? 'text-orange-600 bg-linear-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600 hover:pl-10'
                 }`}
                 title={link.name}
               >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 <span className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isSidebarCollapsed ? 'md:hidden' : 'block'}`}>
                   {link.name}
                 </span>
@@ -215,12 +217,12 @@ export default function DashboardPage() {
                   isSidebarCollapsed ? 'justify-center px-0' : 'px-8'
                 } ${
                   link.active 
-                    ? 'text-orange-600 bg-gradient-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
+                    ? 'text-orange-600 bg-linear-to-r from-orange-50/50 to-white border-r-[3px] border-orange-600' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600 hover:pl-10'
                 }`}
                 title={link.name}
               >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 <span className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isSidebarCollapsed ? 'md:hidden' : 'block'}`}>
                   {link.name}
                 </span>
@@ -234,7 +236,7 @@ export default function DashboardPage() {
           <div className={`flex items-center mb-3 rounded-xl transition-colors hover:bg-slate-50 ${isSidebarCollapsed ? 'md:justify-center md:p-2' : 'px-3 py-2 gap-3'}`}>
             <img 
               src="https://ui-avatars.com/api/?name=Admin+User&background=f97316&color=fff"
-              className="w-8 h-8 rounded-full flex-shrink-0" 
+              className="w-8 h-8 rounded-full shrink-0" 
               alt="Admin"
             />
             {!isSidebarCollapsed && (
@@ -251,7 +253,7 @@ export default function DashboardPage() {
             }`}
             title="Logout"
           >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <LogOut className="w-4 h-4 shrink-0" />
             <span className={`${isSidebarCollapsed ? 'md:hidden' : 'block'} whitespace-nowrap`}>Logout</span>
           </a>
         </div>
@@ -314,7 +316,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10">
               {/* Total Categories card */}
               <div className="bg-white p-5 rounded-2xl shadow-xl shadow-slate-200/40 border border-slate-100/80 flex items-center gap-4 hover:shadow-2xl transition-all duration-300 group">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <FolderOpen className="w-6 h-6" />
                 </div>
                 <div>
@@ -327,7 +329,7 @@ export default function DashboardPage() {
 
               {/* Total Products card */}
               <div className="bg-white p-5 rounded-2xl shadow-xl shadow-slate-200/40 border border-slate-100/80 flex items-center gap-4 hover:shadow-2xl transition-all duration-300 group">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <Package className="w-6 h-6" />
                 </div>
                 <div>
@@ -340,7 +342,7 @@ export default function DashboardPage() {
 
               {/* Published products card */}
               <div className="bg-white p-5 rounded-2xl shadow-xl shadow-slate-200/40 border border-slate-100/80 flex items-center gap-4 hover:shadow-2xl transition-all duration-300 group">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <CheckCircle className="w-6 h-6" />
                 </div>
                 <div>
@@ -353,7 +355,7 @@ export default function DashboardPage() {
 
               {/* Drafts products card */}
               <div className="bg-white p-5 rounded-2xl shadow-xl shadow-slate-200/40 border border-slate-100/80 flex items-center gap-4 hover:shadow-2xl transition-all duration-300 group">
-                <div className="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <FileText className="w-6 h-6" />
                 </div>
                 <div>
@@ -492,7 +494,7 @@ export default function DashboardPage() {
 
                 {/* Operational Pro Tip card */}
                 <div className="p-6 bg-slate-900/5 hover:bg-slate-900/10 rounded-2xl border border-slate-200/40 transition-colors flex gap-3">
-                  <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
                   <div>
                     <h4 className="font-extrabold text-slate-900 text-sm mb-1 uppercase tracking-wider">Pro Tip</h4>
                     <p className="text-xs text-slate-500 font-bold leading-relaxed">
